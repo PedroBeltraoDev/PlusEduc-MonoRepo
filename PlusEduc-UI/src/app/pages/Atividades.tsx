@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
-import { Plus, Wand2, ClipboardList, ClipboardCheck, Calendar, Filter, Loader2, AlertCircle, Download, BookOpen, Search, MoreVertical, Trash2, CheckCircle2, XCircle } from "lucide-react";
+import { Plus, Wand2, ClipboardList, ClipboardCheck, Calendar, Filter, Loader2, AlertCircle, Download, BookOpen, Search, MoreVertical, Trash2, CheckCircle2, Users, XCircle } from "lucide-react";
 import { useApiList } from "@/hooks/useApi";
 import { activitiesService } from "@/services";
 import type { Activity, PendingCorrection } from "@/types";
@@ -421,7 +421,7 @@ export function Atividades() {
                         {getDifficultyText(activity.difficultyLevel)}
                       </span>
                     </div>
-                    <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300">
+                    <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-300">
                       <span>{activity.subject}</span>
                       <span>•</span>
                       <span>{activity.topic}</span>
@@ -430,6 +430,17 @@ export function Atividades() {
                       <span>•</span>
                       <span>{activity.questionsCount} questões</span>
                     </div>
+                    {activity.participation ? (
+                      <div className="mt-2 flex flex-wrap items-center gap-2 text-xs font-semibold">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-blue-100 px-2.5 py-1 text-blue-800 dark:bg-blue-900/40 dark:text-blue-200">
+                          <Users className="h-3.5 w-3.5" />
+                          {activity.participation.completedStudents} de {activity.participation.totalStudents} fizeram
+                        </span>
+                        <span className="text-gray-500 dark:text-gray-400">
+                          {activity.participation.pendingStudents} ainda não fizeram
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${statusInfo.color}`}>

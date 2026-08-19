@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, ClipboardCheck, Download, Info, Loader2, RotateCcw, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Download, Info, Loader2, RotateCcw, Users, XCircle } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/useApi";
@@ -39,6 +39,7 @@ export function ProfessorAtividadeDetalhe() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [graded, setGraded] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [expandedParticipantList, setExpandedParticipantList] = useState<"completed" | "pending" | null>(null);
 
   const { data: activity, loading, error } = useApi(
     () => activitiesService.getActivityById(id!),
@@ -144,6 +145,11 @@ export function ProfessorAtividadeDetalhe() {
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {activity.questionsCount} questão(ões) • {activity.classroomName || "Atividade da turma"}
             </p>
+            {activity.participation ? (
+              <p className="mt-2 text-sm font-semibold text-[#1E5AA8] dark:text-[#4FC3F7]">
+                Participação: {activity.participation.completedStudents} de {activity.participation.totalStudents} alunos fizeram • {activity.participation.pendingStudents} ainda não fizeram
+              </p>
+            ) : null}
           </div>
           <button
             type="button"
@@ -156,6 +162,75 @@ export function ProfessorAtividadeDetalhe() {
           </button>
         </div>
       </section>
+
+      {activity.participation ? (
+        <section className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800 sm:p-6">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Users className="h-5 w-5 text-[#1E5AA8] dark:text-[#4FC3F7]" />
+                <h2 className="font-semibold text-[#0A2463] dark:text-white">Acompanhamento da turma</h2>
+              </div>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                A atividade está disponível para {activity.participation.totalStudents} aluno(s).
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2 text-xs font-semibold">
+              <span className="rounded-full bg-green-100 px-3 py-1 text-green-800 dark:bg-green-900/30 dark:text-green-200">
+                {activity.participation.completedStudents} fizeram
+              </span>
+              <span className="rounded-full bg-amber-100 px-3 py-1 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200">
+                {activity.participation.pendingStudents} não fizeram
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            {(["completed", "pending"] as const).map((listType) => {
+              const isExpanded = expandedParticipantList === listType;
+              const participants = activity.participation?.[listType] ?? [];
+              const label = listType === "completed" ? "Alunos que fizeram" : "Alunos que não fizeram";
+              return (
+                <button
+                  key={listType}
+                  type="button"
+                  onClick={() => setExpandedParticipantList(isExpanded ? null : listType)}
+                  className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4 text-left transition hover:border-[#1E5AA8] dark:border-gray-700 dark:bg-gray-700/50 dark:hover:border-[#4FC3F7]"
+                  aria-expanded={isExpanded}
+                >
+                  <span>
+                    <span className="block text-sm font-semibold text-[#0A2463] dark:text-white">{label}</span>
+                    <span className="mt-1 block text-xs text-gray-500 dark:text-gray-300">{participants.length} aluno(s)</span>
+                  </span>
+                  {isExpanded ? <ChevronUp className="h-5 w-5 text-[#1E5AA8] dark:text-[#4FC3F7]" /> : <ChevronDown className="h-5 w-5 text-[#1E5AA8] dark:text-[#4FC3F7]" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {expandedParticipantList ? (
+            <div className="mt-4 rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+              {(() => {
+                const participants = activity.participation?.[expandedParticipantList] ?? [];
+                return participants.length ? (
+                  <ul className="grid gap-2 sm:grid-cols-2">
+                    {participants.map((participant) => (
+                      <li key={participant.studentId} className="rounded-lg bg-white px-3 py-2 dark:bg-gray-800">
+                        <p className="font-medium text-gray-800 dark:text-gray-100">{participant.studentName}</p>
+                        {expandedParticipantList === "completed" && participant.submittedAt ? (
+                          <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Enviada em {new Date(participant.submittedAt).toLocaleString("pt-BR")}</p>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500 dark:text-gray-300">Nenhum aluno nesta lista.</p>
+                );
+              })()}
+            </div>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-200">
         <Info className="mt-0.5 h-5 w-5 shrink-0" />

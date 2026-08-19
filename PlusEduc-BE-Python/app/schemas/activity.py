@@ -64,6 +64,24 @@ class ActivityUpdateRequest(BaseModel):
     pdfUrl: str | None = None
 
 
+class ActivityParticipant(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    studentId: str
+    studentName: str
+    submittedAt: datetime | None = None
+
+
+class ActivityParticipation(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    totalStudents: int = 0
+    completedStudents: int = 0
+    pendingStudents: int = 0
+    completed: list[ActivityParticipant] = Field(default_factory=list)
+    pending: list[ActivityParticipant] = Field(default_factory=list)
+
+
 class ActivityResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -87,3 +105,4 @@ class ActivityResponse(BaseModel):
     createdBy: str | None = None
     creatorName: str | None = None
     createdAt: datetime | None = None
+    participation: ActivityParticipation | None = None

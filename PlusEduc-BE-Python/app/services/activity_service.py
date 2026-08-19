@@ -14,6 +14,8 @@ from app.repositories.student_repository import StudentRepository
 from app.schemas.activity import (
     ActivityCreateRequest,
     ActivityGenerationRequest,
+    ActivityParticipation,
+    ActivityParticipant,
     ActivityResponse,
     ActivityUpdateRequest,
     GeneratedQuestion,
@@ -30,12 +32,14 @@ class ActivityService:
         classroom_repository: ClassroomRepository,
         mongo,
         settings=None,
+        activity_submission_repository=None,
     ) -> None:
         self.repository = repository
         self.student_repository = student_repository
         self.classroom_repository = classroom_repository
         self.mongo = mongo
         self.settings = settings
+        self.activity_submission_repository = activity_submission_repository
         self.demo_ai_service = DemoAIService()
 
     def create(self, request: ActivityCreateRequest, current_user: UserPrincipal) -> ActivityResponse:
@@ -129,14 +133,14 @@ class ActivityService:
         document = {key: value for key, value in document.items() if value is not None}
         return self.to_response(self.repository.insert(document))
 
-    def list_all(self) -> list[ActivityResponse]:
-        return [self.to_response(item) for item in self.repository.find_all()]
+    def list_all(self, include_participation: bool = False) -> list[ActivityResponse]:
+        return [self.to_response(item, include_participation) for item in self.repository.find_all()]
 
-    def get(self, activity_id: str) -> ActivityResponse:
+    def get(self, activity_id: str, include_participation: bool = False) -> ActivityResponse:
         item = self.repository.find_by_id(activity_id)
         if not item:
             raise HTTPException(status_code=404, detail=f"Atividade não encontrada: {activity_id}")
-        return self.to_response(item)
+        return self.to_response(item, include_participation)
 
     def update(self, activity_id: str, request: ActivityUpdateRequest, current_user: UserPrincipal) -> ActivityResponse:
         if not self.repository.find_by_id(activity_id):
@@ -343,14 +347,13 @@ class ActivityService:
             return text[:87].rstrip() + "..."
         return text
 
-    def to_response(self, document: dict[str, Any]) -> ActivityResponse:
+    def to_response(self, document: dict[str, Any], include_participation: bool = False) -> ActivityResponse:
         activity_id = str(document.get("_id", document.get("id")))
         classroom_id = document.get("classroom_id", document.get("classroomId"))
         student_id = document.get("student_id", document.get("studentId"))
-        classroom = self.mongo.database.classrooms.find_one({"_id": self._object_id(classroom_id)}) if classroom_id else None
-        if classroom is None and classroom_id:
-            classroom = self.mongo.database.classrooms.find_one({"_id": classroom_id})
+        classroom = self.classroom_repository.find_by_id(str(classroom_id)) if classroom_id else None
         student = self.student_repository.find_by_id(str(student_id)) if student_id else None
+        participation = self.participation_summary(document, classroom) if include_participation else None
         return ActivityResponse(
             id=activity_id,
             title=document.get("title", ""),
@@ -372,6 +375,58 @@ class ActivityService:
             createdBy=document.get("created_by", document.get("createdBy")),
             creatorName=None,
             createdAt=document.get("created_at", document.get("createdAt")),
+            participation=participation,
+        )
+
+    def participation_summary(self, document: dict[str, Any], classroom: dict[str, Any] | None) -> ActivityParticipation:
+        activity_id = str(document.get("_id", document.get("id", "")))
+        target_student_id = document.get("student_id", document.get("studentId"))
+        eligible: dict[str, dict[str, Any]] = {}
+
+        if target_student_id:
+            student = self.student_repository.find_by_id(str(target_student_id))
+            if student:
+                student_id = str(student.get("_id", student.get("id", target_student_id)))
+                eligible[student_id] = student
+        elif classroom:
+            member_ids = classroom.get("studentIds", classroom.get("student_ids", classroom.get("students", []))) or []
+            for member_id in member_ids:
+                student = self.student_repository.find_by_id(str(member_id))
+                if student:
+                    student_id = str(student.get("_id", student.get("id", member_id)))
+                    eligible[student_id] = student
+
+        if self.activity_submission_repository:
+            submissions = self.activity_submission_repository.find_by_activity(activity_id)
+        else:
+            submissions = list(self.mongo.database.activity_submissions.find({
+                "$or": [{"activity_id": activity_id}, {"activityId": activity_id}],
+            }))
+
+        completed_by_id: dict[str, dict[str, Any]] = {}
+        for submission in submissions:
+            submitted_id = submission.get("student_id", submission.get("studentId"))
+            if submitted_id is None:
+                continue
+            normalized_id = str(submitted_id)
+            if normalized_id in eligible:
+                completed_by_id[normalized_id] = submission
+
+        def participant(student_id: str, student: dict[str, Any], submission: dict[str, Any] | None = None) -> ActivityParticipant:
+            return ActivityParticipant(
+                studentId=student_id,
+                studentName=str(student.get("name", student.get("studentName", "Aluno"))),
+                submittedAt=(submission or {}).get("submitted_at", (submission or {}).get("submittedAt")),
+            )
+
+        completed = [participant(student_id, eligible[student_id], completed_by_id[student_id]) for student_id in eligible if student_id in completed_by_id]
+        pending = [participant(student_id, eligible[student_id]) for student_id in eligible if student_id not in completed_by_id]
+        return ActivityParticipation(
+            totalStudents=len(eligible),
+            completedStudents=len(completed),
+            pendingStudents=len(pending),
+            completed=completed,
+            pending=pending,
         )
 
     @staticmethod

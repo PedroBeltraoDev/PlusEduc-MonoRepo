@@ -61,6 +61,20 @@ export interface Grade {
 }
 
 // Activity (Atividade)
+export interface ActivityParticipant {
+  studentId: string;
+  studentName: string;
+  submittedAt?: string | null;
+}
+
+export interface ActivityParticipation {
+  totalStudents: number;
+  completedStudents: number;
+  pendingStudents: number;
+  completed: ActivityParticipant[];
+  pending: ActivityParticipant[];
+}
+
 export interface Activity {
   id: string;
   title: string;
@@ -82,6 +96,7 @@ export interface Activity {
   creatorName?: string | null;
   pdfUrl?: string | null;
   createdAt: string;
+  participation?: ActivityParticipation | null;
 }
 
 export interface SubjectTopic {

@@ -32,6 +32,14 @@ class ActivitySubmissionRepository:
     def find_all(self) -> list[dict[str, Any]]:
         return list(self.collection.find({}).sort("submitted_at", -1))
 
+    def find_by_activity(self, activity_id: str) -> list[dict[str, Any]]:
+        return list(self.collection.find({
+            "$or": [
+                {"activity_id": activity_id},
+                {"activityId": activity_id},
+            ]
+        }).sort("submitted_at", -1))
+
     def find_by_id(self, submission_id: str) -> dict[str, Any] | None:
         candidates: list[Any] = [submission_id]
         if ObjectId.is_valid(submission_id):

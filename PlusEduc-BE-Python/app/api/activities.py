@@ -16,6 +16,7 @@ def service(request: Request) -> ActivityService:
         request.app.state.classroom_repository,
         request.app.state.mongo,
         request.app.state.settings,
+        request.app.state.activity_submission_repository,
     )
 
 
@@ -64,7 +65,8 @@ def generate_activity(payload: ActivityGenerationRequest, request: Request, curr
 
 @router.get("", response_model=list[ActivityResponse])
 def list_activities(request: Request, current_user: UserPrincipal = Depends(get_current_user)):
-    return service(request).list_all()
+    include_participation = current_user.role.upper() in {"TEACHER", "ADMIN"}
+    return service(request).list_all(include_participation=include_participation)
 
 
 @router.get("/classroom/{classroom_id}", response_model=list[ActivityResponse])
@@ -103,7 +105,8 @@ def export_activity_pdf(
 
 @router.get("/{activity_id}", response_model=ActivityResponse)
 def get_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(get_current_user)):
-    return service(request).get(activity_id)
+    include_participation = current_user.role.upper() in {"TEACHER", "ADMIN"}
+    return service(request).get(activity_id, include_participation=include_participation)
 
 
 @router.put("/{activity_id}", response_model=ActivityResponse)
