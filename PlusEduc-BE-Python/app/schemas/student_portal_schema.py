@@ -2,6 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.schemas.analytics import SubjectPerformance
 from app.schemas.grade import GradeResponse
 
 
@@ -85,6 +86,20 @@ class StudentActivityDetail(BaseModel):
     results: list[object] = Field(default_factory=list)
     submittedAt: datetime | None = None
     createdAt: datetime | None = None
+
+
+class StudentPortalPerformance(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    studentId: str
+    averageGrade: float
+    totalActivities: int
+    completedActivities: int
+    subjectPerformance: list[SubjectPerformance] = Field(default_factory=list)
+    attendanceRate: int
+    totalClasses: int
+    attendedClasses: int
+    absences: int
 
 
 StudentPortalGrade = GradeResponse

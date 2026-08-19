@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
+import { BookOpen, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
 import { LogoIcon } from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "./ui/utils";
@@ -8,6 +8,7 @@ export const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Turmas", path: "/turmas" },
   { icon: ClipboardList, label: "Atividades", path: "/atividades" },
+  { icon: BookOpen, label: "Minhas matérias", path: "/materias" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
 ];
 

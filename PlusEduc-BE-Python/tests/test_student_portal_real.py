@@ -185,6 +185,14 @@ def test_student_portal_end_to_end_on_real_mongodb(student_portal_real_context):
     assert grades.status_code == 200, grades.text
     assert isinstance(grades.json(), list)
 
+    performance = client.get("/api/student-portal/performance", headers=headers)
+    assert performance.status_code == 200, performance.text
+    performance_payload = performance.json()
+    assert performance_payload["studentId"] == student_id
+    assert "averageGrade" in performance_payload
+    assert "attendanceRate" in performance_payload
+    assert isinstance(performance_payload["subjectPerformance"], list)
+
     pdf = client.get(f"/api/student-portal/activities/{activity_id}/export-pdf", headers=headers)
     assert pdf.status_code == 200, pdf.text
     assert pdf.headers["content-type"].startswith("application/pdf")

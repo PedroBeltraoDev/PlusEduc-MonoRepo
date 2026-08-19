@@ -8,6 +8,10 @@ import { Atividades } from "./pages/Atividades";
 import { GerarAtividade } from "./pages/GerarAtividade";
 import { NovaAtividade } from "./pages/NovaAtividade";
 import { Configuracoes } from "./pages/Configuracoes";
+import { MateriasTopicos } from "./pages/MateriasTopicos";
+import { Materias } from "./pages/Materias";
+import { MateriaTurmas } from "./pages/MateriaTurmas";
+import { MateriaTurmaDesempenho } from "./pages/MateriaTurmaDesempenho";
 import { AlunoHome } from "./pages/student/AlunoHome";
 import { AlunoAtividades } from "./pages/student/AlunoAtividades";
 import { AlunoAtividadeDetalhe } from "./pages/student/AlunoAtividadeDetalhe";
@@ -15,6 +19,8 @@ import { ProfessorAtividadeDetalhe } from "./pages/ProfessorAtividadeDetalhe";
 import { AlunoTurma } from "./pages/student/AlunoTurma";
 import { AlunoProfessores } from "./pages/student/AlunoProfessores";
 import { AlunoNotas } from "./pages/student/AlunoNotas";
+import { AlunoDesempenho } from "./pages/student/AlunoDesempenho";
+import { AlunoConfiguracoes } from "./pages/student/AlunoConfiguracoes";
 
 export const router = createBrowserRouter([
   {
@@ -57,6 +63,22 @@ export const router = createBrowserRouter([
         path: "configuracoes",
         element: <Configuracoes />,
       },
+      {
+        path: "materias",
+        element: <Materias />,
+      },
+      {
+        path: "materias/:subjectId/turmas",
+        element: <MateriaTurmas />,
+      },
+      {
+        path: "materias/:subjectId/turmas/:classroomId/desempenho",
+        element: <MateriaTurmaDesempenho />,
+      },
+      {
+        path: "materias-topicos",
+        element: <MateriasTopicos />,
+      },
     ],
   },
   {
@@ -86,6 +108,14 @@ export const router = createBrowserRouter([
       {
         path: "notas",
         element: <AlunoNotas />,
+      },
+      {
+        path: "desempenho",
+        element: <AlunoDesempenho />,
+      },
+      {
+        path: "configuracoes",
+        element: <AlunoConfiguracoes />,
       },
     ],
   },

@@ -8,6 +8,7 @@ from app.schemas.student_portal_schema import (
     StudentActivityDetail,
     StudentClassroom,
     StudentPortalGrade,
+    StudentPortalPerformance,
     StudentPortalProfile,
     TeacherSummary,
 )
@@ -75,3 +76,8 @@ def export_activity_pdf(activity_id: str, request: Request, current_user: UserPr
 @router.get("/grades", response_model=list[StudentPortalGrade])
 def get_grades(request: Request, current_user: UserPrincipal = Depends(student_user)):
     return service(request).grades(current_user)
+
+
+@router.get("/performance", response_model=StudentPortalPerformance)
+def get_performance(request: Request, current_user: UserPrincipal = Depends(student_user)):
+    return service(request).performance(current_user)

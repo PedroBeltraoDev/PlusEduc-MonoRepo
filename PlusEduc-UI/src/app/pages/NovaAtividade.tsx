@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BookOpen, CheckCircle2, ClipboardPen, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { Link, useNavigate } from "react-router";
 import { toast, Toaster } from "sonner";
-import { activitiesService, classroomsService } from "@/services";
-import type { Classroom, GeneratedQuestion } from "@/types";
+import { activitiesService, classroomsService, subjectTopicsService } from "@/services";
+import type { Classroom, GeneratedQuestion, SubjectTopic } from "@/types";
 import type { CreateActivityRequest } from "@/services/activities";
 
 const difficultyOptions = [
@@ -32,7 +32,9 @@ function createBlankQuestion(type: GeneratedQuestion["questionType"] = "MULTIPLA
 export function NovaAtividade() {
   const navigate = useNavigate();
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
+  const [subjectTopics, setSubjectTopics] = useState<SubjectTopic[]>([]);
   const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingSubjectTopics, setLoadingSubjectTopics] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
   const [form, setForm] = useState<CreateActivityRequest>({
@@ -66,6 +68,21 @@ export function NovaAtividade() {
     }
 
     loadClassrooms();
+  }, []);
+
+  useEffect(() => {
+    async function loadSubjectTopics() {
+      try {
+        setSubjectTopics(await subjectTopicsService.getAll());
+      } catch (error) {
+        console.error(error);
+        toast.error("Não foi possível carregar o catálogo de matérias e tópicos.");
+      } finally {
+        setLoadingSubjectTopics(false);
+      }
+    }
+
+    loadSubjectTopics();
   }, []);
 
   const selectedClassroom = useMemo(
@@ -210,7 +227,7 @@ export function NovaAtividade() {
 
           <button
             onClick={handleSubmit}
-            disabled={submitting || loadingClassrooms}
+            disabled={submitting || loadingClassrooms || loadingSubjectTopics || subjectTopics.length === 0}
             className="bg-[#1E5AA8] hover:bg-[#0A2463] disabled:opacity-60 disabled:cursor-not-allowed text-white px-5 py-3 rounded-lg font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all"
           >
             {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
@@ -271,25 +288,43 @@ export function NovaAtividade() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Matéria</label>
-                  <input
-                    type="text"
+                  <select
                     value={form.subject}
-                    onChange={(event) => handleFieldChange("subject", event.target.value)}
-                    placeholder="Ex: Física"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-                  />
+                    onChange={(event) => {
+                      handleFieldChange("subject", event.target.value);
+                      handleFieldChange("topic", "");
+                    }}
+                    disabled={loadingSubjectTopics || subjectTopics.length === 0}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <option value="">
+                      {loadingSubjectTopics ? "Carregando..." : subjectTopics.length ? "Selecione uma matéria" : "Cadastre uma matéria primeiro"}
+                    </option>
+                    {subjectTopics.map((item) => (
+                      <option key={item.id} value={item.subject}>{item.subject}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Tópico</label>
-                  <input
-                    type="text"
+                  <select
                     value={form.topic}
                     onChange={(event) => handleFieldChange("topic", event.target.value)}
-                    placeholder="Ex: Vetores"
-                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-                  />
+                    disabled={!form.subject || loadingSubjectTopics}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <option value="">{form.subject ? "Selecione um tópico" : "Escolha a matéria primeiro"}</option>
+                    {(subjectTopics.find((item) => item.subject === form.subject)?.topics ?? []).map((topic) => (
+                      <option key={topic} value={topic}>{topic}</option>
+                    ))}
+                  </select>
                 </div>
               </div>
+              {subjectTopics.length === 0 && !loadingSubjectTopics ? (
+                <Link to="/materias-topicos" className="text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#7FC8F8]">
+                  Cadastre matérias e tópicos para liberar a criação de atividades.
+                </Link>
+              ) : null}
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-4 transition-colors">

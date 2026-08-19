@@ -3,8 +3,8 @@ import { useNavigate } from "react-router";
 import { createPortal } from "react-dom";
 import { Plus, Search, MoreVertical, Users, Calendar, TrendingUp, Loader2, AlertCircle, BookOpen, ArrowLeft, GraduationCap, UserCheck, User, Mail, Hash, ArrowRightLeft, Trash2, ClipboardList, Download } from "lucide-react";
 import { useApiList, useApi } from "@/hooks/useApi";
-import { activitiesService, classroomsService, studentsService, CreateClassroomRequest } from "@/services";
-import type { Activity, Classroom, Student, LearningGap } from "@/types";
+import { activitiesService, classroomsService, studentsService, subjectsService, CreateClassroomRequest } from "@/services";
+import type { Activity, Classroom, Student, LearningGap, Subject } from "@/types";
 import { formatDate } from "@/utils";
 import { toast } from "sonner";
 
@@ -21,6 +21,9 @@ interface StudentFormData {
 }
 
 const createFormId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+
+const normalizeSubjectKey = (value: string) =>
+  value.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
 const createEmptyLearningGap = (): LearningGap & { _formId: string } => ({
   _formId: createFormId(),
@@ -498,6 +501,15 @@ export function Turmas() {
 
   // Hook para carregar todos os estudantes (para busca)
   const { data: rawAllStudents, loading: studentsLoading } = useApi(() => studentsService.getAllStudents());
+  const { data: subjectCatalog } = useApi<Subject[]>(() => subjectsService.getAll());
+
+  const visibleClassroomSubjects = useMemo(() => {
+    const classroomSubjects = selectedClassroom?.subjects ?? [];
+    if (!subjectCatalog) return classroomSubjects;
+    return subjectCatalog
+      .filter((subject) => classroomSubjects.some((classroomSubject) => normalizeSubjectKey(subject.name) === normalizeSubjectKey(classroomSubject)))
+      .map((subject) => subject.name);
+  }, [selectedClassroom, subjectCatalog]);
 
   // Limpar IDs dos estudantes usando useMemo para evitar loop
   const allStudents = useMemo(() => {
@@ -1430,7 +1442,7 @@ export function Turmas() {
               <BookOpen className="w-8 h-8 text-[#FF9800]" />
               <div>
                 <p className="text-2xl font-bold text-[#0A2463] dark:text-white">
-                  {(selectedClassroom.subjects || []).length}
+                  {visibleClassroomSubjects.length}
                 </p>
                 <p className="text-sm text-gray-500 dark:text-gray-400">Disciplinas</p>
               </div>
@@ -1438,11 +1450,11 @@ export function Turmas() {
           </div>
 
           {/* Disciplinas */}
-          {(selectedClassroom.subjects || []).length > 0 && (
+          {visibleClassroomSubjects.length > 0 && (
             <div>
               <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Disciplinas:</h3>
               <div className="flex flex-wrap gap-2">
-                {(selectedClassroom.subjects || []).map((subject, index) => (
+                {visibleClassroomSubjects.map((subject, index) => (
                   <span
                     key={index}
                     className="px-3 py-1 bg-[#1E5AA8]/10 text-[#1E5AA8] dark:bg-[#4FC3F7]/10 dark:text-[#4FC3F7] text-sm rounded-full"

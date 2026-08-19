@@ -1,5 +1,5 @@
 import { Link } from "react-router";
-import { ClipboardList, GraduationCap, Users, BookOpen } from "lucide-react";
+import { BarChart3, ClipboardList, GraduationCap, Users, BookOpen } from "lucide-react";
 import { useApi } from "@/hooks/useApi";
 import { studentPortalService } from "@/services";
 
@@ -8,6 +8,7 @@ const quickLinks = [
   { to: "/aluno/turma", icon: Users, label: "Minha Turma", color: "bg-[#4FC3F7]" },
   { to: "/aluno/professores", icon: GraduationCap, label: "Professores", color: "bg-[#FF9800]" },
   { to: "/aluno/notas", icon: BookOpen, label: "Minhas Notas", color: "bg-[#4CAF50]" },
+  { to: "/aluno/desempenho", icon: BarChart3, label: "Desempenho", color: "bg-[#7E57C2]" },
 ];
 
 export function AlunoHome() {
@@ -29,7 +30,7 @@ export function AlunoHome() {
         )}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
         {quickLinks.map((item) => {
           const Icon = item.icon;
           return (

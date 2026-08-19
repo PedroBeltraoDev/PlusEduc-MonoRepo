@@ -7,6 +7,7 @@ interface AuthContextType {
   role: User['role'] | null;
   userName: string | null;
   userEmail: string | null;
+  userId: string | null;
   studentId: string | null;
   isStudent: boolean;
   isEducator: boolean;
@@ -29,6 +30,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [role, setRole] = useState<User['role'] | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [studentId, setStudentId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>('loading');
 
@@ -37,6 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setRole(authService.getRole());
     setUserName(authService.getUserName());
     setUserEmail(authService.getUserEmail());
+    setUserId(authService.getUserId());
     setStudentId(authService.getStudentId());
   };
 
@@ -52,6 +55,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setRole(null);
       setUserName(null);
       setUserEmail(null);
+      setUserId(null);
       setStudentId(null);
       setLoadingState('error');
     }
@@ -69,6 +73,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setRole(null);
       setUserName(null);
       setUserEmail(null);
+      setUserId(null);
       setStudentId(null);
       setLoadingState('error');
       throw error;
@@ -96,6 +101,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     role,
     userName,
     userEmail,
+    userId,
     studentId,
     isStudent: role === 'STUDENT',
     isEducator: role === 'TEACHER' || role === 'ADMIN',

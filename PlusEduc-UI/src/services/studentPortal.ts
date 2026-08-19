@@ -6,6 +6,7 @@ import type {
   StudentActivity,
   StudentActivityDetail,
   StudentClassroom,
+  StudentPortalPerformance,
   StudentPortalProfile,
   StudentSubmissionResult,
   TeacherSummary,
@@ -42,6 +43,10 @@ class StudentPortalService {
 
   async getGrades(): Promise<GradeRecord[]> {
     return apiClient.get<GradeRecord[]>('/student-portal/grades');
+  }
+
+  async getPerformance(): Promise<StudentPortalPerformance> {
+    return apiClient.get<StudentPortalPerformance>('/student-portal/performance');
   }
 
   async downloadActivityPdf(id: string, title: string): Promise<void> {

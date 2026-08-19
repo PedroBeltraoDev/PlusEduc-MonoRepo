@@ -84,6 +84,14 @@ export interface Activity {
   createdAt: string;
 }
 
+export interface SubjectTopic {
+  id: string;
+  subject: string;
+  topics: string[];
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
 export interface GeneratedQuestion {
   questionText: string;
   questionType: 'MULTIPLA_ESCOLHA' | 'DISCURSIVA' | 'VERDADEIRO_FALSO';
@@ -264,6 +272,48 @@ export interface StudentPerformance {
 
 export interface StudentAttendance {
   studentId: string;
+  attendanceRate: number;
+  totalClasses: number;
+  attendedClasses: number;
+  absences: number;
+}
+
+export interface Subject {
+  id: string;
+  name: string;
+  active: boolean;
+  createdAt?: string | null;
+  updatedAt?: string | null;
+}
+
+export interface SubjectClassroom {
+  id: string;
+  name: string;
+  year?: number | null;
+  gradeLevel?: string | null;
+  studentCount: number;
+  averageGrade: number;
+}
+
+export interface SubjectStudentPerformance {
+  studentId: string;
+  studentName: string;
+  studentEmail?: string | null;
+  averageGrade: number;
+  gradeCount: number;
+  lastGrade?: number | null;
+}
+
+export interface StudentPortalPerformance {
+  studentId: string;
+  averageGrade: number;
+  totalActivities: number;
+  completedActivities: number;
+  subjectPerformance: {
+    subject: string;
+    average: number;
+    count: number;
+  }[];
   attendanceRate: number;
   totalClasses: number;
   attendedClasses: number;

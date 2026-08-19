@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BookOpen, Brain, Download, Loader2, Send, Sparkles, Users, Wand2 } from "lucide-react";
 import { Link } from "react-router";
 import { toast, Toaster } from "sonner";
-import { activitiesService, classroomsService, studentsService } from "@/services";
-import type { Activity, Classroom, GenerateActivityRequest, GeneratedQuestion, Student } from "@/types";
+import { activitiesService, classroomsService, studentsService, subjectTopicsService } from "@/services";
+import type { Activity, Classroom, GenerateActivityRequest, GeneratedQuestion, Student, SubjectTopic } from "@/types";
 
 const difficultyOptions = [
   { label: "Fácil", value: "FACIL" },
@@ -64,7 +64,9 @@ function renderQuestionTypeLabel(type: string) {
 export function GerarAtividade() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [classroomStudents, setClassroomStudents] = useState<Student[]>([]);
+  const [subjectTopics, setSubjectTopics] = useState<SubjectTopic[]>([]);
   const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingSubjectTopics, setLoadingSubjectTopics] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [generatedActivity, setGeneratedActivity] = useState<Activity | null>(null);
@@ -101,6 +103,21 @@ export function GerarAtividade() {
     }
 
     loadClassrooms();
+  }, []);
+
+  useEffect(() => {
+    async function loadSubjectTopics() {
+      try {
+        setSubjectTopics(await subjectTopicsService.getAll());
+      } catch (error) {
+        console.error(error);
+        toast.error("Não foi possível carregar o catálogo de matérias e tópicos.");
+      } finally {
+        setLoadingSubjectTopics(false);
+      }
+    }
+
+    loadSubjectTopics();
   }, []);
 
   const selectedClassroom = useMemo(
@@ -373,25 +390,45 @@ export function GerarAtividade() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Matéria</label>
-                <input
-                  type="text"
+                <select
                   value={form.subject}
-                  onChange={(event) => handleChange("subject", event.target.value)}
-                  placeholder="Ex: Física"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-                />
+                  onChange={(event) => {
+                    handleChange("subject", event.target.value);
+                    handleChange("topic", "");
+                    setGeneratedActivity(null);
+                    setGeneratedActivities([]);
+                  }}
+                  disabled={loadingSubjectTopics || subjectTopics.length === 0}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value="">
+                    {loadingSubjectTopics ? "Carregando..." : subjectTopics.length ? "Selecione uma matéria" : "Cadastre uma matéria primeiro"}
+                  </option>
+                  {subjectTopics.map((item) => (
+                    <option key={item.id} value={item.subject}>{item.subject}</option>
+                  ))}
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Tópico/Assunto</label>
-                <input
-                  type="text"
+                <select
                   value={form.topic}
                   onChange={(event) => handleChange("topic", event.target.value)}
-                  placeholder="Ex: Vetores"
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-                />
+                  disabled={!form.subject || loadingSubjectTopics}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  <option value="">{form.subject ? "Selecione um tópico" : "Escolha a matéria primeiro"}</option>
+                  {(subjectTopics.find((item) => item.subject === form.subject)?.topics ?? []).map((topic) => (
+                    <option key={topic} value={topic}>{topic}</option>
+                  ))}
+                </select>
               </div>
+              {subjectTopics.length === 0 && !loadingSubjectTopics ? (
+                <Link to="/materias-topicos" className="text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#7FC8F8]">
+                  Cadastre matérias e tópicos para liberar a geração de atividades.
+                </Link>
+              ) : null}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -471,7 +508,7 @@ export function GerarAtividade() {
 
               <button
                 onClick={handleGenerate}
-                disabled={submitting || loadingClassrooms}
+                disabled={submitting || loadingClassrooms || loadingSubjectTopics || subjectTopics.length === 0}
                 className="w-full mt-2 bg-[#1E5AA8] hover:bg-[#0A2463] disabled:opacity-60 disabled:cursor-not-allowed text-white py-4 rounded-lg font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg transition-all"
               >
                 {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}

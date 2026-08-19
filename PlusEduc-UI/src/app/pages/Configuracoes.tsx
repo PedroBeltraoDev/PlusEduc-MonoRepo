@@ -1,6 +1,18 @@
 import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
-import { Sun, Moon, User, Mail, Briefcase, Edit, Key, LogOut, Shield, Loader2 } from "lucide-react";
+import {
+  Briefcase,
+  Edit,
+  Key,
+  Loader2,
+  LogOut,
+  Mail,
+  Moon,
+  Palette,
+  Shield,
+  Sun,
+  User,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -12,6 +24,7 @@ export function Configuracoes() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const funcao = role === "ADMIN" ? "Administrador" : role === "STUDENT" ? "Aluno" : "Professora";
+  const currentTheme = theme === "dark" ? "dark" : "light";
 
   useEffect(() => {
     if (!isEditing) {
@@ -29,7 +42,6 @@ export function Configuracoes() {
         border: "none",
       },
     });
-
     logout();
   };
 
@@ -73,263 +85,188 @@ export function Configuracoes() {
   };
 
   return (
-    <div className="space-y-6">
-        {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold text-[#0A2463] dark:text-white">Configurações</h1>
-          <p className="text-gray-600 dark:text-gray-300 mt-2">Gerencie suas preferências e dados de acesso</p>
-        </div>
+    <div className="mx-auto max-w-6xl space-y-6">
+      <header>
+        <h1 className="text-2xl font-bold text-[#0A2463] dark:text-white">Configurações</h1>
+        <p className="mt-1 text-gray-600 dark:text-gray-300">
+          Gerencie suas preferências e dados de acesso.
+        </p>
+      </header>
 
-        {/* Grid de Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Seção 1: Aparência (Tema) */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-5 transition-colors">
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-600">
-              <div className="p-2 bg-[#1E5AA8]/10 rounded-lg">
-                <Sun className="w-5 h-5 text-[#1E5AA8]" />
-              </div>
-              <h2 className="text-lg font-bold text-[#0A2463] dark:text-white">Aparência</h2>
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <section className="rounded-2xl bg-white p-6 shadow-sm transition-colors dark:bg-gray-800">
+          <div className="flex items-start gap-4 border-b border-gray-200 pb-5 dark:border-gray-700">
+            <div className="rounded-xl bg-[#1E5AA8]/10 p-3 text-[#1E5AA8] dark:bg-blue-400/10 dark:text-[#4FC3F7]">
+              <Palette className="h-6 w-6" />
             </div>
-
-            <div className="space-y-4">
-              <p className="text-sm text-gray-600 dark:text-gray-300">
-                Escolha entre o modo claro ou escuro para sua interface
+            <div>
+              <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">Tema da interface</h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Escolha o modo que fica melhor para trabalhar. A preferência será aplicada em todo o sistema.
               </p>
-
-              {/* Toggle Switch */}
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
-                <div className="flex items-center gap-3">
-                  {theme === "light" ? (
-                    <Sun className="w-5 h-5 text-[#FF9800]" />
-                  ) : (
-                    <Moon className="w-5 h-5 text-[#1E5AA8] dark:text-[#4FC3F7]" />
-                  )}
-                  <span className="font-medium text-gray-700 dark:text-gray-200">
-                    {theme === "light" ? "Modo Claro" : "Modo Escuro"}
-                  </span>
-                </div>
-                <button
-                  onClick={() => setTheme(theme === "light" ? "dark" : "light")}
-                  className={`relative w-14 h-7 rounded-full transition-colors ${
-                    theme === "light" ? "bg-gray-300" : "bg-[#1E5AA8]"
-                  }`}
-                >
-                  <span
-                    className={`absolute top-1 left-1 w-5 h-5 bg-white rounded-full shadow-md transition-transform ${
-                      theme === "dark" ? "translate-x-7" : ""
-                    }`}
-                  />
-                </button>
-              </div>
-
-              {/* Preview Visual */}
-              <div className="space-y-3">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                  Preview
-                </p>
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Preview Modo Claro */}
-                  <button
-                    onClick={() => setTheme("light")}
-                    className={`relative p-3 border-2 rounded-lg transition-all ${
-                      theme === "light"
-                        ? "border-[#1E5AA8] ring-2 ring-[#1E5AA8]/20"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="space-y-2">
-                      <div className="h-16 bg-gradient-to-b from-[#0A2463] to-[#1E5AA8] rounded" />
-                      <div className="h-2 bg-gray-100 rounded w-3/4" />
-                      <div className="h-2 bg-gray-100 rounded w-1/2" />
-                    </div>
-                    <p className="text-xs font-medium text-gray-600 mt-2 text-center">
-                      Claro
-                    </p>
-                    {theme === "light" && (
-                      <div className="absolute top-2 right-2 w-5 h-5 bg-[#4CAF50] rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-
-                  {/* Preview Modo Escuro */}
-                  <button
-                    onClick={() => setTheme("dark")}
-                    className={`relative p-3 border-2 rounded-lg transition-all ${
-                      theme === "dark"
-                        ? "border-[#1E5AA8] ring-2 ring-[#1E5AA8]/20"
-                        : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="space-y-2">
-                      <div className="h-16 bg-gradient-to-b from-[#0A2463] to-[#1E5AA8] rounded" />
-                      <div className="h-2 bg-gray-700 rounded w-3/4" />
-                      <div className="h-2 bg-gray-700 rounded w-1/2" />
-                    </div>
-                    <p className="text-xs font-medium text-gray-600 mt-2 text-center">
-                      Escuro
-                    </p>
-                    {theme === "dark" && (
-                      <div className="absolute top-2 right-2 w-5 h-5 bg-[#4CAF50] rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </button>
-                </div>
-              </div>
-
-              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-xs text-blue-700">
-                  <strong>Nota:</strong> A preferência de tema será aplicada em todo o sistema.
-                </p>
-              </div>
             </div>
           </div>
 
-          {/* Seção 2: Dados Pessoais */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-5 transition-colors">
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-600">
-              <div className="p-2 bg-[#1E5AA8]/10 dark:bg-[#1E5AA8]/20 rounded-lg">
-                <User className="w-5 h-5 text-[#1E5AA8] dark:text-[#4FC3F7]" />
-              </div>
-              <h2 className="text-lg font-bold text-[#0A2463] dark:text-white">Dados Pessoais</h2>
-            </div>
-
-            <div className="space-y-4">
-              {/* Nome */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  <User className="w-4 h-4" />
-                  Nome
-                </label>
-                <input
-                  type="text"
-                  value={nome}
-                  onChange={(e) => setNome(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="Nome não informado"
-                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition ${isEditing ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-700/70"}`}
-                />
-              </div>
-
-              {/* Email */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  <Mail className="w-4 h-4" />
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  readOnly={!isEditing}
-                  placeholder="E-mail não informado"
-                  className={`w-full px-4 py-3 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition ${isEditing ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-700/70"}`}
-                />
-              </div>
-
-              {/* Função (Read-only) */}
-              <div>
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  <Briefcase className="w-4 h-4" />
-                  Função (Role)
-                </label>
-                <input
-                  type="text"
-                  value={funcao}
-                  disabled
-                  className="w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed outline-none"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1">
-                  <Shield className="w-3 h-3" />
-                  Este campo é definido pelo administrador do sistema
-                </p>
-              </div>
-
-              {/* Botões de Ação */}
-              <div className="flex flex-wrap gap-3 pt-4">
-                {isEditing && (
-                  <button
-                    type="button"
-                    onClick={handleCancelEdit}
-                    disabled={isSaving}
-                    className="flex-1 border-2 border-gray-300 text-gray-700 hover:bg-gray-100 py-3 px-6 rounded-lg font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
-                  >
-                    Cancelar
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={handleEditProfile}
-                  disabled={isSaving}
-                  className="flex-1 border-2 border-[#1E5AA8] text-[#1E5AA8] hover:bg-[#1E5AA8] hover:text-white py-3 px-6 rounded-lg font-semibold flex items-center justify-center gap-2 transition-all disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Edit className="w-4 h-4" />}
-                  {isSaving ? "Salvando..." : isEditing ? "Salvar Perfil" : "Editar Perfil"}
-                </button>
-                <button
-                  onClick={handleChangePassword}
-                  className="text-[#1E5AA8] hover:text-[#0A2463] font-medium flex items-center gap-2 px-4 transition-colors"
-                >
-                  <Key className="w-4 h-4" />
-                  Alterar Senha
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Seção 3: Sessão e Segurança (Full Width) */}
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 space-y-5 transition-colors">
-          <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-600">
-            <div className="p-2 bg-red-50 dark:bg-red-900/20 rounded-lg">
-              <Shield className="w-5 h-5 text-red-600 dark:text-red-400" />
-            </div>
-            <h2 className="text-lg font-bold text-[#0A2463] dark:text-white">Sessão e Segurança</h2>
-          </div>
-
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 p-6 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />
-                <h3 className="font-bold text-red-900 dark:text-red-200">Encerrar Sessão</h3>
-              </div>
-              <p className="text-sm text-red-700 dark:text-red-300">
-                Você precisará fazer login novamente para acessar suas turmas e atividades
-              </p>
-              <p className="text-xs text-red-600 dark:text-red-400 mt-2">
-                Certifique-se de salvar todas as alterações antes de sair
-              </p>
-            </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <button
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white py-3 px-8 rounded-lg font-semibold flex items-center gap-2 shadow-md hover:shadow-lg transition-all whitespace-nowrap"
+              type="button"
+              onClick={() => setTheme("light")}
+              aria-pressed={currentTheme === "light"}
+              className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
+                currentTheme === "light"
+                  ? "border-[#1E5AA8] bg-blue-50 text-[#0A2463] dark:border-[#4FC3F7] dark:bg-blue-950/30 dark:text-blue-100"
+                  : "border-gray-200 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600"
+              }`}
             >
-              <LogOut className="w-5 h-5" />
-              Sair da Conta
+              <Sun className="h-5 w-5 shrink-0 text-amber-500" />
+              <span>
+                <span className="block font-semibold">Modo claro</span>
+                <span className="mt-1 block text-xs opacity-75">Fundo claro e leitura confortável</span>
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setTheme("dark")}
+              aria-pressed={currentTheme === "dark"}
+              className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
+                currentTheme === "dark"
+                  ? "border-[#1E5AA8] bg-blue-50 text-[#0A2463] dark:border-[#4FC3F7] dark:bg-blue-950/30 dark:text-blue-100"
+                  : "border-gray-200 text-gray-600 hover:border-gray-300 dark:border-gray-700 dark:text-gray-300 dark:hover:border-gray-600"
+              }`}
+            >
+              <Moon className="h-5 w-5 shrink-0 text-[#1E5AA8] dark:text-[#4FC3F7]" />
+              <span>
+                <span className="block font-semibold">Modo escuro</span>
+                <span className="mt-1 block text-xs opacity-75">Menos brilho para trabalhar à noite</span>
+              </span>
             </button>
           </div>
+        </section>
 
-          {/* Informações Adicionais de Segurança */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4">
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                Último Acesso
-              </p>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">15/04/2026 às 09:32</p>
+        <section className="rounded-2xl bg-white p-6 shadow-sm transition-colors dark:bg-gray-800">
+          <div className="flex items-start gap-4 border-b border-gray-200 pb-5 dark:border-gray-700">
+            <div className="rounded-xl bg-[#1E5AA8]/10 p-3 text-[#1E5AA8] dark:bg-blue-400/10 dark:text-[#4FC3F7]">
+              <User className="h-6 w-6" />
             </div>
-            <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg transition-colors">
-              <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
-                Dispositivo
+            <div>
+              <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">Dados pessoais</h2>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Mantenha suas informações de acesso atualizadas.
               </p>
-              <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Chrome - Windows 11</p>
             </div>
           </div>
+
+          <div className="mt-6 space-y-4">
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                <User className="h-4 w-4" />
+                Nome
+              </span>
+              <input
+                type="text"
+                value={nome}
+                onChange={(event) => setNome(event.target.value)}
+                readOnly={!isEditing}
+                placeholder="Nome não informado"
+                className={`w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-[#1E5AA8] dark:border-gray-600 dark:text-gray-100 ${isEditing ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-700/70"}`}
+              />
+            </label>
+
+            <label className="block">
+              <span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                <Mail className="h-4 w-4" />
+                E-mail
+              </span>
+              <input
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                readOnly={!isEditing}
+                placeholder="E-mail não informado"
+                className={`w-full rounded-lg border border-gray-300 px-4 py-3 text-gray-900 outline-none transition focus:border-transparent focus:ring-2 focus:ring-[#1E5AA8] dark:border-gray-600 dark:text-gray-100 ${isEditing ? "bg-white dark:bg-gray-700" : "bg-gray-50 dark:bg-gray-700/70"}`}
+              />
+            </label>
+
+            <div>
+              <span className="mb-2 flex items-center gap-2 text-sm font-medium text-gray-700 dark:text-gray-200">
+                <Briefcase className="h-4 w-4" />
+                Função
+              </span>
+              <div className="flex items-center gap-2 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3 text-gray-500 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-400">
+                <span>{funcao}</span>
+                <Shield className="ml-auto h-4 w-4" />
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-3 pt-2">
+              {isEditing && (
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  disabled={isSaving}
+                  className="flex-1 rounded-lg border-2 border-gray-300 px-4 py-3 font-semibold text-gray-700 transition hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                >
+                  Cancelar
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleEditProfile}
+                disabled={isSaving}
+                className="flex-1 inline-flex items-center justify-center gap-2 rounded-lg border-2 border-[#1E5AA8] px-4 py-3 font-semibold text-[#1E5AA8] transition hover:bg-[#1E5AA8] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit className="h-4 w-4" />}
+                {isSaving ? "Salvando..." : isEditing ? "Salvar perfil" : "Editar perfil"}
+              </button>
+              <button
+                type="button"
+                onClick={handleChangePassword}
+                className="inline-flex items-center gap-2 px-2 py-3 font-medium text-[#1E5AA8] transition hover:text-[#0A2463] dark:text-[#4FC3F7] dark:hover:text-white"
+              >
+                <Key className="h-4 w-4" />
+                Alterar senha
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm transition-colors dark:border-rose-900/50 dark:bg-gray-800">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <div className="flex items-center gap-2">
+              <LogOut className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+              <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">Encerrar sessão</h2>
+            </div>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+              Você precisará fazer login novamente para acessar suas turmas e atividades.
+            </p>
+            <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+              Salve suas alterações antes de sair.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="inline-flex items-center justify-center gap-2 rounded-lg bg-rose-600 px-5 py-3 font-semibold text-white transition hover:bg-rose-700 focus:outline-none focus:ring-2 focus:ring-rose-500 focus:ring-offset-2 dark:focus:ring-offset-gray-800"
+          >
+            <LogOut className="h-4 w-4" />
+            Sair da conta
+          </button>
         </div>
+
+        <div className="mt-5 grid gap-3 border-t border-gray-200 pt-5 sm:grid-cols-2 dark:border-gray-700">
+          <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Último acesso</p>
+            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">15/04/2026 às 09:32</p>
+          </div>
+          <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Dispositivo</p>
+            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">Chrome - Windows 11</p>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

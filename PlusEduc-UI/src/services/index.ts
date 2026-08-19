@@ -6,6 +6,8 @@ export { studentsService } from './students';
 export { classroomsService } from './classrooms';
 export { activitiesService } from './activities';
 export { studentPortalService } from './studentPortal';
+export { subjectTopicsService } from './subjectTopics';
+export { subjectsService } from './subjects';
 
 export type { PaginatedResponse, ApiError } from './api';
 export type { CreateStudentRequest, UpdateStudentRequest } from './students';

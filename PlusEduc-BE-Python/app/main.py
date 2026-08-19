@@ -15,6 +15,8 @@ from app.api.student_analytics import router as student_analytics_router
 from app.api.activity_submissions import router as activity_submissions_router
 from app.api.students import router as students_router
 from app.api.student_portal import router as student_portal_router
+from app.api.subject_topics import router as subject_topics_router
+from app.api.subject_catalog import router as subject_catalog_router
 from app.api.teachers import router as teachers_router
 from app.core.config import Settings, get_settings
 from app.core.database import MongoConnection
@@ -29,6 +31,8 @@ from app.repositories.activity_submission_repository import ActivitySubmissionRe
 from app.repositories.classroom_repository import ClassroomRepository
 from app.repositories.grade_repository import GradeRepository
 from app.repositories.student_repository import StudentRepository
+from app.repositories.subject_topic_repository import SubjectTopicRepository
+from app.repositories.subject_repository import SubjectRepository
 from app.repositories.teacher_repository import TeacherRepository
 from app.repositories.user_repository import UserRepository
 
@@ -42,6 +46,8 @@ def create_app(
     grade_repository=None,
     activity_repository=None,
     activity_submission_repository=None,
+    subject_topic_repository=None,
+    subject_repository=None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     configure_logging(resolved_settings.log_level)
@@ -59,6 +65,8 @@ def create_app(
         application.state.grade_repository = grade_repository or GradeRepository(mongo)
         application.state.activity_repository = activity_repository or ActivityRepository(mongo)
         application.state.activity_submission_repository = activity_submission_repository or ActivitySubmissionRepository(mongo)
+        application.state.subject_topic_repository = subject_topic_repository or SubjectTopicRepository(mongo)
+        application.state.subject_repository = subject_repository or SubjectRepository(mongo)
         try:
             yield
         finally:
@@ -93,6 +101,8 @@ def create_app(
     application.include_router(grades_router)
     application.include_router(activities_router)
     application.include_router(student_portal_router)
+    application.include_router(subject_topics_router)
+    application.include_router(subject_catalog_router)
     application.include_router(activity_submissions_router)
     return application
 

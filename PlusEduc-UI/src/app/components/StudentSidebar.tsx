@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { BookOpen, ClipboardList, GraduationCap, Home, LogOut, Users } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardList, GraduationCap, Home, LogOut, Settings, Users } from "lucide-react";
 import { LogoIcon } from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "./ui/utils";
@@ -10,6 +10,8 @@ export const studentMenuItems = [
   { icon: Users, label: "Minha Turma", path: "/aluno/turma" },
   { icon: GraduationCap, label: "Professores", path: "/aluno/professores" },
   { icon: BookOpen, label: "Minhas Notas", path: "/aluno/notas" },
+  { icon: BarChart3, label: "Desempenho", path: "/aluno/desempenho" },
+  { icon: Settings, label: "Configurações", path: "/aluno/configuracoes" },
 ];
 
 interface StudentSidebarProps {

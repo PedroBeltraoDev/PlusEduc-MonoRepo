@@ -20,6 +20,7 @@ from app.schemas.student_portal_schema import (
     StudentActivityDetail,
     StudentClassroom,
     StudentPortalGrade,
+    StudentPortalPerformance,
     StudentPortalProfile,
     StudentQuestion,
     TeacherSummary,
@@ -28,6 +29,7 @@ from app.services.activity_pdf_service import ActivityPdfService
 from app.services.activity_service import ActivityService
 from app.services.activity_submission_service import ActivitySubmissionService
 from app.services.grade_service import GradeService
+from app.services.student_analytics_service import StudentAnalyticsService
 
 
 class StudentPortalService:
@@ -201,6 +203,27 @@ class StudentPortalService:
         repository_items = self.grade_repository.find_by_student(self._id(student))
         from app.services.grade_service import GradeService
         return [GradeService.to_response(item) for item in repository_items]
+
+    def performance(self, current_user: UserPrincipal) -> StudentPortalPerformance:
+        student = self.current_student(current_user)
+        analytics = StudentAnalyticsService(
+            self.student_repository,
+            self.grade_repository,
+            self.classroom_repository,
+        )
+        performance = analytics.performance(self._id(student))
+        attendance = analytics.attendance(self._id(student))
+        return StudentPortalPerformance(
+            studentId=performance.studentId,
+            averageGrade=performance.averageGrade,
+            totalActivities=performance.totalActivities,
+            completedActivities=performance.completedActivities,
+            subjectPerformance=performance.subjectPerformance,
+            attendanceRate=attendance.attendanceRate,
+            totalClasses=attendance.totalClasses,
+            attendedClasses=attendance.attendedClasses,
+            absences=attendance.absences,
+        )
 
     def export_pdf(self, activity_id: str, current_user: UserPrincipal) -> bytes:
         student = self.current_student(current_user)
