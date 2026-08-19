@@ -20,7 +20,12 @@ interface StudentFormData {
   learningGaps: (LearningGap & { _formId: string })[];
 }
 
-const createFormId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+let formIdSequence = 0;
+
+const createFormId = () => {
+  formIdSequence += 1;
+  return `learning-gap-${Date.now()}-${formIdSequence}`;
+};
 
 const normalizeSubjectKey = (value: string) =>
   value.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
