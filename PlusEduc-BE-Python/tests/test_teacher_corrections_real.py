@@ -103,6 +103,10 @@ def test_teacher_can_review_discursive_submission_on_real_mongodb(teacher_correc
         pending_item = next(item for item in pending.json() if item["submissionId"] == submission_id)
         assert pending_item["questions"][0]["questionIndex"] == 1
 
+        legacy_pending = client.get("/api/teacher/activity_corrections/pending")
+        assert legacy_pending.status_code == 200
+        assert any(item["submissionId"] == submission_id for item in legacy_pending.json())
+
         reviewed = client.put(
             f"/api/teacher/activity-corrections/{submission_id}/questions/1",
             json={"correct": True, "feedback": "Boa explicação."},

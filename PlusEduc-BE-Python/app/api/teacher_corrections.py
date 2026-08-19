@@ -10,6 +10,7 @@ from app.schemas.activity_submission import (
 from app.services.teacher_correction_service import TeacherCorrectionService
 
 router = APIRouter(prefix="/api/teacher/activity-corrections", tags=["Teacher Activity Corrections"])
+legacy_router = APIRouter(prefix="/api/teacher/activity_corrections", tags=["Teacher Activity Corrections (legacy)"])
 
 
 def service(request: Request) -> TeacherCorrectionService:
@@ -31,6 +32,25 @@ def list_pending(
 
 @router.put("/{submission_id}/questions/{question_index}", response_model=StudentSubmissionResult)
 def review_question(
+    submission_id: str,
+    question_index: int,
+    payload: ReviewQuestionRequest,
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+):
+    return service(request).review_question(submission_id, question_index, payload, current_user)
+
+
+@legacy_router.get("/pending", response_model=list[PendingCorrectionResponse])
+def list_pending_legacy(
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+):
+    return service(request).list_pending(current_user)
+
+
+@legacy_router.put("/{submission_id}/questions/{question_index}", response_model=StudentSubmissionResult)
+def review_question_legacy(
     submission_id: str,
     question_index: int,
     payload: ReviewQuestionRequest,
