@@ -1,0 +1,42 @@
+# Dependencies
+**/.venv/
+**/venv/
+**/node_modules/
+**/__pycache__/
+**/*.py[cod]
+
+# Secrets and environment
+**/.env
+**/.env.*
+!**/.env.example
+**/*.pem
+**/*.key
+**/secrets/
+
+# Builds and caches
+**/dist/
+**/build/
+**/out/
+**/.pytest_cache/
+**/.mypy_cache/
+**/.ruff_cache/
+**/.coverage
+**/htmlcov/
+**/coverage/
+**/*.tsbuildinfo
+
+# Logs and temporary files
+**/*.log
+**/*_output.txt
+**/tmp/
+**/temp/
+
+# IDE and OS
+**/.idea/
+**/.vscode/
+**/.DS_Store
+**/Thumbs.db
+*.swp
+*.swo
+*~
+PlusEduc-UI/.git-legacy-backup/
