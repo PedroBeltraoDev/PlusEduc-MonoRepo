@@ -1680,8 +1680,9 @@ export function Turmas() {
         </div>
       </div>
 
-      {/* Busca por Aluno */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {/* Busca por Aluno */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
         <h2 className="text-xl font-bold text-[#0A2463] dark:text-white mb-4">Buscar Aluno</h2>
         <div className="relative mb-4">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -1758,18 +1759,19 @@ export function Turmas() {
         )}
       </div>
 
-      {/* Buscar Turmas */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
-        <h2 className="text-xl font-bold text-[#0A2463] dark:text-white mb-4">Buscar Turma</h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
-          <input
-            type="text"
-            placeholder="Buscar por nome da turma, ano ou nível..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-          />
+        {/* Buscar Turmas */}
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
+          <h2 className="text-xl font-bold text-[#0A2463] dark:text-white mb-4">Buscar Turma</h2>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
+            <input
+              type="text"
+              placeholder="Buscar por nome da turma, ano ou nível..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-11 pr-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
+            />
+          </div>
         </div>
       </div>
 
