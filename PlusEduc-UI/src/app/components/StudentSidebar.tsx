@@ -1,7 +1,9 @@
 import { Link, useLocation, useNavigate } from "react-router";
+import { useEffect, useState } from "react";
 import { BarChart3, BookOpen, ClipboardList, GraduationCap, Home, LogOut, Settings, Users } from "lucide-react";
 import { LogoIcon } from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { studentPortalService } from "@/services";
 import { cn } from "./ui/utils";
 
 export const studentMenuItems = [
@@ -23,10 +25,32 @@ export function StudentSidebar({ className, onNavigate }: StudentSidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { userName, logout } = useAuth();
+  const [profileName, setProfileName] = useState<string | null>(null);
 
-  const displayName = userName || "Aluno";
-  const displayInitials = userName
-    ? userName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
+  useEffect(() => {
+    if (userName) {
+      setProfileName(null);
+      return;
+    }
+
+    let mounted = true;
+    void studentPortalService.getProfile()
+      .then((profile) => {
+        if (mounted && profile.name) setProfileName(profile.name);
+      })
+      .catch(() => {
+        // O fallback visual continua sendo usado se o perfil não puder ser carregado.
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [userName]);
+
+  const resolvedName = userName || profileName;
+  const displayName = resolvedName || "Aluno";
+  const displayInitials = resolvedName
+    ? resolvedName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
     : "AL";
 
   const handleLogout = () => {

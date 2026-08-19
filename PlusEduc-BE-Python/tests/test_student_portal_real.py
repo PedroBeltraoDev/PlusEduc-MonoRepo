@@ -24,6 +24,16 @@ class FakeUserRepository:
         return user
 
 
+class FakeStudentRepository:
+    def find_by_id(self, student_id: str):
+        if student_id == "student-profile-id":
+            return {"_id": student_id, "name": "Aluno de Teste", "active": True}
+        return None
+
+    def find_by_user_id_and_active(self, user_id: str):
+        return None
+
+
 def test_student_login_returns_student_role_and_claim_contract():
     password_hash = bcrypt.hashpw(b"student-password", bcrypt.gensalt()).decode()
     settings = Settings(
@@ -40,10 +50,13 @@ def test_student_login_returns_student_role_and_claim_contract():
         "password": password_hash,
         "role": "STUDENT",
         "studentId": "student-profile-id",
-        "name": "Aluno de Teste",
         "active": True,
     }])
-    with TestClient(create_app(settings, user_repository=fake_users)) as client:
+    with TestClient(create_app(
+        settings,
+        user_repository=fake_users,
+        student_repository=FakeStudentRepository(),
+    )) as client:
         response = client.post("/api/auth/login", json={
             "email": "student-login@example.com",
             "password": "student-password",
@@ -52,6 +65,7 @@ def test_student_login_returns_student_role_and_claim_contract():
     payload = response.json()
     assert payload["role"] == "STUDENT"
     assert payload["studentId"] == "student-profile-id"
+    assert payload["name"] == "Aluno de Teste"
     assert payload["tokenType"] == "Bearer"
     assert payload["accessToken"]
 

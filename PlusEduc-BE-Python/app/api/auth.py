@@ -23,6 +23,7 @@ def update_profile(
         request.app.state.user_repository,
         request.app.state.settings,
         request.app.state.teacher_repository,
+        request.app.state.student_repository,
     )
     return service.update_profile(current_user, payload)
 
@@ -38,5 +39,6 @@ def login(request: Request, payload: AuthenticationRequest) -> AuthenticationRes
         request.app.state.user_repository,
         request.app.state.settings,
         request.app.state.teacher_repository,
+        request.app.state.student_repository,
     )
     return service.login(payload)

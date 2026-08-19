@@ -7,6 +7,7 @@ from app.core.auth import UserPrincipal, principal_from_document
 from app.core.config import Settings
 from app.core.jwt import create_access_token, create_refresh_token
 from app.core.passwords import verify_password
+from app.repositories.student_repository import StudentRepository
 from app.repositories.teacher_repository import TeacherRepository
 from app.repositories.user_repository import UserRepository
 from app.schemas.auth import AuthenticationRequest, AuthenticationResponse, ProfileUpdateRequest
@@ -20,10 +21,12 @@ class AuthService:
         repository: UserRepository,
         settings: Settings,
         teacher_repository: TeacherRepository | None = None,
+        student_repository: StudentRepository | None = None,
     ) -> None:
         self._repository = repository
         self._settings = settings
         self._teacher_repository = teacher_repository
+        self._student_repository = student_repository
 
     def update_profile(self, current_user: UserPrincipal, request: ProfileUpdateRequest) -> AuthenticationResponse:
         current_email = current_user.email
@@ -53,12 +56,34 @@ class AuthService:
             return None
         return self._teacher_repository.find_active_by_email(email)
 
+    def _find_student(self, principal: UserPrincipal) -> dict | None:
+        if not self._student_repository:
+            return None
+        if principal.student_id:
+            student = self._student_repository.find_by_id(principal.student_id)
+            if student:
+                return student
+        return self._student_repository.find_by_user_id_and_active(principal.user_id)
+
     def _display_principal(
         self,
         document: dict,
         teacher_override: dict | None = None,
     ) -> UserPrincipal:
         principal = principal_from_document(document)
+        if principal.role == "STUDENT":
+            if principal.name:
+                return principal
+            student = self._find_student(principal)
+            if student:
+                student_id = principal.student_id or str(student.get("_id", ""))
+                student_name = student.get("name") or student.get("studentName")
+                return replace(
+                    principal,
+                    student_id=student_id or principal.student_id,
+                    name=str(student_name) if student_name else principal.name,
+                )
+            return principal
         if principal.role != "TEACHER":
             return principal
         teacher = teacher_override or self._find_teacher(principal.email)
