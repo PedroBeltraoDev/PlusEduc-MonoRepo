@@ -1,14 +1,39 @@
-import { LogOut, Moon, Palette, Sun } from "lucide-react";
+import { Mail, LogOut, Moon, Palette, Sun, UserRound } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTheme } from "next-themes";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { studentPortalService } from "@/services";
 
 export function AlunoConfiguracoes() {
   const { theme, setTheme } = useTheme();
-  const { logout } = useAuth();
+  const { logout, userName, userEmail } = useAuth();
   const navigate = useNavigate();
+  const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
   const currentTheme = theme === "dark" ? "dark" : "light";
+
+  useEffect(() => {
+    if (userName && userEmail) return;
+
+    let mounted = true;
+    void studentPortalService.getProfile()
+      .then((studentProfile) => {
+        if (mounted) {
+          setProfile({ name: studentProfile.name, email: studentProfile.email });
+        }
+      })
+      .catch(() => {
+        // Os dados já persistidos no login continuam sendo usados como fallback.
+      });
+
+    return () => {
+      mounted = false;
+    };
+  }, [userEmail, userName]);
+
+  const displayName = userName || profile?.name || "Aluno";
+  const displayEmail = userEmail || profile?.email || "E-mail não disponível";
 
   const handleLogout = () => {
     toast.success("Sessão encerrada com sucesso!", {
@@ -31,6 +56,37 @@ export function AlunoConfiguracoes() {
           Ajuste a aparência da sua área e controle sua sessão.
         </p>
       </header>
+
+      <section className="rounded-2xl bg-white p-6 shadow-sm transition-colors dark:bg-gray-800">
+        <div className="flex items-start gap-4 border-b border-gray-200 pb-5 dark:border-gray-700">
+          <div className="rounded-xl bg-[#1E5AA8]/10 p-3 text-[#1E5AA8] dark:bg-blue-400/10 dark:text-[#4FC3F7]">
+            <UserRound className="h-6 w-6" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">Informações do aluno</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+              Consulte os dados da sua conta cadastrados no PlusEduc.
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+              <UserRound className="h-4 w-4" />
+              <span>Nome completo</span>
+            </div>
+            <p className="mt-2 break-words font-semibold text-[#0A2463] dark:text-white">{displayName}</p>
+          </div>
+          <div className="rounded-xl border border-gray-200 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-700/50">
+            <div className="flex items-center gap-2 text-sm text-gray-500 dark:text-gray-300">
+              <Mail className="h-4 w-4" />
+              <span>E-mail</span>
+            </div>
+            <p className="mt-2 break-words font-semibold text-[#0A2463] dark:text-white">{displayEmail}</p>
+          </div>
+        </div>
+      </section>
 
       <section className="rounded-2xl bg-white p-6 shadow-sm transition-colors dark:bg-gray-800">
         <div className="flex items-start gap-4 border-b border-gray-200 pb-5 dark:border-gray-700">
