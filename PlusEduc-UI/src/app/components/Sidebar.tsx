@@ -1,6 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import { BookOpen, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
-import { LogoIcon } from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "./ui/utils";
 
@@ -55,11 +54,6 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
           <LogOut className="w-3 h-3" />
           Sair
         </button>
-      </div>
-
-      {/* Logo Icon */}
-      <div className="px-6 py-4 flex justify-center border-b border-white/10">
-        <LogoIcon />
       </div>
 
       {/* Menu Items */}

@@ -1,7 +1,6 @@
 import { Link, useLocation, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { BarChart3, BookOpen, ClipboardList, GraduationCap, Home, LogOut, Settings, Users } from "lucide-react";
-import { LogoIcon } from "./Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { studentPortalService } from "@/services";
 import { cn } from "./ui/utils";
@@ -79,10 +78,6 @@ export function StudentSidebar({ className, onNavigate }: StudentSidebarProps) {
           <LogOut className="w-3 h-3" />
           Sair
         </button>
-      </div>
-
-      <div className="px-6 py-4 flex justify-center border-b border-white/10">
-        <LogoIcon />
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-1">
