@@ -19,6 +19,10 @@ class SubjectsService {
     return apiClient.post<Subject>("/subjects", data);
   }
 
+  async delete(subjectId: string): Promise<void> {
+    return apiClient.delete(`/subjects/${subjectId}`);
+  }
+
   async getClassrooms(subjectId: string): Promise<SubjectClassroom[]> {
     return apiClient.get<SubjectClassroom[]>(`/subjects/${subjectId}/classrooms`);
   }

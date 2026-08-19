@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTitle } from "./ui/sheet";
+import { NotificationBell } from "./NotificationBell";
 
 export function DashboardLayout() {
   const { isAuthenticated, loadingState, isStudent } = useAuth();
@@ -49,6 +50,15 @@ export function DashboardLayout() {
             <p className="text-sm font-semibold text-[#0A2463] dark:text-white">PlusEduc</p>
             <p className="text-xs text-gray-500 dark:text-gray-400">Painel do educador</p>
           </div>
+          <div className="ml-auto">
+            <NotificationBell />
+          </div>
+        </div>
+      </div>
+
+      <div className="hidden border-b border-gray-200 bg-[#F5F7FA]/95 px-8 py-3 dark:border-gray-700 dark:bg-gray-900/95 lg:block">
+        <div className="flex items-center justify-end">
+          <NotificationBell />
         </div>
       </div>
 

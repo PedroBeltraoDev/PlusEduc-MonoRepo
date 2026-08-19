@@ -13,6 +13,7 @@ from app.api.grades import router as grades_router
 from app.api.health import router as health_router
 from app.api.student_analytics import router as student_analytics_router
 from app.api.activity_submissions import router as activity_submissions_router
+from app.api.teacher_corrections import router as teacher_corrections_router
 from app.api.students import router as students_router
 from app.api.student_portal import router as student_portal_router
 from app.api.subject_topics import router as subject_topics_router
@@ -67,6 +68,8 @@ def create_app(
         application.state.activity_submission_repository = activity_submission_repository or ActivitySubmissionRepository(mongo)
         application.state.subject_topic_repository = subject_topic_repository or SubjectTopicRepository(mongo)
         application.state.subject_repository = subject_repository or SubjectRepository(mongo)
+        if subject_repository is None and mongo.health() == "ok":
+            application.state.subject_repository.ensure_indexes()
         try:
             yield
         finally:
@@ -104,6 +107,7 @@ def create_app(
     application.include_router(subject_topics_router)
     application.include_router(subject_catalog_router)
     application.include_router(activity_submissions_router)
+    application.include_router(teacher_corrections_router)
     return application
 
 

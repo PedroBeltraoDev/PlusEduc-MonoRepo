@@ -1,7 +1,14 @@
 // Serviço de gerenciamento de atividades
 
 import { apiClient } from './api';
-import type { Activity, GenerateActivityRequest, GeneratedQuestion, PaginatedResponse } from '@/types';
+import type {
+  Activity,
+  GenerateActivityRequest,
+  GeneratedQuestion,
+  PaginatedResponse,
+  PendingCorrection,
+  StudentSubmissionResult,
+} from '@/types';
 
 export interface CreateActivityRequest {
   title: string;
@@ -98,6 +105,21 @@ class ActivitiesService {
   // Deletar atividade
   async deleteActivity(id: string): Promise<void> {
     return apiClient.delete(`/activities/${id}`);
+  }
+
+  async getPendingCorrections(): Promise<PendingCorrection[]> {
+    return apiClient.get<PendingCorrection[]>('/teacher/activity-corrections/pending');
+  }
+
+  async reviewCorrection(
+    submissionId: string,
+    questionIndex: number,
+    data: { correct: boolean; feedback?: string },
+  ): Promise<StudentSubmissionResult> {
+    return apiClient.put<StudentSubmissionResult>(
+      `/teacher/activity-corrections/${submissionId}/questions/${questionIndex}`,
+      data,
+    );
   }
 
   // Exportar atividade em PDF

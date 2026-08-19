@@ -83,6 +83,7 @@ class StudentActivityDetail(BaseModel):
     correctCount: int | None = None
     totalQuestions: int | None = None
     scorePercent: int | None = None
+    pendingCount: int | None = None
     results: list[object] = Field(default_factory=list)
     submittedAt: datetime | None = None
     createdAt: datetime | None = None

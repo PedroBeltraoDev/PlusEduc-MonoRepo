@@ -190,15 +190,40 @@ export interface QuestionResult {
   questionType: string;
   options: string[];
   selectedAnswer: string;
-  correctAnswer: string;
+  correctAnswer: string | null;
   correct: boolean;
+  reviewStatus?: "AUTO_GRADED" | "PENDING" | "REVIEWED" | string;
+  teacherFeedback?: string | null;
+  reviewedBy?: string | null;
+  reviewedAt?: string | null;
 }
 
 export interface StudentSubmissionResult {
   correctCount: number;
   totalQuestions: number;
   scorePercent: number;
+  pendingCount?: number;
   results: QuestionResult[];
+}
+
+export interface PendingQuestion {
+  questionIndex: number;
+  questionText: string;
+  selectedAnswer: string;
+  reviewStatus: string;
+}
+
+export interface PendingCorrection {
+  submissionId: string;
+  activityId: string;
+  activityTitle: string;
+  subject?: string | null;
+  topic?: string | null;
+  classroomName?: string | null;
+  studentId: string;
+  studentName: string;
+  submittedAt?: string | null;
+  questions: PendingQuestion[];
 }
 
 export interface StudentActivityDetail {
@@ -214,6 +239,7 @@ export interface StudentActivityDetail {
   correctCount?: number | null;
   totalQuestions?: number | null;
   scorePercent?: number | null;
+  pendingCount?: number | null;
   results: QuestionResult[];
   submittedAt?: string | null;
   createdAt: string;

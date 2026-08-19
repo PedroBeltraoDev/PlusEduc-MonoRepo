@@ -15,6 +15,7 @@ from app.schemas.activity_submission import (
     StoredSubmissionResult,
     StudentSubmissionResult,
 )
+
 from app.services.activity_service import ActivityService
 
 
@@ -69,6 +70,7 @@ class ActivitySubmissionService:
             correctCount=stored.correctCount,
             totalQuestions=stored.totalQuestions,
             scorePercent=stored.scorePercent,
+            pendingCount=stored.pendingCount,
             results=stored.results,
         )
 
@@ -93,6 +95,7 @@ class ActivitySubmissionService:
                     correctCount=1,
                     totalQuestions=1,
                     scorePercent=100,
+                    pendingCount=1,
                 )
         if not isinstance(raw, dict):
             raise HTTPException(status_code=500, detail="Submissão persistida possui formato inválido")
@@ -110,7 +113,8 @@ class ActivitySubmissionService:
         result_rows: list[QuestionResult] = []
         for index, question in enumerate(questions):
             selected = answer_map[index]
-            correct_answer = self.resolve_correct_answer_label(question)
+            discursive = self.is_discursive_question(question.questionType)
+            correct_answer = None if discursive else self.resolve_correct_answer_label(question)
             result_rows.append(QuestionResult(
                 questionIndex=index,
                 questionText=question.questionText,
@@ -118,15 +122,18 @@ class ActivitySubmissionService:
                 options=question.options or [],
                 selectedAnswer=selected,
                 correctAnswer=correct_answer,
-                correct=self.is_answer_correct(question, selected),
+                correct=False if discursive else self.is_answer_correct(question, selected),
+                reviewStatus="PENDING" if discursive else "AUTO_GRADED",
             ))
         correct_count = sum(1 for row in result_rows if row.correct)
+        pending_count = sum(1 for row in result_rows if row.reviewStatus == "PENDING")
         total_questions = len(questions)
         score_percent = int((correct_count * 100 / total_questions) + 0.5) if total_questions else 0
         return StudentSubmissionResult(
             correctCount=correct_count,
             totalQuestions=total_questions,
             scorePercent=score_percent,
+            pendingCount=pending_count,
             results=result_rows,
         )
 
@@ -143,6 +150,10 @@ class ActivitySubmissionService:
             indexes.add(answer.questionIndex)
         if len(indexes) != total_questions:
             raise HTTPException(status_code=400, detail="Responda todas as questões antes de enviar")
+
+    @staticmethod
+    def is_discursive_question(question_type: str) -> bool:
+        return str(question_type or "").strip().upper() in {"DISCURSIVA", "DISSERTATIVA", "ABERTA", "OPEN_ENDED"}
 
     @classmethod
     def resolve_correct_answer_label(cls, question) -> str:

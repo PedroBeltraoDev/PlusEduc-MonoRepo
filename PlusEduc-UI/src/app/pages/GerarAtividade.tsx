@@ -2,8 +2,8 @@ import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, BookOpen, Brain, Download, Loader2, Send, Sparkles, Users, Wand2 } from "lucide-react";
 import { Link } from "react-router";
 import { toast, Toaster } from "sonner";
-import { activitiesService, classroomsService, studentsService, subjectTopicsService } from "@/services";
-import type { Activity, Classroom, GenerateActivityRequest, GeneratedQuestion, Student, SubjectTopic } from "@/types";
+import { activitiesService, classroomsService, studentsService, subjectTopicsService, subjectsService } from "@/services";
+import type { Activity, Classroom, GenerateActivityRequest, GeneratedQuestion, Student, Subject, SubjectTopic } from "@/types";
 
 const difficultyOptions = [
   { label: "Fácil", value: "FACIL" },
@@ -16,6 +16,9 @@ const formatOptions = [
   { label: "Discursiva", value: "DISCURSIVA" },
   { label: "Misto", value: "MISTO" },
 ];
+
+const normalizeSubjectKey = (value: string) =>
+  value.trim().toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 const adaptationOptions = [
   { label: "Dislexia", value: "Dislexia" },
@@ -64,8 +67,10 @@ function renderQuestionTypeLabel(type: string) {
 export function GerarAtividade() {
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [classroomStudents, setClassroomStudents] = useState<Student[]>([]);
+  const [subjects, setSubjects] = useState<Subject[]>([]);
   const [subjectTopics, setSubjectTopics] = useState<SubjectTopic[]>([]);
   const [loadingClassrooms, setLoadingClassrooms] = useState(true);
+  const [loadingSubjects, setLoadingSubjects] = useState(true);
   const [loadingSubjectTopics, setLoadingSubjectTopics] = useState(true);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -106,23 +111,36 @@ export function GerarAtividade() {
   }, []);
 
   useEffect(() => {
-    async function loadSubjectTopics() {
+    async function loadSubjectCatalog() {
       try {
-        setSubjectTopics(await subjectTopicsService.getAll());
+        const [catalogTopics, catalogSubjects] = await Promise.all([
+          subjectTopicsService.getAll(),
+          subjectsService.getAll(),
+        ]);
+        const activeSubjects = catalogSubjects.filter((subject) => subject.active !== false);
+        const activeSubjectKeys = new Set(activeSubjects.map((subject) => normalizeSubjectKey(subject.name)));
+        setSubjects(activeSubjects);
+        setSubjectTopics(catalogTopics.filter((item) => activeSubjectKeys.has(normalizeSubjectKey(item.subject))));
       } catch (error) {
         console.error(error);
         toast.error("Não foi possível carregar o catálogo de matérias e tópicos.");
       } finally {
+        setLoadingSubjects(false);
         setLoadingSubjectTopics(false);
       }
     }
 
-    loadSubjectTopics();
+    loadSubjectCatalog();
   }, []);
 
   const selectedClassroom = useMemo(
     () => classrooms.find(classroom => classroom.id === form.classroomId) ?? null,
     [classrooms, form.classroomId],
+  );
+
+  const selectedSubjectTopics = useMemo(
+    () => subjectTopics.find((item) => normalizeSubjectKey(item.subject) === normalizeSubjectKey(form.subject))?.topics ?? [],
+    [subjectTopics, form.subject],
   );
 
   useEffect(() => {
@@ -398,33 +416,35 @@ export function GerarAtividade() {
                     setGeneratedActivity(null);
                     setGeneratedActivities([]);
                   }}
-                  disabled={loadingSubjectTopics || subjectTopics.length === 0}
+                  disabled={loadingSubjects || subjects.length === 0}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <option value="">
-                    {loadingSubjectTopics ? "Carregando..." : subjectTopics.length ? "Selecione uma matéria" : "Cadastre uma matéria primeiro"}
+                    {loadingSubjects ? "Carregando..." : subjects.length ? "Selecione uma matéria" : "Cadastre uma matéria primeiro"}
                   </option>
-                  {subjectTopics.map((item) => (
-                    <option key={item.id} value={item.subject}>{item.subject}</option>
+                  {subjects.map((item) => (
+                    <option key={item.id} value={item.name}>{item.name}</option>
                   ))}
                 </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Tópico/Assunto</label>
-                <select
+                <input
+                  list="ai-activity-topics"
                   value={form.topic}
                   onChange={(event) => handleChange("topic", event.target.value)}
                   disabled={!form.subject || loadingSubjectTopics}
+                  placeholder={form.subject ? (selectedSubjectTopics.length ? "Digite ou selecione um tópico" : "Digite o tópico da atividade") : "Escolha a matéria primeiro"}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  <option value="">{form.subject ? "Selecione um tópico" : "Escolha a matéria primeiro"}</option>
-                  {(subjectTopics.find((item) => item.subject === form.subject)?.topics ?? []).map((topic) => (
-                    <option key={topic} value={topic}>{topic}</option>
+                />
+                <datalist id="ai-activity-topics">
+                  {selectedSubjectTopics.map((topic) => (
+                    <option key={topic} value={topic} />
                   ))}
-                </select>
+                </datalist>
               </div>
-              {subjectTopics.length === 0 && !loadingSubjectTopics ? (
+              {subjects.length === 0 && !loadingSubjects ? (
                 <Link to="/materias-topicos" className="text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#7FC8F8]">
                   Cadastre matérias e tópicos para liberar a geração de atividades.
                 </Link>

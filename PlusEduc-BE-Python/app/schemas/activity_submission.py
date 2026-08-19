@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
@@ -26,6 +27,10 @@ class QuestionResult(BaseModel):
     selectedAnswer: str | None = None
     correctAnswer: str | None = None
     correct: bool
+    reviewStatus: str = "AUTO_GRADED"
+    teacherFeedback: str | None = None
+    reviewedBy: str | None = None
+    reviewedAt: datetime | None = None
 
 
 class StudentSubmissionResult(BaseModel):
@@ -34,7 +39,39 @@ class StudentSubmissionResult(BaseModel):
     correctCount: int
     totalQuestions: int
     scorePercent: int
+    pendingCount: int = 0
     results: list[QuestionResult]
+
+
+class PendingQuestionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    questionIndex: int
+    questionText: str
+    selectedAnswer: str
+    reviewStatus: str = "PENDING"
+
+
+class PendingCorrectionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    submissionId: str
+    activityId: str
+    activityTitle: str
+    subject: str | None = None
+    topic: str | None = None
+    classroomName: str | None = None
+    studentId: str
+    studentName: str
+    submittedAt: datetime | None = None
+    questions: list[PendingQuestionResponse] = Field(default_factory=list)
+
+
+class ReviewQuestionRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    correct: bool
+    feedback: str | None = Field(default=None, max_length=2000)
 
 
 class StoredSubmissionResult(BaseModel):
@@ -44,6 +81,7 @@ class StoredSubmissionResult(BaseModel):
     correctCount: int = 0
     totalQuestions: int = 0
     scorePercent: int = 0
+    pendingCount: int = 0
     results: list[QuestionResult] = Field(default_factory=list)
 
     @classmethod
@@ -59,5 +97,6 @@ class StoredSubmissionResult(BaseModel):
             correctCount=correct_count,
             totalQuestions=total_questions,
             scorePercent=int(score_percent),
+            pendingCount=int(document.get("pendingCount", 0)),
             results=document.get("results", []),
         )

@@ -178,6 +178,7 @@ class StudentPortalService:
                 correctCount=stored.correctCount,
                 totalQuestions=stored.totalQuestions,
                 scorePercent=stored.scorePercent,
+                pendingCount=stored.pendingCount,
                 results=stored.results,
                 submittedAt=self._first(submission, "submitted_at", "submittedAt"),
             )

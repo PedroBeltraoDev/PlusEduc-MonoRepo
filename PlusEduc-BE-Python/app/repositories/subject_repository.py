@@ -13,8 +13,19 @@ class SubjectRepository:
     def collection(self):
         return self._mongo.database["subjects"]
 
+    def ensure_indexes(self) -> None:
+        self.collection.create_index(
+            [("name_normalized", 1)],
+            name="subjects_name_normalized_active_unique",
+            unique=True,
+            partialFilterExpression={"active": True},
+        )
+
+    def find_all(self) -> list[dict[str, Any]]:
+        return list(self.collection.find({}).sort("name", 1))
+
     def find_all_active(self) -> list[dict[str, Any]]:
-        return list(self.collection.find({"active": {"$ne": False}}).sort("name", 1))
+        return [item for item in self.find_all() if item.get("active", True) is not False]
 
     def find_by_id(self, subject_id: str) -> dict[str, Any] | None:
         candidates: list[Any] = [subject_id]

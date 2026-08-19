@@ -1,5 +1,7 @@
 from typing import Any
 
+from bson import ObjectId
+
 from app.core.database import MongoConnection
 
 
@@ -26,6 +28,26 @@ class ActivitySubmissionRepository:
                 {"studentId": student_id},
             ]
         }))
+
+    def find_all(self) -> list[dict[str, Any]]:
+        return list(self.collection.find({}).sort("submitted_at", -1))
+
+    def find_by_id(self, submission_id: str) -> dict[str, Any] | None:
+        candidates: list[Any] = [submission_id]
+        if ObjectId.is_valid(submission_id):
+            candidates.append(ObjectId(submission_id))
+        return self.collection.find_one({"_id": {"$in": candidates}})
+
+    def update_content(self, submission_id: str, content: dict[str, Any]) -> dict[str, Any] | None:
+        current = self.find_by_id(submission_id)
+        if current is None:
+            return None
+        self.collection.update_one(
+            {"_id": current["_id"]},
+            {"$set": {"content": content}},
+        )
+        current["content"] = content
+        return current
 
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)

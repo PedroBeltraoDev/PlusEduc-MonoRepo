@@ -92,3 +92,93 @@ def test_subject_catalog_and_performance_on_real_mongodb():
         if db is not None and inserted_id is not None:
             db.subjects.delete_one({"_id": inserted_id})
         mongo.close()
+
+
+def test_subject_delete_deactivates_and_reactivates_on_recreate():
+    from uuid import uuid4
+
+    settings = Settings(
+        app_env="test-subject-delete",
+        mongodb_uri="mongodb://localhost:27017",
+        mongodb_database="escola_db",
+        mongodb_required=True,
+        mongodb_server_selection_timeout_ms=3000,
+        mongodb_connect_timeout_ms=3000,
+        jwt_secret="test-subject-delete-secret",
+    )
+    mongo = MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=3000, connectTimeoutMS=3000)
+    subject_id = None
+    db = None
+    email = f"subject-delete-{uuid4().hex}@example.com"
+    user = {"_id": "subject-delete-test-user", "email": email, "role": "TEACHER", "active": True}
+    token = create_access_token(email, settings)
+
+    try:
+        mongo.admin.command("ping")
+        db = mongo[settings.mongodb_database]
+        app = create_app(settings, user_repository=FakeUserRepository([user]))
+        with TestClient(app) as client:
+            headers = {"Authorization": f"Bearer {token}"}
+            subject_name = f"Matéria de exclusão {uuid4().hex[:8]}"
+            created = client.post("/api/subjects", json={"name": subject_name}, headers=headers)
+            assert created.status_code == 201, created.text
+            subject_id = created.json()["id"]
+
+            deleted = client.delete(f"/api/subjects/{subject_id}", headers=headers)
+            assert deleted.status_code == 204, deleted.text
+            assert db.subjects.find_one({"_id": ObjectId(subject_id)})["active"] is False
+            assert all(item["id"] != subject_id for item in client.get("/api/subjects", headers=headers).json())
+
+            recreated = client.post("/api/subjects", json={"name": subject_name}, headers=headers)
+            assert recreated.status_code == 201, recreated.text
+            assert recreated.json()["id"] == subject_id
+            assert recreated.json()["active"] is True
+    finally:
+        if db is not None and subject_id is not None:
+            db.subjects.delete_one({"_id": ObjectId(subject_id)})
+        mongo.close()
+
+
+def test_subject_delete_deactivates_all_duplicate_documents():
+    from uuid import uuid4
+
+    settings = Settings(
+        app_env="test-subject-duplicate-delete",
+        mongodb_uri="mongodb://localhost:27017",
+        mongodb_database="escola_db",
+        mongodb_required=True,
+        mongodb_server_selection_timeout_ms=3000,
+        mongodb_connect_timeout_ms=3000,
+        jwt_secret="test-subject-duplicate-delete-secret",
+    )
+    mongo = MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=3000, connectTimeoutMS=3000, retryWrites=False)
+    db = None
+    inserted_ids = []
+    email = f"subject-duplicate-delete-{uuid4().hex}@example.com"
+    user = {"_id": "subject-duplicate-delete-user", "email": email, "role": "TEACHER", "active": True}
+    token = create_access_token(email, settings)
+
+    try:
+        mongo.admin.command("ping")
+        db = mongo[settings.mongodb_database]
+        subject_name = f"Matéria duplicada {uuid4().hex[:8]}"
+        now = datetime.now(timezone.utc)
+        inserted_ids = db.subjects.insert_many([
+            {"name": subject_name, "name_normalized": subject_key(subject_name), "active": True, "created_at": now, "updated_at": now},
+            {"name": subject_name, "name_normalized": subject_key(subject_name), "active": False, "created_at": now, "updated_at": now},
+        ]).inserted_ids
+        app = create_app(settings, user_repository=FakeUserRepository([user]))
+
+        with TestClient(app) as client:
+            deleted = client.delete(
+                f"/api/subjects/{inserted_ids[0]}",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+            assert deleted.status_code == 204, deleted.text
+            documents = list(db.subjects.find({"_id": {"$in": list(inserted_ids)}}))
+            assert len(documents) == 2
+            assert all(item.get("active") is False for item in documents)
+    finally:
+        if db is not None and inserted_ids:
+            db.subjects.delete_many({"_id": {"$in": list(inserted_ids)}})
+        mongo.close()

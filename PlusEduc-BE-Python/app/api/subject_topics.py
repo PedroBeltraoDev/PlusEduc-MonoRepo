@@ -13,7 +13,10 @@ router = APIRouter(prefix="/api/subject-topics", tags=["Subject Topics"])
 
 
 def service(request: Request) -> SubjectTopicService:
-    return SubjectTopicService(request.app.state.subject_topic_repository)
+    return SubjectTopicService(
+        request.app.state.subject_topic_repository,
+        request.app.state.subject_repository,
+    )
 
 
 teacher_user = require_roles("TEACHER", "ADMIN")

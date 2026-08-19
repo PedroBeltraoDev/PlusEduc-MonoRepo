@@ -60,20 +60,31 @@ class SubjectCatalogService:
         )
 
     def list_subjects(self) -> list[SubjectResponse]:
-        return [self._subject_response(item) for item in self.subject_repository.find_all_active()]
+        result: list[SubjectResponse] = []
+        seen: set[str] = set()
+        for item in self.subject_repository.find_all_active():
+            key = self._key(str(item.get("name", item.get("subject", ""))))
+            if key in seen:
+                continue
+            seen.add(key)
+            result.append(self._subject_response(item))
+        return result
 
     def create_subject(self, payload: SubjectCreateRequest) -> SubjectResponse:
         name = self._normalize(payload.name)
-        existing = next(
-            (
-                item
-                for item in self.subject_repository.find_all_active()
-                if self._key(str(item.get("name", item.get("subject", "")))) == self._key(name)
-            ),
-            None,
-        )
+        matches = [
+            item
+            for item in self.subject_repository.find_all()
+            if self._key(str(item.get("name", item.get("subject", "")))) == self._key(name)
+        ]
+        existing = next((item for item in matches if item.get("active", True) is not False), None)
+        if existing is None and matches:
+            existing = matches[-1]
         now = datetime.now(timezone.utc)
         if existing:
+            for duplicate in matches:
+                if str(duplicate["_id"]) != str(existing["_id"]):
+                    self.subject_repository.update(str(duplicate["_id"]), {"active": False, "updated_at": now})
             updated = self.subject_repository.update(
                 str(existing["_id"]),
                 {"name": name, "name_normalized": self._key(name), "active": True, "updated_at": now},
@@ -90,10 +101,27 @@ class SubjectCatalogService:
         return self._subject_response(self.subject_repository.insert(document))
 
     def update_subject(self, subject_id: str, payload: SubjectUpdateRequest) -> SubjectResponse:
+        current = self.subject_repository.find_by_id(subject_id)
+        if current is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Matéria não encontrada")
+
         updates: dict[str, Any] = {"updated_at": datetime.now(timezone.utc)}
         if payload.active is not None:
             updates["active"] = payload.active
-        updated = self.subject_repository.update(subject_id, updates)
+
+        if payload.active is False:
+            subject_key = self._key(str(current.get("name", current.get("subject", ""))))
+            matching = [
+                item
+                for item in self.subject_repository.find_all()
+                if self._key(str(item.get("name", item.get("subject", "")))) == subject_key
+            ]
+            for item in matching:
+                self.subject_repository.update(str(item["_id"]), updates)
+            updated = self.subject_repository.find_by_id(subject_id)
+        else:
+            updated = self.subject_repository.update(subject_id, updates)
+
         if updated is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Matéria não encontrada")
         return self._subject_response(updated)

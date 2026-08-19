@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { ArrowLeft, CheckCircle2, Download, Loader2, Send, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle2, Clock3, Download, Loader2, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/useApi";
 import { studentPortalService } from "@/services";
@@ -8,6 +8,10 @@ import type { QuestionAnswer, QuestionResult } from "@/types";
 
 function optionLabel(index: number) {
   return String.fromCharCode(65 + index);
+}
+
+function isDiscursiveQuestion(questionType: string) {
+  return ["DISCURSIVA", "DISSERTATIVA", "ABERTA", "OPEN_ENDED"].includes(questionType.trim().toUpperCase());
 }
 
 export function AlunoAtividadeDetalhe() {
@@ -34,8 +38,8 @@ export function AlunoAtividadeDetalhe() {
       selectedAnswer: answers[q.questionIndex] ?? "",
     }));
 
-    if (payload.some((a) => !a.selectedAnswer)) {
-      toast.error("Marque uma alternativa em cada questão.");
+    if (payload.some((a) => !a.selectedAnswer?.trim())) {
+      toast.error("Preencha todas as questões antes de enviar.");
       return;
     }
 
@@ -98,7 +102,7 @@ export function AlunoAtividadeDetalhe() {
         <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
           <h1 className="text-2xl font-bold text-[#0A2463] dark:text-white">{activity.title}</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
-            {activity.subject} • {activity.correctCount}/{activity.totalQuestions} acertos ({activity.scorePercent}%)
+            {activity.pendingCount ? `${activity.correctCount}/${activity.totalQuestions} acertos (${activity.scorePercent}%) • ${activity.pendingCount} aguardando correção` : `${activity.subject} • ${activity.correctCount}/${activity.totalQuestions} acertos (${activity.scorePercent}%)`}
           </p>
         </div>
 
@@ -141,31 +145,44 @@ export function AlunoAtividadeDetalhe() {
             </h2>
             <p className="mt-2 text-gray-700 dark:text-gray-300">{question.questionText}</p>
 
-            <div className="mt-4 space-y-2">
-              {question.options?.map((option, optionIndex) => {
-                const label = optionLabel(optionIndex);
-                const selected = answers[question.questionIndex] === option;
-                return (
-                  <label
-                    key={optionIndex}
-                    className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition ${
-                      selected
-                        ? "border-[#1E5AA8] bg-blue-50 dark:bg-blue-900/20"
-                        : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
-                    }`}
-                  >
-                    <input
-                      type="radio"
-                      name={`question-${question.questionIndex}`}
-                      checked={selected}
-                      onChange={() => handleSelect(question.questionIndex, option)}
-                      className="h-4 w-4 accent-[#1E5AA8]"
-                    />
-                    <span className="font-medium text-[#1E5AA8]">{label})</span>
-                    <span className="text-gray-700 dark:text-gray-300">{option}</span>
-                  </label>
-                );
-              })}
+            <div className="mt-4">
+              {isDiscursiveQuestion(question.questionType) ? (
+                <textarea
+                  value={answers[question.questionIndex] ?? ""}
+                  onChange={(event) => handleSelect(question.questionIndex, event.target.value)}
+                  rows={5}
+                  placeholder="Digite sua resposta..."
+                  className="w-full resize-y rounded-lg border border-gray-300 bg-white p-4 text-gray-900 outline-none transition focus:border-[#1E5AA8] focus:ring-2 focus:ring-[#1E5AA8]/30 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  aria-label={`Resposta da questão ${idx + 1}`}
+                />
+              ) : (
+                <div className="space-y-2">
+                  {question.options?.map((option, optionIndex) => {
+                    const label = optionLabel(optionIndex);
+                    const selected = answers[question.questionIndex] === option;
+                    return (
+                      <label
+                        key={optionIndex}
+                        className={`flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition ${
+                          selected
+                            ? "border-[#1E5AA8] bg-blue-50 dark:bg-blue-900/20"
+                            : "border-gray-200 hover:border-gray-300 dark:border-gray-600"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name={`question-${question.questionIndex}`}
+                          checked={selected}
+                          onChange={() => handleSelect(question.questionIndex, option)}
+                          className="h-4 w-4 accent-[#1E5AA8]"
+                        />
+                        <span className="font-medium text-[#1E5AA8]">{label})</span>
+                        <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         ))}
@@ -184,33 +201,42 @@ export function AlunoAtividadeDetalhe() {
 }
 
 function ResultCard({ result }: { result: QuestionResult }) {
+  const pending = result.reviewStatus === "PENDING";
+  const reviewed = result.reviewStatus === "REVIEWED";
+  const cardClass = pending
+    ? "border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-900/20"
+    : result.correct
+      ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
+      : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20";
+
   return (
-    <div
-      className={`rounded-2xl border p-5 ${
-        result.correct
-          ? "border-green-200 bg-green-50 dark:border-green-800 dark:bg-green-900/20"
-          : "border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-900/20"
-      }`}
-    >
+    <div className={`rounded-2xl border p-5 ${cardClass}`}>
       <div className="flex items-start gap-2">
-        {result.correct ? (
+        {pending ? (
+          <Clock3 className="h-5 w-5 shrink-0 text-amber-600" />
+        ) : result.correct ? (
           <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
         ) : (
           <XCircle className="h-5 w-5 shrink-0 text-red-600" />
         )}
         <div className="flex-1">
           <p className="font-semibold text-[#0A2463] dark:text-white">
-            Questão {result.questionIndex + 1}
+            Questão {result.questionIndex + 1} — {pending ? "Aguardando correção" : result.correct ? "Correta" : "Incorreta"}
           </p>
           <p className="mt-1 text-gray-700 dark:text-gray-300">{result.questionText}</p>
           <p className="mt-3 text-sm">
             <span className="font-medium">Sua resposta:</span> {result.selectedAnswer}
           </p>
-          {!result.correct && (
+          {!pending && !result.correct && result.correctAnswer && (
             <p className="mt-1 text-sm text-green-700 dark:text-green-300">
               <span className="font-medium">Resposta correta:</span> {result.correctAnswer}
             </p>
           )}
+          {reviewed && result.teacherFeedback ? (
+            <div className="mt-3 rounded-lg bg-white/70 p-3 text-sm text-gray-700 dark:bg-gray-800/60 dark:text-gray-200">
+              <span className="font-medium">Feedback do professor:</span> {result.teacherFeedback}
+            </div>
+          ) : null}
         </div>
       </div>
     </div>
