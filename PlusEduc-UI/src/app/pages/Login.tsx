@@ -4,13 +4,14 @@ import { AlertCircle, Lock, Mail, UserRound } from "lucide-react";
 import { Logo } from "../components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 
-type LoginMode = "login" | "register";
+type LoginMode = "login" | "registerStudent" | "registerTeacher";
 
 export function Login() {
   const navigate = useNavigate();
   const {
     login,
     registerStudent,
+    registerTeacher,
     loadingState,
     isAuthenticated,
     getHomePath,
@@ -41,29 +42,34 @@ export function Login() {
     e.preventDefault();
     setError("");
 
-    if (mode === "register" && password !== confirmPassword) {
+    if (mode !== "login" && password !== confirmPassword) {
       setError("As senhas não coincidem");
       return;
     }
 
     try {
-      const redirectPath = mode === "register"
+      const redirectPath = mode === "registerStudent"
         ? await registerStudent({ name, email, password })
-        : await login({ email, password });
+        : mode === "registerTeacher"
+          ? await registerTeacher({ name, email, password, subjects: [] })
+          : await login({ email, password });
       navigate(redirectPath);
     } catch (err) {
       setError(
         err instanceof Error
           ? err.message
-          : mode === "register"
-            ? "Erro ao cadastrar aluno"
-            : "Erro ao fazer login",
+          : mode === "registerTeacher"
+            ? "Erro ao cadastrar professor"
+            : mode === "registerStudent"
+              ? "Erro ao cadastrar aluno"
+              : "Erro ao fazer login",
       );
     }
   };
 
   const isLoading = loadingState === "loading";
-  const isRegistering = mode === "register";
+  const isRegistering = mode !== "login";
+  const isTeacherRegistering = mode === "registerTeacher";
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A2463] via-[#1E5AA8] to-[#4FC3F7] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center p-4 transition-colors">
@@ -72,12 +78,14 @@ export function Login() {
 
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-            {isRegistering ? "Cadastro de aluno" : "Acesse sua conta"}
+            {isTeacherRegistering ? "Cadastro de professor" : isRegistering ? "Cadastro de aluno" : "Acesse sua conta"}
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            {isRegistering
-              ? "Informe seus dados; sua matrícula será gerada automaticamente pela escola."
-              : "Entre para continuar no PlusEduc."}
+            {isTeacherRegistering
+              ? "Crie seu acesso de professor para entrar no painel do PlusEduc."
+              : isRegistering
+                ? "Informe seus dados; sua matrícula será gerada automaticamente pela escola."
+                : "Entre para continuar no PlusEduc."}
           </p>
         </div>
 
@@ -211,15 +219,24 @@ export function Login() {
           ) : (
             <>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
-                Ainda não possui acesso como aluno?
+                Ainda não possui acesso?
               </p>
-              <button
-                type="button"
-                onClick={() => changeMode("register")}
-                className="text-sm font-medium text-[#1E5AA8] hover:text-[#0A2463] dark:text-[#4FC3F7] dark:hover:text-white transition"
-              >
-                Cadastre-se como aluno
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => changeMode("registerStudent")}
+                  className="text-sm font-medium text-[#1E5AA8] hover:text-[#0A2463] dark:text-[#4FC3F7] dark:hover:text-white transition"
+                >
+                  Cadastre-se como aluno
+                </button>
+                <button
+                  type="button"
+                  onClick={() => changeMode("registerTeacher")}
+                  className="text-sm font-medium text-[#1E5AA8] hover:text-[#0A2463] dark:text-[#4FC3F7] dark:hover:text-white transition"
+                >
+                  Cadastre-se como professor
+                </button>
+              </div>
             </>
           )}
         </div>

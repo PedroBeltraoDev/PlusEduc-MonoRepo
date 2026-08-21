@@ -7,6 +7,7 @@ from app.schemas.auth import (
     AuthenticationResponse,
     ProfileUpdateRequest,
     StudentRegistrationRequest,
+    TeacherRegistrationRequest,
 )
 from app.services.auth_service import AuthService
 
@@ -47,6 +48,22 @@ def register_student(request: Request, payload: StudentRegistrationRequest) -> A
         request.app.state.student_repository,
     )
     return service.register_student(payload)
+
+
+@router.post(
+    "/register/teacher",
+    response_model=AuthenticationResponse,
+    response_model_exclude_none=True,
+    summary="Cadastrar professor e emitir tokens",
+)
+def register_teacher(request: Request, payload: TeacherRegistrationRequest) -> AuthenticationResponse:
+    service = AuthService(
+        request.app.state.user_repository,
+        request.app.state.settings,
+        request.app.state.teacher_repository,
+        request.app.state.student_repository,
+    )
+    return service.register_teacher(payload)
 
 
 @router.post(

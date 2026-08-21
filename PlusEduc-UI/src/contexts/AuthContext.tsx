@@ -5,6 +5,7 @@ import type {
   LoadingState,
   LoginRequest,
   ProfileUpdateRequest,
+  RegisterTeacherRequest,
   StudentRegistrationRequest,
   User,
 } from '@/types';
@@ -21,6 +22,7 @@ interface AuthContextType {
   loadingState: LoadingState;
   login: (credentials: LoginRequest) => Promise<string>;
   registerStudent: (data: StudentRegistrationRequest) => Promise<string>;
+  registerTeacher: (data: RegisterTeacherRequest) => Promise<string>;
   updateProfile: (data: ProfileUpdateRequest) => Promise<AuthResponse>;
   logout: () => void;
   getToken: () => string | null;
@@ -88,6 +90,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const registerTeacher = async (data: RegisterTeacherRequest) => {
+    try {
+      setLoadingState('loading');
+      const response = await authService.registerTeacher(data);
+      syncFromStorage();
+      setLoadingState('success');
+      return response.role === 'STUDENT' ? '/aluno' : '/dashboard';
+    } catch (error) {
+      setIsAuthenticated(false);
+      setRole(null);
+      setUserName(null);
+      setUserEmail(null);
+      setUserId(null);
+      setStudentId(null);
+      setLoadingState('error');
+      throw error;
+    }
+  };
+
   const registerStudent = async (data: StudentRegistrationRequest) => {
     try {
       setLoadingState('loading');
@@ -135,6 +156,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     loadingState,
     login,
     registerStudent,
+    registerTeacher,
     updateProfile,
     logout,
     getToken: () => authService.getAccessToken(),

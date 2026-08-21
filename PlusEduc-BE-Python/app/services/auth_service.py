@@ -16,6 +16,7 @@ from app.schemas.auth import (
     AuthenticationResponse,
     ProfileUpdateRequest,
     StudentRegistrationRequest,
+    TeacherRegistrationRequest,
 )
 
 INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
@@ -188,6 +189,61 @@ class AuthService:
                 detail="Usuário criado, mas não pôde ser recuperado",
             )
         return self._authentication_response(self._display_principal(user))
+
+    def register_teacher(self, request: TeacherRegistrationRequest) -> AuthenticationResponse:
+        if not self._teacher_repository:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Teacher repository is not configured",
+            )
+
+        normalized_email = request.email.lower()
+        if self._repository.find_active_by_email(normalized_email) or self._teacher_repository.find_by_email(normalized_email):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email já cadastrado",
+            )
+
+        now = datetime.now(timezone.utc)
+        password_hash = hash_password(request.password)
+        teacher = None
+        user_id = ""
+        try:
+            user_id = self._repository.insert_teacher_user(normalized_email, password_hash)
+            teacher = self._teacher_repository.insert(
+                {
+                    "name": request.name,
+                    "email": normalized_email,
+                    "password": password_hash,
+                    "subjects": request.subjects,
+                    "classrooms": [],
+                    "active": True,
+                    "created_at": now,
+                    "updated_at": now,
+                    "created_by": "public-registration",
+                    "updated_by": "public-registration",
+                }
+            )
+        except DuplicateKeyError as error:
+            if user_id:
+                self._repository.delete_by_id(user_id)
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Email já cadastrado") from error
+        except Exception:
+            if user_id:
+                self._repository.delete_by_id(user_id)
+            raise
+
+        user = self._repository.find_active_by_email(normalized_email)
+        if not user or not teacher:
+            if user_id:
+                self._repository.delete_by_id(user_id)
+            if teacher and teacher.get("_id"):
+                self._teacher_repository.soft_delete(str(teacher["_id"]), datetime.now(timezone.utc))
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Professor criado, mas não pôde ser recuperado",
+            )
+        return self._authentication_response(self._display_principal(user, teacher_override=teacher))
 
     def login(self, request: AuthenticationRequest) -> AuthenticationResponse:
         user = self._repository.find_active_by_email(request.email)

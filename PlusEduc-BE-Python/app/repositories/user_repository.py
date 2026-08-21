@@ -44,3 +44,15 @@ class UserRepository:
             }
         )
         return str(result.inserted_id)
+
+    def insert_teacher_user(self, email: str, password_hash: str) -> str:
+        result = self._mongo.database["users"].insert_one(
+            {
+                "email": email,
+                "password": password_hash,
+                "role": "TEACHER",
+                "active": True,
+                "createdAt": datetime.now(timezone.utc),
+            }
+        )
+        return str(result.inserted_id)

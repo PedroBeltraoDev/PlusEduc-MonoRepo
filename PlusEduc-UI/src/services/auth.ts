@@ -42,8 +42,10 @@ class AuthService {
     return response;
   }
 
-  async registerTeacher(data: RegisterTeacherRequest): Promise<void> {
-    await apiClient.post('/auth/register/teacher', data);
+  async registerTeacher(data: RegisterTeacherRequest): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>('/auth/register/teacher', data);
+    this.persistSession(response);
+    return response;
   }
 
   logout(): void {
