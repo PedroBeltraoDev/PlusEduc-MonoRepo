@@ -15,6 +15,7 @@ export interface Student {
   id: string;
   name: string;
   email: string;
+  matricula?: string | null;
   birthDate: string | null;
   classId?: string | null;
   className?: string | null;
@@ -36,6 +37,13 @@ export interface Teacher {
 }
 
 // Classroom (Turma)
+export interface SubjectTeacherSummary {
+  subjectId: string;
+  subjectName: string;
+  teacherId: string;
+  teacherName?: string | null;
+}
+
 export interface Classroom {
   id: string;
   name: string;
@@ -44,6 +52,7 @@ export interface Classroom {
   teacherId: string;
   studentIds: string[];
   subjects: string[];
+  subjectTeachers?: SubjectTeacherSummary[];
   active: boolean;
 }
 
@@ -285,6 +294,12 @@ export interface RegisterTeacherRequest {
   subjects: string[];
 }
 
+export interface StudentRegistrationRequest {
+  name: string;
+  email: string;
+  password: string;
+}
+
 // Activity Generation
 export interface GenerateActivityRequest {
   subject: string;
@@ -311,6 +326,25 @@ export interface StudentPerformance {
   }[];
 }
 
+export interface PedagogicalRecommendationEvidence {
+  signal: string;
+  detail: string;
+  weight: number;
+}
+
+export interface PedagogicalRecommendation {
+  studentId: string;
+  studentName: string;
+  priority: 'HIGH' | 'MEDIUM' | 'LOW';
+  recommendedSubject: string;
+  recommendedTopic: string;
+  recommendedDifficulty: string;
+  recommendedQuestionsCount: number;
+  rationale: string;
+  evidences: PedagogicalRecommendationEvidence[];
+  generatedAt: string;
+}
+
 export interface StudentAttendance {
   studentId: string;
   attendanceRate: number;
@@ -323,6 +357,9 @@ export interface Subject {
   id: string;
   name: string;
   active: boolean;
+  area?: string | null;
+  gradeLevels?: string[] | null;
+  curriculumKey?: string | null;
   createdAt?: string | null;
   updatedAt?: string | null;
 }

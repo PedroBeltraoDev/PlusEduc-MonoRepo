@@ -1,7 +1,14 @@
 // Serviço de autenticação
 
 import { apiClient } from './api';
-import type { AuthResponse, LoginRequest, ProfileUpdateRequest, RegisterTeacherRequest, User } from '@/types';
+import type {
+  AuthResponse,
+  LoginRequest,
+  ProfileUpdateRequest,
+  RegisterTeacherRequest,
+  StudentRegistrationRequest,
+  User,
+} from '@/types';
 
 const AUTH_KEYS = {
   accessToken: 'accessToken',
@@ -25,6 +32,12 @@ class AuthService {
 
   async updateProfile(data: ProfileUpdateRequest): Promise<AuthResponse> {
     const response = await apiClient.put<AuthResponse>('/auth/profile', data);
+    this.persistSession(response);
+    return response;
+  }
+
+  async registerStudent(data: StudentRegistrationRequest): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>('/auth/register/student', data);
     this.persistSession(response);
     return response;
   }

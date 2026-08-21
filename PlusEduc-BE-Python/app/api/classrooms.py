@@ -29,7 +29,7 @@ def create_classroom(
     request: Request,
     current_user: UserPrincipal = Depends(get_current_user),
 ):
-    return service(request).create(payload)
+    return service(request).create(payload, current_user)
 
 
 @router.get("", response_model=list[ClassroomResponse])

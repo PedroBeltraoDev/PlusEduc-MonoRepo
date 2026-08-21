@@ -14,8 +14,10 @@ from app.schemas.classroom import (
     ClassroomResponse,
     ClassroomUpdateRequest,
     StudentSummary,
+    SubjectTeacherSummary,
 )
 from app.schemas.analytics import ClassroomPerformanceResponse, ClassroomSubjectPerformance
+from app.services.curriculum import curriculum_subjects_for_grade, normalize_curriculum_key
 from app.services.student_service import StudentService
 
 
@@ -32,22 +34,39 @@ class ClassroomService:
         self.teacher_repository = teacher_repository
         self.grade_repository = grade_repository
 
-    def create(self, request: ClassroomCreateRequest) -> ClassroomResponse:
+    def create(
+        self,
+        request: ClassroomCreateRequest,
+        current_user: UserPrincipal | None = None,
+    ) -> ClassroomResponse:
         self.validate_year(request.year)
+        teacher_id = request.teacherId
+        if current_user is not None and teacher_id == "current-teacher-id":
+            teacher = self.teacher_repository.find_by_id(current_user.user_id) or self.teacher_repository.find_by_email(current_user.email)
+            if teacher is None:
+                raise HTTPException(status_code=400, detail="Perfil de professor não encontrado para criar a turma")
+            teacher_id = str(teacher.get("_id"))
         if self.repository.exists_by_name_and_year(request.name, request.year):
             raise HTTPException(status_code=409, detail="Já existe uma turma com este nome e ano")
-        if self.repository.count_active_by_teacher(request.teacherId) >= 5:
+        if self.repository.count_active_by_teacher(teacher_id) >= 5:
             raise HTTPException(status_code=400, detail="Limite máximo de 5 turmas ativas por professor")
         student_ids = request.studentIds or []
         self.validate_students_exist(student_ids)
+        requested_subjects = request.subjects or []
+        if not requested_subjects or (
+            len(requested_subjects) == 1
+            and normalize_curriculum_key(str(requested_subjects[0])) == normalize_curriculum_key(request.gradeLevel)
+        ):
+            requested_subjects = curriculum_subjects_for_grade(request.gradeLevel)
         now = datetime.now(timezone.utc)
         document = {
             "name": request.name,
             "year": request.year,
             "grade_level": request.gradeLevel,
-            "teacher_id": request.teacherId,
+            "teacher_id": teacher_id,
             "students": student_ids,
-            "subjects": request.subjects or [],
+            "subjects": requested_subjects,
+            "subjectTeachers": [],
             "active": True if request.active is None else request.active,
             "created_at": now,
             "updated_at": now,
@@ -139,6 +158,15 @@ class ClassroomService:
             raise HTTPException(status_code=409, detail="Já existe uma turma com este nome e ano")
         if "studentIds" in values:
             self.validate_students_exist(values["studentIds"] or [])
+        if "gradeLevel" in values and (
+            "subjects" not in values
+            or not values.get("subjects")
+            or (
+                len(values.get("subjects") or []) == 1
+                and normalize_curriculum_key(str(values["subjects"][0])) == normalize_curriculum_key(str(values["gradeLevel"]))
+            )
+        ):
+            values["subjects"] = curriculum_subjects_for_grade(str(values["gradeLevel"]))
         if "teacherId" in values and self.repository.count_active_by_teacher(values["teacherId"], classroom_id) >= 5:
             raise HTTPException(status_code=400, detail="Limite máximo de 5 turmas ativas por professor")
         mapping = {
@@ -215,6 +243,21 @@ class ClassroomService:
                         learningGaps=StudentService.to_response(student).learningGaps,
                     )
                 )
+        subject_teachers = []
+        for assignment in document.get("subjectTeachers", []) or []:
+            if not isinstance(assignment, dict):
+                continue
+            assigned_teacher_id = str(assignment.get("teacherId", assignment.get("teacher_id", "")))
+            assigned_teacher = self.teacher_repository.find_by_id(assigned_teacher_id)
+            subject_teachers.append(
+                SubjectTeacherSummary(
+                    subjectId=str(assignment.get("subjectId", assignment.get("subject_id", ""))),
+                    subjectName=str(assignment.get("subjectName", assignment.get("subject_name", ""))),
+                    teacherId=assigned_teacher_id,
+                    teacherName=assigned_teacher.get("name") if assigned_teacher else None,
+                )
+            )
+
         return ClassroomResponse(
             id=str(raw_id),
             name=document.get("name", ""),
@@ -225,6 +268,7 @@ class ClassroomService:
             studentIds=student_ids,
             students=students,
             subjects=list(document.get("subjects", []) or []),
+            subjectTeachers=subject_teachers,
             active=document.get("active"),
             createdAt=document.get("created_at", document.get("createdAt")),
             updatedAt=document.get("updated_at", document.get("updatedAt")),

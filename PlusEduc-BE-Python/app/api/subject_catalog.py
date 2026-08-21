@@ -5,6 +5,8 @@ from app.dependencies import require_roles
 from app.schemas.subject_catalog import (
     SortField,
     SortOrder,
+    SubjectAssignmentRequest,
+    SubjectAssignmentResponse,
     SubjectClassroomResponse,
     SubjectCreateRequest,
     SubjectResponse,
@@ -32,6 +34,24 @@ teacher_user = require_roles("TEACHER", "ADMIN")
 @router.get("", response_model=list[SubjectResponse])
 def list_subjects(request: Request, current_user: UserPrincipal = Depends(teacher_user)):
     return service(request).list_subjects()
+
+
+@router.get("/available", response_model=list[SubjectResponse])
+def list_available_subjects(
+    request: Request,
+    classroomId: str = Query(min_length=1),
+    current_user: UserPrincipal = Depends(teacher_user),
+):
+    return service(request).list_available_subjects(classroomId, current_user)
+
+
+@router.post("/assignments", response_model=SubjectAssignmentResponse, status_code=status.HTTP_201_CREATED)
+def assign_subject(
+    payload: SubjectAssignmentRequest,
+    request: Request,
+    current_user: UserPrincipal = Depends(teacher_user),
+):
+    return service(request).assign_subject(payload, current_user)
 
 
 @router.post("", response_model=SubjectResponse, status_code=status.HTTP_201_CREATED)

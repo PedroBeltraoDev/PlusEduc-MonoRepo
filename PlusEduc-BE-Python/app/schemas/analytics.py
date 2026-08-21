@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, ConfigDict
 
 
@@ -25,6 +27,29 @@ class StudentAttendanceResponse(BaseModel):
     totalClasses: int
     attendedClasses: int
     absences: int
+
+
+class RecommendationEvidence(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    signal: str
+    detail: str
+    weight: float
+
+
+class PedagogicalRecommendationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    studentId: str
+    studentName: str
+    priority: str
+    recommendedSubject: str
+    recommendedTopic: str
+    recommendedDifficulty: str
+    recommendedQuestionsCount: int
+    rationale: str
+    evidences: list[RecommendationEvidence]
+    generatedAt: datetime
 
 
 class ClassroomSubjectPerformance(BaseModel):

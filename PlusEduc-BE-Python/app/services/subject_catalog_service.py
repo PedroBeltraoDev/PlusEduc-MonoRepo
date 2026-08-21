@@ -13,12 +13,24 @@ from app.repositories.teacher_repository import TeacherRepository
 from app.schemas.subject_catalog import (
     SortField,
     SortOrder,
+    SubjectAssignmentRequest,
+    SubjectAssignmentResponse,
     SubjectClassroomResponse,
     SubjectCreateRequest,
     SubjectResponse,
     SubjectStudentPerformanceResponse,
     SubjectUpdateRequest,
 )
+from app.services.curriculum import (
+    all_curriculum_subjects,
+    curriculum_subjects_for_grade,
+    normalize_curriculum_key,
+    subject_area,
+)
+
+
+def classroom_id_not_in(classroom_id: Any, classroom_ids: list[Any]) -> bool:
+    return str(classroom_id) not in {str(value) for value in classroom_ids}
 
 
 class SubjectCatalogService:
@@ -57,6 +69,9 @@ class SubjectCatalogService:
             active=document.get("active", True) is not False,
             createdAt=document.get("created_at", document.get("createdAt")),
             updatedAt=document.get("updated_at", document.get("updatedAt")),
+            area=document.get("area"),
+            gradeLevels=document.get("grade_levels", document.get("gradeLevels")),
+            curriculumKey=document.get("curriculum_key", document.get("curriculumKey")),
         )
 
     def list_subjects(self) -> list[SubjectResponse]:
@@ -69,6 +84,17 @@ class SubjectCatalogService:
             seen.add(key)
             result.append(self._subject_response(item))
         return result
+
+    def _catalog_subject_for_name(self, name: str) -> dict[str, Any] | None:
+        normalized = self._key(name)
+        return next(
+            (
+                item
+                for item in self.subject_repository.find_all_active()
+                if self._key(str(item.get("name", item.get("subject", "")))) == normalized
+            ),
+            None,
+        )
 
     def create_subject(self, payload: SubjectCreateRequest) -> SubjectResponse:
         name = self._normalize(payload.name)
@@ -95,6 +121,9 @@ class SubjectCatalogService:
             "name": name,
             "name_normalized": self._key(name),
             "active": True,
+            "area": payload.area or subject_area(name),
+            "grade_levels": payload.gradeLevels,
+            "curriculum_key": normalize_curriculum_key(name),
             "created_at": now,
             "updated_at": now,
         }
@@ -125,6 +154,90 @@ class SubjectCatalogService:
         if updated is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Matéria não encontrada")
         return self._subject_response(updated)
+
+    def list_available_subjects(self, classroom_id: str, current_user: UserPrincipal) -> list[SubjectResponse]:
+        classroom = self.classroom_repository.find_by_id(classroom_id)
+        if classroom is None or classroom.get("active", True) is False:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Turma não encontrada")
+        self._assert_teacher_profile(current_user)
+
+        curriculum = curriculum_subjects_for_grade(str(classroom.get("grade_level", classroom.get("gradeLevel", ""))))
+        if not curriculum:
+            curriculum = all_curriculum_subjects()
+        assigned_keys = {
+            str(item.get("subjectKey", ""))
+            for item in (classroom.get("subjectTeachers", []) or [])
+            if isinstance(item, dict)
+        }
+
+        available: list[SubjectResponse] = []
+        for name in curriculum:
+            if self._key(name) in assigned_keys:
+                continue
+            subject = self._catalog_subject_for_name(name)
+            if subject is not None:
+                available.append(self._subject_response(subject))
+        return available
+
+    def _assert_teacher_profile(self, current_user: UserPrincipal) -> None:
+        if current_user.role == "ADMIN":
+            return
+        if self._teacher(current_user) is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Perfil de professor não encontrado")
+
+    def assign_subject(self, payload: SubjectAssignmentRequest, current_user: UserPrincipal) -> SubjectAssignmentResponse:
+        classroom = self.classroom_repository.find_by_id(payload.classroomId)
+        if classroom is None or classroom.get("active", True) is False:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Turma não encontrada")
+        self._assert_teacher_profile(current_user)
+        subject = self._subject(payload.subjectId)
+        subject_name = str(subject.get("name", subject.get("subject", "")))
+        curriculum = curriculum_subjects_for_grade(str(classroom.get("grade_level", classroom.get("gradeLevel", ""))))
+        if curriculum and self._key(subject_name) not in {self._key(value) for value in curriculum}:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Matéria não pertence ao currículo desta série")
+
+        teacher = self._teacher(current_user)
+        if teacher is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Perfil de professor não encontrado")
+        teacher_id = str(teacher.get("_id"))
+        now = datetime.now(timezone.utc)
+        assignment = {
+            "subjectId": str(subject.get("_id")),
+            "subjectKey": self._key(subject_name),
+            "subjectName": subject_name,
+            "teacherId": teacher_id,
+            "assignedAt": now,
+        }
+        updated = self.classroom_repository.add_subject_teacher(payload.classroomId, assignment)
+        if updated is None:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Esta matéria já possui professor nesta turma")
+
+        subjects = list(updated.get("subjects", []) or [])
+        if not any(self._key(str(value)) == self._key(subject_name) for value in subjects):
+            subjects.append(subject_name)
+        else:
+            subjects = [subject_name if self._key(str(value)) == self._key(subject_name) else value for value in subjects]
+        self.classroom_repository.update(payload.classroomId, {"subjects": subjects, "updated_at": now})
+
+        teacher_subjects = list(teacher.get("subjects", []) or [])
+        if not any(self._key(str(value)) == self._key(subject_name) for value in teacher_subjects):
+            teacher_subjects.append(subject_name)
+        else:
+            teacher_subjects = [subject_name if self._key(str(value)) == self._key(subject_name) else value for value in teacher_subjects]
+        teacher_classrooms = list(teacher.get("classrooms", teacher.get("classroomIds", [])) or [])
+        if payload.classroomId not in [str(value) for value in teacher_classrooms]:
+            teacher_classrooms.append(payload.classroomId)
+        self.teacher_repository.update(
+            teacher_id,
+            {"subjects": teacher_subjects, "classrooms": teacher_classrooms, "updated_at": now},
+        )
+        return SubjectAssignmentResponse(
+            classroomId=payload.classroomId,
+            subjectId=str(subject.get("_id")),
+            subjectName=subject_name,
+            teacherId=teacher_id,
+            teacherName=teacher.get("name"),
+        )
 
     def _subject(self, subject_id: str) -> dict[str, Any]:
         subject = self.subject_repository.find_by_id(subject_id)

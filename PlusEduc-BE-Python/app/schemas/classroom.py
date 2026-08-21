@@ -35,6 +35,13 @@ class StudentSummary(BaseModel):
     learningGaps: list[LearningGapResponse] | None = None
 
 
+class SubjectTeacherSummary(BaseModel):
+    subjectId: str
+    subjectName: str
+    teacherId: str
+    teacherName: str | None = None
+
+
 class ClassroomResponse(BaseModel):
     id: str
     name: str
@@ -45,6 +52,7 @@ class ClassroomResponse(BaseModel):
     studentIds: list[str]
     students: list[StudentSummary]
     subjects: list[str]
+    subjectTeachers: list[SubjectTeacherSummary] = []
     active: bool | None = None
     createdAt: datetime | None = None
     updatedAt: datetime | None = None

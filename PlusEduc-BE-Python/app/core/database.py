@@ -24,6 +24,17 @@ class MongoConnection:
         try:
             self._client.admin.command("ping")
             self._database = self._client[self._settings.mongodb_database]
+            matricula_index_exists = any(
+                index.get("key", {}).get("matricula") == 1 and index.get("unique") is True
+                for index in self._database["students"].list_indexes()
+            )
+            if not matricula_index_exists:
+                self._database["students"].create_index(
+                    "matricula",
+                    unique=True,
+                    sparse=True,
+                    name="students_matricula_unique",
+                )
             logger.info("Conexão MongoDB inicializada")
         except PyMongoError as exc:
             logger.warning("MongoDB indisponível durante o startup: %s", type(exc).__name__)

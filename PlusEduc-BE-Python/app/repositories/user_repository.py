@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
 from typing import Any
 
+from bson import ObjectId
+
 from app.core.database import MongoConnection
 
 
@@ -22,6 +24,13 @@ class UserRepository:
         if result.matched_count == 0:
             return None
         return collection.find_one({"email": email, "active": {"$ne": False}})
+
+    def delete_by_id(self, user_id: str) -> bool:
+        candidates: list[Any] = [user_id]
+        if ObjectId.is_valid(user_id):
+            candidates.append(ObjectId(user_id))
+        result = self._mongo.database["users"].delete_one({"_id": {"$in": candidates}})
+        return result.deleted_count == 1
 
     def insert_student_user(self, email: str, password_hash: str, student_id: str) -> str:
         result = self._mongo.database["users"].insert_one(

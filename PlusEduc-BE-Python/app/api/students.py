@@ -39,6 +39,14 @@ def list_students(
     return service(request).list_active()
 
 
+@router.get("/unassigned", response_model=list[StudentResponse])
+def list_unassigned_students(
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+):
+    return service(request).list_unassigned()
+
+
 @router.get("/paginated", response_model=StudentPageResponse)
 def list_students_paginated(
     request: Request,

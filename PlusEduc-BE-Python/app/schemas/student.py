@@ -55,8 +55,8 @@ class StudentCreateRequest(BaseModel):
 
     name: str = Field(min_length=3, max_length=100)
     email: str = Field(min_length=1)
-    birthDate: str = Field(min_length=1)
-    classId: str = Field(min_length=1)
+    birthDate: str | None = None
+    classId: str | None = None
     learningGaps: list[LearningGapInput] | None = None
     active: bool | None = True
 
@@ -80,6 +80,7 @@ class StudentResponse(BaseModel):
     id: str
     name: str
     email: str
+    matricula: str | None = None
     birthDate: str | None = None
     learningGaps: list[LearningGapResponse] | None = None
     classId: str | None = None

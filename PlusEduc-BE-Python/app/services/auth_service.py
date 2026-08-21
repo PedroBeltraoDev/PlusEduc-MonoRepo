@@ -2,15 +2,21 @@ from dataclasses import replace
 from datetime import datetime, timezone
 
 from fastapi import HTTPException, status
+from pymongo.errors import DuplicateKeyError
 
 from app.core.auth import UserPrincipal, principal_from_document
 from app.core.config import Settings
 from app.core.jwt import create_access_token, create_refresh_token
-from app.core.passwords import verify_password
+from app.core.passwords import hash_password, verify_password
 from app.repositories.student_repository import StudentRepository
 from app.repositories.teacher_repository import TeacherRepository
 from app.repositories.user_repository import UserRepository
-from app.schemas.auth import AuthenticationRequest, AuthenticationResponse, ProfileUpdateRequest
+from app.schemas.auth import (
+    AuthenticationRequest,
+    AuthenticationResponse,
+    ProfileUpdateRequest,
+    StudentRegistrationRequest,
+)
 
 INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
 
@@ -104,6 +110,84 @@ class AuthService:
             studentId=principal.student_id,
             name=principal.name,
         )
+
+    def register_student(self, request: StudentRegistrationRequest) -> AuthenticationResponse:
+        if not self._student_repository:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Student repository is not configured",
+            )
+
+        normalized_email = request.email.lower()
+        if self._repository.find_active_by_email(normalized_email):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email já cadastrado",
+            )
+
+        student = None
+        student_id = ""
+        for _ in range(10):
+            matricula = self._student_repository.next_matricula()
+            try:
+                student = self._student_repository.insert(
+                    {
+                        "name": request.name,
+                        "email": normalized_email,
+                        "matricula": matricula,
+                        "active": True,
+                        "learning_gaps": [],
+                        "created_at": datetime.now(timezone.utc),
+                        "updated_at": datetime.now(timezone.utc),
+                        "created_by": "public-registration",
+                        "updated_by": "public-registration",
+                    }
+                )
+                student_id = str(student.get("_id", ""))
+                break
+            except DuplicateKeyError:
+                continue
+
+        if not student or not student_id:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Não foi possível gerar uma matrícula disponível",
+            )
+
+        try:
+            user_id = self._repository.insert_student_user(
+                normalized_email,
+                hash_password(request.password),
+                student_id,
+            )
+        except DuplicateKeyError as error:
+            self._student_repository.delete_by_id(student_id)
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Email já cadastrado",
+            ) from error
+
+        updated_student = self._student_repository.update(
+            student_id,
+            {"user_id": user_id, "updated_at": datetime.now(timezone.utc)},
+        )
+        if not updated_student:
+            self._repository.delete_by_id(user_id)
+            self._student_repository.delete_by_id(student_id)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Não foi possível vincular o usuário ao aluno",
+            )
+
+        user = self._repository.find_active_by_email(normalized_email)
+        if not user:
+            self._repository.delete_by_id(user_id)
+            self._student_repository.delete_by_id(student_id)
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Usuário criado, mas não pôde ser recuperado",
+            )
+        return self._authentication_response(self._display_principal(user))
 
     def login(self, request: AuthenticationRequest) -> AuthenticationResponse:
         user = self._repository.find_active_by_email(request.email)

@@ -6,7 +6,8 @@ import type {
   LearningGap,
   PaginatedResponse,
   StudentPerformance,
-  StudentAttendance
+  StudentAttendance,
+  PedagogicalRecommendation
 } from '@/types';
 
 export interface CreateStudentRequest {
@@ -31,6 +32,11 @@ class StudentsService {
   // Listar todos os alunos
   async getAllStudents(): Promise<Student[]> {
     return apiClient.get<Student[]>('/students');
+  }
+
+  // Listar alunos ativos sem turma para gestão pelo professor
+  async getUnassignedStudents(): Promise<Student[]> {
+    return apiClient.get<Student[]>('/students/unassigned');
   }
 
   // Listar alunos com paginação
@@ -81,6 +87,11 @@ class StudentsService {
   // Obter frequência do aluno
   async getStudentAttendance(id: string): Promise<StudentAttendance> {
     return apiClient.get<StudentAttendance>(`/students/${id}/attendance`);
+  }
+
+  // Obter recomendação pedagógica explicável baseada em lacunas e desempenho
+  async getPedagogicalRecommendation(id: string): Promise<PedagogicalRecommendation> {
+    return apiClient.get<PedagogicalRecommendation>(`/students/${id}/pedagogical-recommendation`);
   }
 
   // Buscar alunos (com filtros)

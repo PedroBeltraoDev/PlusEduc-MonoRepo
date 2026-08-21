@@ -8,6 +8,14 @@ class AuthenticationRequest(BaseModel):
     password: str = Field(min_length=1)
 
 
+class StudentRegistrationRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    name: str = Field(min_length=3, max_length=120)
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=6, max_length=100)
+
+
 class ProfileUpdateRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 

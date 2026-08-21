@@ -5,6 +5,19 @@ export interface CreateSubjectRequest {
   name: string;
 }
 
+export interface AssignSubjectRequest {
+  classroomId: string;
+  subjectId: string;
+}
+
+export interface SubjectAssignment {
+  classroomId: string;
+  subjectId: string;
+  subjectName: string;
+  teacherId: string;
+  teacherName?: string | null;
+}
+
 export interface SubjectPerformanceSort {
   sortBy: "name" | "grade";
   order: "asc" | "desc";
@@ -17,6 +30,15 @@ class SubjectsService {
 
   async create(data: CreateSubjectRequest): Promise<Subject> {
     return apiClient.post<Subject>("/subjects", data);
+  }
+
+  async getAvailable(classroomId: string): Promise<Subject[]> {
+    const params = new URLSearchParams({ classroomId });
+    return apiClient.get<Subject[]>(`/subjects/available?${params.toString()}`);
+  }
+
+  async assign(data: AssignSubjectRequest): Promise<SubjectAssignment> {
+    return apiClient.post<SubjectAssignment>("/subjects/assignments", data);
   }
 
   async delete(subjectId: string): Promise<void> {

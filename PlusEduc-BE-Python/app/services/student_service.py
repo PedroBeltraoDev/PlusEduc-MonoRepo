@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from fastapi import HTTPException, status
+from pymongo.errors import DuplicateKeyError
 
 from app.core.auth import UserPrincipal
 from app.core.passwords import hash_password
@@ -29,28 +30,55 @@ class StudentService:
         self.classroom_repository = classroom_repository
         self.user_repository = user_repository
 
+    def _next_matricula(self) -> str:
+        generator = getattr(self.repository, "next_matricula", None)
+        if callable(generator):
+            return generator()
+        highest = 0
+        for item in self.repository.find_active():
+            value = str(item.get("matricula", ""))
+            if value.startswith("MAT-2026-"):
+                try:
+                    highest = max(highest, int(value.removeprefix("MAT-2026-")))
+                except ValueError:
+                    continue
+        return f"MAT-2026-{highest + 1:04d}"
+
     def create(self, request: StudentCreateRequest, current_user: UserPrincipal) -> StudentResponse:
         if self.repository.find_by_email(request.email):
             raise HTTPException(status_code=409, detail=f"Email já cadastrado: {request.email}")
-        if not self.classroom_repository.exists_by_id(request.classId):
+        if request.classId and not self.classroom_repository.exists_by_id(request.classId):
             raise HTTPException(status_code=400, detail="Turma não encontrada")
+
         now = datetime.now(timezone.utc)
-        document = {
-            "name": request.name,
-            "email": request.email,
-            "birth_date": request.birthDate,
-            "class_id": request.classId,
-            "learning_gaps": [gap.to_document() for gap in (request.learningGaps or [])],
-            "active": True if request.active is None else request.active,
-            "created_at": now,
-            "updated_at": now,
-            "created_by": current_user.email,
-            "updated_by": current_user.email,
-        }
-        return self.to_response(self.repository.insert(document))
+        for _ in range(10):
+            document = {
+                "name": request.name,
+                "email": request.email,
+                "matricula": self._next_matricula(),
+                "learning_gaps": [gap.to_document() for gap in (request.learningGaps or [])],
+                "active": True if request.active is None else request.active,
+                "created_at": now,
+                "updated_at": now,
+                "created_by": current_user.email,
+                "updated_by": current_user.email,
+            }
+            if request.birthDate:
+                document["birth_date"] = request.birthDate
+            if request.classId:
+                document["class_id"] = request.classId
+            try:
+                return self.to_response(self.repository.insert(document))
+            except DuplicateKeyError:
+                continue
+
+        raise HTTPException(status_code=409, detail="Não foi possível gerar uma matrícula disponível")
 
     def list_active(self) -> list[StudentResponse]:
         return [self.to_response(item) for item in self.repository.find_active()]
+
+    def list_unassigned(self) -> list[StudentResponse]:
+        return [self.to_response(item) for item in self.repository.find_unassigned_active()]
 
     def page(self, page: int, size: int) -> StudentPageResponse:
         page = max(page, 0)
@@ -157,6 +185,7 @@ class StudentService:
             id=str(raw_id),
             name=document.get("name", ""),
             email=document.get("email", ""),
+            matricula=document.get("matricula"),
             birthDate=document.get("birth_date", document.get("birthDate")),
             learningGaps=gaps,
             classId=document.get("class_id", document.get("classId")),

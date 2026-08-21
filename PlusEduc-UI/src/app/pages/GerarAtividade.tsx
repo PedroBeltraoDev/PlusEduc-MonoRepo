@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, BookOpen, Brain, Download, Loader2, Send, Sparkles, Users, Wand2 } from "lucide-react";
+import { ArrowLeft, BookOpen, Brain, CheckCircle2, Download, Lightbulb, Loader2, Send, Sparkles, Users, Wand2 } from "lucide-react";
 import { Link } from "react-router";
 import { toast, Toaster } from "sonner";
 import { activitiesService, classroomsService, studentsService, subjectTopicsService, subjectsService } from "@/services";
-import type { Activity, Classroom, GenerateActivityRequest, GeneratedQuestion, Student, Subject, SubjectTopic } from "@/types";
+import type { Activity, Classroom, GenerateActivityRequest, GeneratedQuestion, PedagogicalRecommendation, Student, Subject, SubjectTopic } from "@/types";
 
 const difficultyOptions = [
   { label: "Fácil", value: "FACIL" },
@@ -78,6 +78,8 @@ export function GerarAtividade() {
   const [generatedActivities, setGeneratedActivities] = useState<Activity[]>([]);
   const [deliveryMode, setDeliveryMode] = useState<"classroom" | "students">("classroom");
   const [selectedStudentIds, setSelectedStudentIds] = useState<string[]>([]);
+  const [recommendation, setRecommendation] = useState<PedagogicalRecommendation | null>(null);
+  const [loadingRecommendation, setLoadingRecommendation] = useState(false);
 
   const [form, setForm] = useState<GenerateActivityRequest>({
     classroomId: "",
@@ -168,6 +170,54 @@ export function GerarAtividade() {
 
     loadStudents();
   }, [form.classroomId]);
+
+  useEffect(() => {
+    const selectedStudentId = deliveryMode === "students" && selectedStudentIds.length === 1
+      ? selectedStudentIds[0]
+      : null;
+    if (!selectedStudentId) {
+      setRecommendation(null);
+      setLoadingRecommendation(false);
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingRecommendation(true);
+    studentsService.getPedagogicalRecommendation(selectedStudentId)
+      .then((data) => {
+        if (!cancelled) {
+          setRecommendation(data);
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+        if (!cancelled) {
+          setRecommendation(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoadingRecommendation(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [deliveryMode, selectedStudentIds]);
+
+  const applyRecommendation = () => {
+    if (!recommendation) {
+      return;
+    }
+    if (recommendation.recommendedSubject) {
+      handleChange("subject", recommendation.recommendedSubject);
+    }
+    handleChange("topic", recommendation.recommendedTopic);
+    handleChange("difficultyLevel", recommendation.recommendedDifficulty);
+    handleChange("questionsCount", recommendation.recommendedQuestionsCount);
+    toast.success(`Recomendação aplicada para ${recommendation.studentName}.`);
+  };
 
   const previewAdaptations = form.disabilityAdaptations ?? [];
   const previewClasses = getPreviewClassNames(previewAdaptations);
@@ -350,6 +400,7 @@ export function GerarAtividade() {
                     onClick={() => {
                       setDeliveryMode("classroom");
                       setSelectedStudentIds([]);
+                      setRecommendation(null);
                     }}
                     className={`rounded-lg border px-3 py-2 text-sm font-semibold transition-colors ${
                       deliveryMode === "classroom"
@@ -373,7 +424,8 @@ export function GerarAtividade() {
                 </div>
 
                 {deliveryMode === "students" ? (
-                  <div className="mt-4 rounded-lg border border-gray-200 dark:border-gray-600">
+                  <>
+                    <div className="mt-4 rounded-lg border border-gray-200 dark:border-gray-600">
                     {loadingStudents ? (
                       <div className="flex items-center gap-2 p-4 text-sm text-gray-500 dark:text-gray-400">
                         <Loader2 className="h-4 w-4 animate-spin" />
@@ -403,8 +455,66 @@ export function GerarAtividade() {
                       </div>
                     )}
                   </div>
+                    {selectedStudentIds.length > 1 ? (
+                      <p className="mt-3 text-xs text-gray-500 dark:text-gray-400">
+                        Selecione apenas um aluno para consultar a recomendação pedagógica personalizada.
+                      </p>
+                    ) : null}
+                  </>
                 ) : null}
               </div>
+
+              {deliveryMode === "students" && selectedStudentIds.length === 1 ? (
+                <div className="rounded-lg border border-[#7FC8F8]/60 bg-[#EAF7FF] p-4 dark:border-[#4FC3F7]/50 dark:bg-[#12304A]">
+                  <div className="flex items-start gap-3">
+                    <Lightbulb className="mt-0.5 h-5 w-5 shrink-0 text-[#1E5AA8] dark:text-[#7FC8F8]" />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="text-sm font-bold text-[#0A2463] dark:text-white">Recomendação pedagógica</h3>
+                        {recommendation ? (
+                          <span className={`rounded-full px-2 py-1 text-[11px] font-bold ${
+                            recommendation.priority === "HIGH"
+                              ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-200"
+                              : recommendation.priority === "MEDIUM"
+                                ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-200"
+                                : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-200"
+                          }`}>
+                            Prioridade {recommendation.priority === "HIGH" ? "alta" : recommendation.priority === "MEDIUM" ? "média" : "baixa"}
+                          </span>
+                        ) : null}
+                      </div>
+                      {loadingRecommendation ? (
+                        <div className="mt-3 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-300">
+                          <Loader2 className="h-4 w-4 animate-spin" /> Analisando lacunas e desempenho...
+                        </div>
+                      ) : recommendation ? (
+                        <>
+                          <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">
+                            Para <strong>{recommendation.studentName}</strong>, reforçar <strong>{recommendation.recommendedSubject}</strong> — <strong>{recommendation.recommendedTopic}</strong>.
+                          </p>
+                          <p className="mt-2 text-xs leading-relaxed text-gray-600 dark:text-gray-300">{recommendation.rationale}</p>
+                          <div className="mt-3 space-y-1">
+                            {recommendation.evidences.map((evidence) => (
+                              <p key={`${evidence.signal}-${evidence.detail}`} className="text-xs text-gray-600 dark:text-gray-300">
+                                <span className="font-semibold">{evidence.signal}:</span> {evidence.detail}
+                              </p>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={applyRecommendation}
+                            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-[#1E5AA8] px-3 py-2 text-xs font-semibold text-white transition hover:bg-[#0A2463]"
+                          >
+                            <CheckCircle2 className="h-4 w-4" /> Aplicar recomendação
+                          </button>
+                        </>
+                      ) : (
+                        <p className="mt-2 text-xs text-gray-600 dark:text-gray-300">Ainda não foi possível calcular uma recomendação para este aluno.</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : null}
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Matéria</label>

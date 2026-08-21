@@ -1,6 +1,13 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { authService } from '@/services';
-import type { AuthResponse, LoadingState, LoginRequest, ProfileUpdateRequest, User } from '@/types';
+import type {
+  AuthResponse,
+  LoadingState,
+  LoginRequest,
+  ProfileUpdateRequest,
+  StudentRegistrationRequest,
+  User,
+} from '@/types';
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -13,6 +20,7 @@ interface AuthContextType {
   isEducator: boolean;
   loadingState: LoadingState;
   login: (credentials: LoginRequest) => Promise<string>;
+  registerStudent: (data: StudentRegistrationRequest) => Promise<string>;
   updateProfile: (data: ProfileUpdateRequest) => Promise<AuthResponse>;
   logout: () => void;
   getToken: () => string | null;
@@ -80,6 +88,25 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  const registerStudent = async (data: StudentRegistrationRequest) => {
+    try {
+      setLoadingState('loading');
+      const response = await authService.registerStudent(data);
+      syncFromStorage();
+      setLoadingState('success');
+      return response.role === 'STUDENT' ? '/aluno' : '/dashboard';
+    } catch (error) {
+      setIsAuthenticated(false);
+      setRole(null);
+      setUserName(null);
+      setUserEmail(null);
+      setUserId(null);
+      setStudentId(null);
+      setLoadingState('error');
+      throw error;
+    }
+  };
+
   const updateProfile = async (data: ProfileUpdateRequest) => {
     const response = await authService.updateProfile(data);
     syncFromStorage();
@@ -107,6 +134,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     isEducator: role === 'TEACHER' || role === 'ADMIN',
     loadingState,
     login,
+    registerStudent,
     updateProfile,
     logout,
     getToken: () => authService.getAccessToken(),

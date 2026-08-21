@@ -63,6 +63,31 @@ class ClassroomRepository:
         current.update(updates)
         return current
 
+    def add_subject_teacher(self, classroom_id: str, assignment: dict[str, Any]) -> dict[str, Any] | None:
+        current = self.find_by_id(classroom_id)
+        if current is None:
+            return None
+
+        assignments = list(current.get("subjectTeachers", []) or [])
+        subject_key = str(assignment.get("subjectKey", ""))
+        if any(str(item.get("subjectKey", "")) == subject_key for item in assignments if isinstance(item, dict)):
+            return None
+
+        assignments.append(assignment)
+        result = self.collection.update_one(
+            {
+                "_id": current.get("_id"),
+                "subjectTeachers": {
+                    "$not": {"$elemMatch": {"subjectKey": subject_key}},
+                },
+            },
+            {"$set": {"subjectTeachers": assignments}},
+        )
+        if result.matched_count != 1:
+            return None
+        current["subjectTeachers"] = assignments
+        return current
+
     def soft_delete(self, classroom_id: str, updated_at) -> bool:
         current = self.find_by_id(classroom_id)
         if current is None:

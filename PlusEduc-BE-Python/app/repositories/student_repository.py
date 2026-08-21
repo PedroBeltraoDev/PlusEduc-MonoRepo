@@ -19,6 +19,44 @@ class StudentRepository:
     def find_active_by_email(self, email: str) -> dict[str, Any] | None:
         return self.collection.find_one({"email": email, "active": True})
 
+    def find_by_matricula(self, matricula: str) -> dict[str, Any] | None:
+        return self.collection.find_one({"matricula": matricula, "active": True})
+
+    def find_unassigned_active(self) -> list[dict[str, Any]]:
+        return list(
+            self.collection.find(
+                {
+                    "active": True,
+                    "$and": [
+                        {
+                            "$or": [
+                                {"class_id": {"$exists": False}},
+                                {"class_id": None},
+                                {"class_id": ""},
+                            ]
+                        },
+                        {
+                            "$or": [
+                                {"classId": {"$exists": False}},
+                                {"classId": None},
+                                {"classId": ""},
+                            ]
+                        },
+                    ],
+                }
+            ).sort("name", 1)
+        )
+
+    def next_matricula(self, prefix: str = "MAT-2026-") -> str:
+        highest = 0
+        for document in self.collection.find({"matricula": {"$regex": f"^{prefix}\\d+$"}}, {"matricula": 1}):
+            value = str(document.get("matricula", ""))
+            try:
+                highest = max(highest, int(value[len(prefix):]))
+            except ValueError:
+                continue
+        return f"{prefix}{highest + 1:04d}"
+
     def find_by_user_id_and_active(self, user_id: str) -> dict[str, Any] | None:
         return self.collection.find_one({
             "$or": [{"userId": user_id}, {"user_id": user_id}],
@@ -66,6 +104,13 @@ class StudentRepository:
         self.collection.update_one({"_id": identifier}, {"$set": updates})
         current.update(updates)
         return current
+
+    def delete_by_id(self, student_id: str) -> bool:
+        current = self.find_by_id(student_id)
+        if current is None:
+            return False
+        result = self.collection.delete_one({"_id": current.get("_id")})
+        return result.deleted_count == 1
 
     def soft_delete(self, student_id: str, updated_at) -> bool:
         current = self.find_by_id(student_id)

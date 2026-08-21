@@ -30,6 +30,23 @@ const createFormId = () => {
 const normalizeSubjectKey = (value: string) =>
   value.trim().toLocaleLowerCase('pt-BR').normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
+const SCHOOL_GRADE_OPTIONS = [
+  '1º Ano do Ensino Fundamental',
+  '2º Ano do Ensino Fundamental',
+  '3º Ano do Ensino Fundamental',
+  '4º Ano do Ensino Fundamental',
+  '5º Ano do Ensino Fundamental',
+  '6º Ano do Ensino Fundamental',
+  '7º Ano do Ensino Fundamental',
+  '8º Ano do Ensino Fundamental',
+  '9º Ano do Ensino Fundamental',
+  '1º Ano do Ensino Médio',
+  '2º Ano do Ensino Médio',
+  '3º Ano do Ensino Médio',
+] as const;
+
+const CLASS_SECTION_OPTIONS = ['A', 'B', 'C', 'D', 'E'] as const;
+
 const createEmptyLearningGap = (): LearningGap & { _formId: string } => ({
   _formId: createFormId(),
   subject: '',
@@ -411,6 +428,142 @@ const StudentModal = ({
   return createPortal(modalContent, document.body);
 };
 
+const UnassignedStudentsModal = ({
+  isOpen,
+  onClose,
+  students,
+  loading,
+  classrooms,
+  selectedStudent,
+  onSelectStudent,
+  targetClassroom,
+  onTargetClassroomChange,
+  onLink,
+  isLinking,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  students: Student[];
+  loading: boolean;
+  classrooms: Classroom[] | undefined;
+  selectedStudent: Student | null;
+  onSelectStudent: (student: Student | null) => void;
+  targetClassroom: string;
+  onTargetClassroomChange: (value: string) => void;
+  onLink: () => void;
+  isLinking: boolean;
+}) => {
+  if (!isOpen) return null;
+
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="mb-6 flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-[#0A2463] dark:text-white">Alunos sem turmas</h2>
+            <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+              Selecione um aluno e vincule-o a uma das suas turmas.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-xl font-bold text-gray-500 transition-colors hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
+            aria-label="Fechar alunos sem turmas"
+          >
+            ✕
+          </button>
+        </div>
+
+        {loading ? (
+          <div className="flex items-center justify-center gap-3 py-10 text-gray-500 dark:text-gray-400">
+            <Loader2 className="h-5 w-5 animate-spin" />
+            Carregando alunos...
+          </div>
+        ) : students.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-gray-300 px-5 py-10 text-center dark:border-gray-600">
+            <UserCheck className="mx-auto mb-3 h-12 w-12 text-[#4CAF50]" />
+            <h3 className="font-semibold text-gray-900 dark:text-white">Todos os alunos estão com turmas</h3>
+            <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Não há alunos pendentes de vínculo.</p>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="max-h-72 space-y-2 overflow-y-auto pr-1">
+              {students.map((student) => (
+                <button
+                  key={student.id}
+                  type="button"
+                  onClick={() => onSelectStudent(student)}
+                  className={`w-full rounded-lg border p-4 text-left transition-colors ${selectedStudent?.id === student.id
+                    ? 'border-[#1E5AA8] bg-blue-50 dark:border-[#4FC3F7] dark:bg-blue-950/40'
+                    : 'border-gray-200 bg-gray-50 hover:border-[#4FC3F7] dark:border-gray-600 dark:bg-gray-700 dark:hover:border-[#4FC3F7]'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-[#0A2463] dark:text-white">{student.name}</p>
+                      <p className="mt-1 truncate text-sm text-gray-600 dark:text-gray-300">{student.email}</p>
+                    </div>
+                    <span className="shrink-0 rounded-full bg-[#E3F2FD] px-2 py-1 text-xs font-semibold text-[#0A2463] dark:bg-blue-900/50 dark:text-blue-100">
+                      {student.matricula || 'Sem matrícula'}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {selectedStudent && (
+              <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-950/40">
+                <p className="mb-3 text-sm text-blue-900 dark:text-blue-100">
+                  Vincular <strong>{selectedStudent.name}</strong> a:
+                </p>
+                <select
+                  value={targetClassroom}
+                  onChange={(event) => onTargetClassroomChange(event.target.value)}
+                  className="w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-gray-900 outline-none focus:border-transparent focus:ring-2 focus:ring-[#1E5AA8] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  disabled={isLinking}
+                >
+                  <option value="">Selecione uma turma</option>
+                  {(classrooms || []).map((classroom) => (
+                    <option key={classroom.id} value={classroom.id}>
+                      {classroom.name} - {classroom.gradeLevel} ({classroom.year})
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => onSelectStudent(null)}
+                    disabled={isLinking}
+                    className="flex-1 rounded-lg border border-gray-300 px-4 py-3 font-semibold text-gray-700 transition-colors hover:bg-white disabled:opacity-50 dark:border-gray-600 dark:text-gray-200 dark:hover:bg-gray-700"
+                  >
+                    Cancelar seleção
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onLink}
+                    disabled={isLinking || !targetClassroom}
+                    className="flex-1 rounded-lg bg-[#1E5AA8] px-4 py-3 font-semibold text-white transition-colors hover:bg-[#0A2463] disabled:cursor-not-allowed disabled:bg-gray-400"
+                  >
+                    {isLinking ? 'Vinculando...' : 'Vincular aluno'}
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>,
+    document.body,
+  );
+};
+
 export function Turmas() {
   const navigate = useNavigate();
   const {
@@ -441,6 +594,10 @@ export function Turmas() {
   const [showModal, setShowModal] = useState(false);
   const [showStudentModal, setShowStudentModal] = useState(false);
   const [showTransferModal, setShowTransferModal] = useState(false);
+  const [showUnassignedModal, setShowUnassignedModal] = useState(false);
+  const [selectedUnassignedStudent, setSelectedUnassignedStudent] = useState<Student | null>(null);
+  const [unassignedTargetClassroom, setUnassignedTargetClassroom] = useState('');
+  const [isLinkingUnassigned, setIsLinkingUnassigned] = useState(false);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
   const [transferTargetClassroom, setTransferTargetClassroom] = useState('');
   const [isCreating, setIsCreating] = useState(false);
@@ -449,8 +606,13 @@ export function Turmas() {
     name: '',
     year: new Date().getFullYear(),
     gradeLevel: '',
+    section: 'A',
     subjects: [] as string[]
   });
+  const [availableSubjects, setAvailableSubjects] = useState<Subject[]>([]);
+  const [selectedSubjectId, setSelectedSubjectId] = useState('');
+  const [loadingAvailableSubjects, setLoadingAvailableSubjects] = useState(false);
+  const [isAssigningSubject, setIsAssigningSubject] = useState(false);
   const [studentFormData, setStudentFormData] = useState<StudentFormData>({
     name: '',
     email: '',
@@ -505,8 +667,37 @@ export function Turmas() {
   };
 
   // Hook para carregar todos os estudantes (para busca)
-  const { data: rawAllStudents, loading: studentsLoading } = useApi(() => studentsService.getAllStudents());
+  const { data: rawAllStudents, loading: studentsLoading, refetch: refetchAllStudents } = useApi(() => studentsService.getAllStudents());
+  const { data: unassignedStudents, loading: unassignedLoading, refetch: refetchUnassigned } = useApi(() => studentsService.getUnassignedStudents());
   const { data: subjectCatalog } = useApi<Subject[]>(() => subjectsService.getAll());
+
+  useEffect(() => {
+    if (!selectedClassroom) {
+      setAvailableSubjects([]);
+      setSelectedSubjectId('');
+      return;
+    }
+
+    let cancelled = false;
+    setLoadingAvailableSubjects(true);
+    subjectsService.getAvailable(selectedClassroom.id)
+      .then((subjects) => {
+        if (!cancelled) setAvailableSubjects(subjects);
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setAvailableSubjects([]);
+          toast.error(error instanceof Error ? error.message : 'Não foi possível carregar as matérias disponíveis.');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingAvailableSubjects(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedClassroom?.id]);
 
   const visibleClassroomSubjects = useMemo(() => {
     const classroomSubjects = selectedClassroom?.subjects ?? [];
@@ -603,6 +794,7 @@ export function Turmas() {
       const results = allStudents.filter(student =>
         student.name.toLowerCase().includes(studentSearch.toLowerCase()) ||
         (student.email || '').toLowerCase().includes(studentSearch.toLowerCase()) ||
+        (student.matricula || '').toLowerCase().includes(studentSearch.toLowerCase()) ||
         student.id?.toLowerCase().includes(studentSearch.toLowerCase())
       );
       setStudentSearchResults(results);
@@ -638,8 +830,16 @@ export function Turmas() {
     setIsCreating(true);
 
     try {
+      if (!formData.gradeLevel) {
+        toast.error('Selecione uma série escolar para criar a turma.');
+        return;
+      }
+
+      const generatedName = `${formData.gradeLevel} ${formData.section}`;
       const createData: CreateClassroomRequest = {
-        ...formData,
+        name: generatedName,
+        year: formData.year,
+        gradeLevel: formData.gradeLevel,
         teacherId: "current-teacher-id", // TODO: Obter do contexto de autenticação
         subjects: formData.subjects.length > 0 ? formData.subjects : [formData.gradeLevel]
       };
@@ -650,6 +850,7 @@ export function Turmas() {
         name: '',
         year: new Date().getFullYear(),
         gradeLevel: '',
+        section: 'A',
         subjects: []
       });
       refetch();
@@ -658,6 +859,32 @@ export function Turmas() {
       // TODO: Mostrar notificação de erro
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleAssignSubject = async () => {
+    if (!selectedClassroom || !selectedSubjectId) {
+      toast.error('Selecione uma matéria disponível.');
+      return;
+    }
+
+    try {
+      setIsAssigningSubject(true);
+      await subjectsService.assign({
+        classroomId: selectedClassroom.id,
+        subjectId: selectedSubjectId,
+      });
+      const refreshedClassroom = await classroomsService.getClassroomById(selectedClassroom.id);
+      setSelectedClassroom(refreshedClassroom);
+      setSelectedSubjectId('');
+      const subjects = await subjectsService.getAvailable(refreshedClassroom.id);
+      setAvailableSubjects(subjects);
+      refetch();
+      toast.success('Matéria atribuída à turma.');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Não foi possível atribuir a matéria.');
+    } finally {
+      setIsAssigningSubject(false);
     }
   };
 
@@ -913,7 +1140,7 @@ export function Turmas() {
 
       // Fechar modal e recarregar dados
       setShowStudentModal(false);
-      refetch(); // Recarregar turmas
+      await Promise.all([refetch(), refetchUnassigned(), refetchAllStudents()]);
 
       // Se estiver vendo detalhes de um aluno, atualizar
       if (selectedStudent && editingStudent && selectedStudent.id === editingStudent.id) {
@@ -1003,6 +1230,27 @@ export function Turmas() {
     } catch (error) {
       console.error('Erro ao transferir aluno:', error);
       toast.error(`Erro ao ${currentClassroom ? 'transferir' : 'matricular'} aluno. Tente novamente.`);
+    }
+  };
+
+  const handleLinkUnassignedStudent = async () => {
+    if (!selectedUnassignedStudent || !unassignedTargetClassroom) {
+      toast.error('Selecione um aluno e uma turma para vincular.');
+      return;
+    }
+
+    setIsLinkingUnassigned(true);
+    try {
+      await classroomsService.enrollStudent(unassignedTargetClassroom, selectedUnassignedStudent.id);
+      toast.success(`${selectedUnassignedStudent.name} foi vinculado à turma.`);
+      setSelectedUnassignedStudent(null);
+      setUnassignedTargetClassroom('');
+      await Promise.all([refetchUnassigned(), refetchAllStudents(), refetch()]);
+    } catch (error) {
+      console.error('Erro ao vincular aluno sem turma:', error);
+      toast.error(error instanceof Error ? error.message : 'Não foi possível vincular o aluno à turma.');
+    } finally {
+      setIsLinkingUnassigned(false);
     }
   };
 
@@ -1114,6 +1362,26 @@ export function Turmas() {
     </div>
   ) : null;
 
+  const sharedUnassignedModal = (
+    <UnassignedStudentsModal
+      isOpen={showUnassignedModal}
+      onClose={() => {
+        setShowUnassignedModal(false);
+        setSelectedUnassignedStudent(null);
+        setUnassignedTargetClassroom('');
+      }}
+      students={unassignedStudents || []}
+      loading={unassignedLoading}
+      classrooms={classrooms}
+      selectedStudent={selectedUnassignedStudent}
+      onSelectStudent={setSelectedUnassignedStudent}
+      targetClassroom={unassignedTargetClassroom}
+      onTargetClassroomChange={setUnassignedTargetClassroom}
+      onLink={handleLinkUnassignedStudent}
+      isLinking={isLinkingUnassigned}
+    />
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1176,6 +1444,10 @@ export function Turmas() {
                 <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
                   <Mail className="w-4 h-4" />
                   {selectedStudent.email}
+                </p>
+                <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
+                  <Hash className="w-4 h-4" />
+                  Matrícula: {selectedStudent.matricula || 'Não cadastrada'}
                 </p>
                 <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
                   <Hash className="w-4 h-4" />
@@ -1470,6 +1742,71 @@ export function Turmas() {
               </div>
             </div>
           )}
+
+          <div className="mt-6 border-t border-gray-200 pt-5 dark:border-gray-700">
+            <div className="mb-4 flex items-start justify-between gap-3">
+              <div>
+                <h3 className="font-semibold text-gray-700 dark:text-gray-200">Matérias e professores</h3>
+                <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                  Cada matéria pode ter apenas um professor responsável nesta turma.
+                </p>
+              </div>
+              <BookOpen className="h-5 w-5 text-[#1E5AA8] dark:text-[#4FC3F7]" />
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {visibleClassroomSubjects.map((subject) => {
+                const assignment = (selectedClassroom.subjectTeachers ?? []).find(
+                  (item) => normalizeSubjectKey(item.subjectName) === normalizeSubjectKey(subject),
+                );
+                return (
+                  <div key={subject} className="rounded-lg border border-gray-200 bg-gray-50 p-3 dark:border-gray-700 dark:bg-gray-900/40">
+                    <p className="font-medium text-gray-800 dark:text-gray-100">{subject}</p>
+                    <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                      {assignment?.teacherName ? `Professor: ${assignment.teacherName}` : 'Professor ainda não atribuído'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+            <div className="mt-5 rounded-lg border border-dashed border-blue-300 bg-blue-50/60 p-4 dark:border-blue-800 dark:bg-blue-950/30">
+              <p className="font-semibold text-[#0A2463] dark:text-blue-100">Adicionar matéria disponível</p>
+              <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                Matérias já ocupadas nesta turma não aparecem novamente.
+              </p>
+              {loadingAvailableSubjects ? (
+                <div className="mt-3 flex items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Carregando matérias...
+                </div>
+              ) : availableSubjects.length === 0 ? (
+                <p className="mt-3 text-sm font-medium text-emerald-700 dark:text-emerald-300">
+                  Todas as matérias curriculares desta turma já possuem professor.
+                </p>
+              ) : (
+                <div className="mt-3 flex flex-col gap-3 sm:flex-row">
+                  <select
+                    value={selectedSubjectId}
+                    onChange={(event) => setSelectedSubjectId(event.target.value)}
+                    disabled={isAssigningSubject}
+                    className="min-w-0 flex-1 rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 outline-none focus:ring-2 focus:ring-[#1E5AA8] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+                  >
+                    <option value="">Selecione uma matéria</option>
+                    {availableSubjects.map((subject) => (
+                      <option key={subject.id} value={subject.id}>{subject.name}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => void handleAssignSubject()}
+                    disabled={isAssigningSubject || !selectedSubjectId}
+                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#1E5AA8] px-4 py-2 font-semibold text-white transition-colors hover:bg-[#0A2463] disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {isAssigningSubject ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />}
+                    Atribuir matéria
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
 
         <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors">
@@ -1666,7 +2003,7 @@ export function Turmas() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
         <div className="bg-gradient-to-br from-[#1E5AA8] to-[#4FC3F7] rounded-lg shadow-md p-6 text-white">
           <div className="flex items-center gap-3 mb-2">
             <Users className="w-6 h-6" />
@@ -1695,6 +2032,25 @@ export function Turmas() {
             {searchTerm ? `de ${total} turmas` : 'turmas totais'}
           </p>
         </div>
+
+        <button
+          type="button"
+          onClick={() => setShowUnassignedModal(true)}
+          className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 text-left transition-all hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#1E5AA8]"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <GraduationCap className="w-6 h-6 text-[#1E5AA8] dark:text-[#4FC3F7]" />
+            <h3 className="font-semibold text-[#0A2463] dark:text-white">Alunos sem turma</h3>
+          </div>
+          <p className="text-4xl font-bold text-[#0A2463] dark:text-white">{unassignedStudents?.length || 0}</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+            {unassignedLoading
+              ? 'Carregando...'
+              : unassignedStudents?.length
+                ? 'Clique para vincular'
+                : 'Todos estão vinculados'}
+          </p>
+        </button>
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -1736,6 +2092,9 @@ export function Turmas() {
                     {student.email && (
                       <p className="text-sm text-gray-600 dark:text-gray-300">{student.email}</p>
                     )}
+                    <p className="text-xs font-semibold text-[#1E5AA8] dark:text-[#4FC3F7]">
+                      Matrícula: {student.matricula || 'Não cadastrada'}
+                    </p>
                   </div>
                 </div>
                 <div className="text-right flex items-center gap-3">
@@ -1878,27 +2237,43 @@ export function Turmas() {
             <form onSubmit={handleCreateClassroom} className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Nome da Turma</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-                  placeholder="Ex: 9º Ano A"
-                  required
-                  disabled={isCreating}
-                />
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-[#0A2463] dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100">
+                  {formData.gradeLevel ? `${formData.gradeLevel} ${formData.section}` : 'Selecione a série e a letra da turma'}
+                </div>
+                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                  O nome será preenchido automaticamente.
+                </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Nível/Série</label>
-                <input
-                  type="text"
+                <label htmlFor="class-grade-level" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Nível/Série</label>
+                <select
+                  id="class-grade-level"
                   value={formData.gradeLevel}
                   onChange={(e) => setFormData(prev => ({ ...prev, gradeLevel: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
-                  placeholder="Ex: 9º Ano"
                   required
                   disabled={isCreating}
-                />
+                >
+                  <option value="">Selecione uma série</option>
+                  {SCHOOL_GRADE_OPTIONS.map((grade) => (
+                    <option key={grade} value={grade}>{grade}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label htmlFor="class-section" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Letra da turma</label>
+                <select
+                  id="class-section"
+                  value={formData.section}
+                  onChange={(e) => setFormData(prev => ({ ...prev, section: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
+                  required
+                  disabled={isCreating}
+                >
+                  {CLASS_SECTION_OPTIONS.map((section) => (
+                    <option key={section} value={section}>Turma {section}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Ano</label>
@@ -1940,6 +2315,7 @@ export function Turmas() {
     </div>
     {sharedStudentModal}
     {sharedTransferModal}
+    {sharedUnassignedModal}
     </>
   );
 }

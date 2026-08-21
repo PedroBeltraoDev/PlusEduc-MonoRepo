@@ -8,6 +8,8 @@ class SubjectCreateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
     name: str = Field(min_length=2, max_length=80)
+    area: str | None = Field(default=None, max_length=80)
+    gradeLevels: list[str] | None = None
 
 
 class SubjectUpdateRequest(BaseModel):
@@ -24,6 +26,24 @@ class SubjectResponse(BaseModel):
     active: bool
     createdAt: datetime | None = None
     updatedAt: datetime | None = None
+    area: str | None = None
+    gradeLevels: list[str] | None = None
+    curriculumKey: str | None = None
+
+
+class SubjectAssignmentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", populate_by_name=True)
+
+    classroomId: str = Field(min_length=1)
+    subjectId: str = Field(min_length=1)
+
+
+class SubjectAssignmentResponse(BaseModel):
+    classroomId: str
+    subjectId: str
+    subjectName: str
+    teacherId: str
+    teacherName: str | None = None
 
 
 class SubjectClassroomResponse(BaseModel):

@@ -47,13 +47,31 @@ def activity_participation_context():
         app = create_app(settings)
         app.dependency_overrides[get_current_user] = lambda: teacher_user
         with TestClient(app) as client:
-            yield client, db, classroom_id, student_id, str(student.get("name", "Aluno")), teacher_id, teacher_email
+            yield (
+                client,
+                db,
+                classroom_id,
+                student_id,
+                str(student.get("name", "Aluno")),
+                teacher_id,
+                teacher_email,
+                len(member_ids),
+            )
     finally:
         mongo.close()
 
 
 def test_activity_participation_summary_is_real_and_updates_after_submission(activity_participation_context):
-    client, db, classroom_id, student_id, student_name, teacher_id, teacher_email = activity_participation_context
+    (
+        client,
+        db,
+        classroom_id,
+        student_id,
+        student_name,
+        teacher_id,
+        teacher_email,
+        member_count,
+    ) = activity_participation_context
     created = client.post("/api/activities", json={
         "title": "Atividade Temporária de Participação",
         "subject": "Matemática",
@@ -76,10 +94,10 @@ def test_activity_participation_summary_is_real_and_updates_after_submission(act
         initial = client.get(f"/api/activities/{activity_id}")
         assert initial.status_code == 200, initial.text
         initial_participation = initial.json()["participation"]
-        assert initial_participation["totalStudents"] == 1
+        assert initial_participation["totalStudents"] == member_count
         assert initial_participation["completedStudents"] == 0
-        assert initial_participation["pendingStudents"] == 1
-        assert initial_participation["pending"][0]["studentName"] == student_name
+        assert initial_participation["pendingStudents"] == member_count
+        assert any(item["studentName"] == student_name for item in initial_participation["pending"])
 
         student_user = UserPrincipal(user_id=student_id, email="student-participation@local", role="STUDENT", student_id=student_id)
         teacher_user = UserPrincipal(user_id=teacher_id, email=teacher_email, role="TEACHER")
@@ -94,11 +112,12 @@ def test_activity_participation_summary_is_real_and_updates_after_submission(act
         updated = client.get(f"/api/activities/{activity_id}")
         assert updated.status_code == 200, updated.text
         updated_participation = updated.json()["participation"]
-        assert updated_participation["totalStudents"] == 1
+        assert updated_participation["totalStudents"] == member_count
         assert updated_participation["completedStudents"] == 1
-        assert updated_participation["pendingStudents"] == 0
+        assert updated_participation["pendingStudents"] == member_count - 1
         assert updated_participation["completed"][0]["studentName"] == student_name
-        assert updated_participation["pending"] == []
+        assert len(updated_participation["pending"]) == member_count - 1
+        assert all(item["studentName"] != student_name for item in updated_participation["pending"])
 
         listed = client.get("/api/activities")
         assert listed.status_code == 200, listed.text
