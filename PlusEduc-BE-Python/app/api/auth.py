@@ -5,7 +5,11 @@ from app.core.auth import UserPrincipal
 from app.schemas.auth import (
     AuthenticationRequest,
     AuthenticationResponse,
+    ForgotPasswordRequest,
+    ForgotPasswordResponse,
     ProfileUpdateRequest,
+    ResetPasswordRequest,
+    ResetPasswordResponse,
     StudentRegistrationRequest,
     TeacherRegistrationRequest,
 )
@@ -80,3 +84,33 @@ def login(request: Request, payload: AuthenticationRequest) -> AuthenticationRes
         request.app.state.student_repository,
     )
     return service.login(payload)
+
+
+@router.post(
+    "/forgot-password",
+    response_model=ForgotPasswordResponse,
+    summary="Solicitar código de verificação para redefinição de senha",
+)
+def forgot_password(request: Request, payload: ForgotPasswordRequest) -> ForgotPasswordResponse:
+    service = AuthService(
+        request.app.state.user_repository,
+        request.app.state.settings,
+        request.app.state.teacher_repository,
+        request.app.state.student_repository,
+    )
+    return service.request_password_reset(payload)
+
+
+@router.post(
+    "/reset-password",
+    response_model=ResetPasswordResponse,
+    summary="Redefinir senha a partir do código de verificação",
+)
+def reset_password(request: Request, payload: ResetPasswordRequest) -> ResetPasswordResponse:
+    service = AuthService(
+        request.app.state.user_repository,
+        request.app.state.settings,
+        request.app.state.teacher_repository,
+        request.app.state.student_repository,
+    )
+    return service.reset_password(payload)

@@ -89,7 +89,7 @@ def create_student(db, students: list[dict], classroom_id: str, index: int, pass
         "name": name,
         "email": email,
         "matricula": matricula,
-        "birth_date": datetime(2010 + (index % 5), 2 + (index % 9), 10 + (index % 15), tzinfo=timezone.utc),
+        "birth_date": datetime(2010 + (index % 5), 2 + (index % 9), 10 + (index % 15), tzinfo=timezone.utc).date().isoformat(),
         "class_id": classroom_id,
         "learning_gaps": [],
         "active": True,

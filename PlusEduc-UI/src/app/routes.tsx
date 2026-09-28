@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate } from "react-router";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { StudentLayout } from "./components/StudentLayout";
 import { Login } from "./pages/Login";
+import { ForgotPassword } from "./pages/ForgotPassword";
 import { Dashboard } from "./pages/Dashboard";
 import { Turmas } from "./pages/Turmas";
 import { Atividades } from "./pages/Atividades";
@@ -30,6 +31,10 @@ export const router = createBrowserRouter([
   {
     path: "/login",
     element: <Login />,
+  },
+  {
+    path: "/esqueci-senha",
+    element: <ForgotPassword />,
   },
   {
     path: "/",

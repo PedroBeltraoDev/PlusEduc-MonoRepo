@@ -56,3 +56,41 @@ class UserRepository:
             }
         )
         return str(result.inserted_id)
+
+    def set_password_reset_code(self, email: str, code_hash: str, expires_at: datetime) -> bool:
+        result = self._mongo.database["users"].update_one(
+            {"email": email, "active": {"$ne": False}},
+            {
+                "$set": {
+                    "passwordResetCodeHash": code_hash,
+                    "passwordResetExpiresAt": expires_at,
+                    "passwordResetAttempts": 0,
+                }
+            },
+        )
+        return result.matched_count == 1
+
+    def register_password_reset_attempt(self, email: str) -> None:
+        self._mongo.database["users"].update_one(
+            {"email": email},
+            {"$inc": {"passwordResetAttempts": 1}},
+        )
+
+    def clear_password_reset_code(self, email: str) -> None:
+        self._mongo.database["users"].update_one(
+            {"email": email},
+            {
+                "$unset": {
+                    "passwordResetCodeHash": "",
+                    "passwordResetExpiresAt": "",
+                    "passwordResetAttempts": "",
+                }
+            },
+        )
+
+    def update_password(self, email: str, password_hash: str) -> bool:
+        result = self._mongo.database["users"].update_one(
+            {"email": email, "active": {"$ne": False}},
+            {"$set": {"password": password_hash, "updatedAt": datetime.now(timezone.utc)}},
+        )
+        return result.matched_count == 1
