@@ -48,6 +48,14 @@ class AuthService {
     return response;
   }
 
+  async forgotPassword(email: string): Promise<{ message: string; demoCode?: string | null }> {
+    return apiClient.post<{ message: string; demoCode?: string | null }>('/auth/forgot-password', { email });
+  }
+
+  async resetPassword(data: { email: string; code: string; newPassword: string }): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>('/auth/reset-password', data);
+  }
+
   logout(): void {
     Object.values(AUTH_KEYS).forEach((key) => localStorage.removeItem(key));
   }

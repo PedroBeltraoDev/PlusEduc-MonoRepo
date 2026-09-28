@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router";
-import { AlertCircle, Lock, Mail, UserRound } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router";
+import { AlertCircle, CheckCircle2, Lock, Mail, UserRound } from "lucide-react";
 import { Logo } from "../components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -8,6 +8,7 @@ type LoginMode = "login" | "registerStudent" | "registerTeacher";
 
 export function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
   const {
     login,
     registerStudent,
@@ -22,6 +23,11 @@ export function Login() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [successMessage, setSuccessMessage] = useState(
+    (location.state as { passwordResetSuccess?: boolean } | null)?.passwordResetSuccess
+      ? "Senha redefinida com sucesso. Faça login com sua nova senha."
+      : "",
+  );
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -32,6 +38,7 @@ export function Login() {
   const changeMode = (nextMode: LoginMode) => {
     setMode(nextMode);
     setError("");
+    setSuccessMessage("");
     setName("");
     setEmail("");
     setPassword("");
@@ -88,6 +95,13 @@ export function Login() {
                 : "Entre para continuar no PlusEduc."}
           </p>
         </div>
+
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+            <span className="text-sm text-green-700 dark:text-green-400">{successMessage}</span>
+          </div>
+        )}
 
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
@@ -196,13 +210,12 @@ export function Login() {
 
           {!isRegistering && (
             <div className="text-center">
-              <a
-                href="#"
-                onClick={(event) => event.preventDefault()}
+              <Link
+                to="/esqueci-senha"
                 className="text-sm text-[#1E5AA8] hover:text-[#0A2463] dark:text-[#4FC3F7] dark:hover:text-[#1E5AA8] transition"
               >
                 Esqueci minha senha
-              </a>
+              </Link>
             </div>
           )}
         </form>

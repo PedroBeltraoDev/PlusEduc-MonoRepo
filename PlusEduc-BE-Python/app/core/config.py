@@ -41,6 +41,19 @@ class Settings(BaseSettings):
     gemini_read_timeout_seconds: float = Field(default=45.0, gt=0.0)
     ai_demo_fallback_enabled: bool = True
 
+    smtp_host: str = "smtp.gmail.com"
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_email: str = ""
+    smtp_from_name: str = "PlusEduc"
+
+    # Quando preenchido, todo código de recuperação de senha é enviado para este
+    # endereço em vez do e-mail da conta (útil em ambiente de demonstração, onde
+    # as contas de professor/aluno não são caixas de e-mail reais).
+    password_reset_override_email: str = ""
+    password_reset_code_ttl_minutes: int = Field(default=15, ge=1)
+
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, value: object) -> object:

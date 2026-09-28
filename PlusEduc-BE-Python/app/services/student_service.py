@@ -181,12 +181,16 @@ class StudentService:
                     improved=gap.get("improved"),
                 )
             )
+        birth_date = document.get("birth_date", document.get("birthDate"))
+        if isinstance(birth_date, datetime):
+            birth_date = birth_date.date().isoformat()
+
         return StudentResponse(
             id=str(raw_id),
             name=document.get("name", ""),
             email=document.get("email", ""),
             matricula=document.get("matricula"),
-            birthDate=document.get("birth_date", document.get("birthDate")),
+            birthDate=birth_date,
             learningGaps=gaps,
             classId=document.get("class_id", document.get("classId")),
             className=document.get("class_name", document.get("className", document.get("_class"))),
