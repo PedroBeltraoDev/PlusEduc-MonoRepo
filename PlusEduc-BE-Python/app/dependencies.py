@@ -42,7 +42,9 @@ def get_current_user(
             detail="User not found or inactive",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    return principal_from_document(user)
+    principal = principal_from_document(user)
+    request.state.principal = principal  # usado pelo histórico de operações para identificar o autor
+    return principal
 
 
 def require_roles(*allowed_roles: str):

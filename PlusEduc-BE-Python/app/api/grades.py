@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.core.auth import UserPrincipal
+from app.core.audit_middleware import set_audit
 from app.dependencies import require_roles
 from app.schemas.grade import (
     ActivityGradesLaunchResponse,
@@ -25,13 +26,40 @@ def service(request: Request) -> GradeService:
     )
 
 
+def _fmt(value: float) -> str:
+    return f"{value:.1f}".replace(".", ",")
+
+
+def _snapshot(grade: GradeResponse) -> dict:
+    return {
+        "grade": grade.grade,
+        "attendance": grade.attendance,
+        "subject": grade.subject,
+        "activityType": grade.activityType,
+        "observations": grade.observations,
+        "date": grade.date.isoformat() if grade.date else None,
+    }
+
+
+def _describe(request: Request, grade: GradeResponse) -> str:
+    student = request.app.state.student_repository.find_by_id(grade.studentId) or {}
+    return f"{student.get('name', 'aluno')} ({grade.subject or 'sem disciplina'})"
+
+
 @router.post("", response_model=GradeResponse, status_code=status.HTTP_201_CREATED)
 def create_grade(
     payload: GradeCreateRequest,
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
-    return service(request).create(payload, current_user)
+    created = service(request).create(payload, current_user)
+    set_audit(
+        request,
+        entityId=created.id,
+        summary=f"Nota {_fmt(created.grade)} lançada para {_describe(request, created)}",
+        details={"after": _snapshot(created), "studentId": created.studentId, "classroomId": created.classroomId},
+    )
+    return created
 
 
 @router.get("", response_model=list[GradeResponse])
@@ -85,7 +113,13 @@ def launch_grades_from_activity(
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
-    return service(request).launch_from_activity(activity_id, current_user)
+    result = service(request).launch_from_activity(activity_id, current_user)
+    set_audit(
+        request,
+        summary=f"Notas lançadas a partir da atividade “{result.activityTitle}”: {result.launched} nova(s), {result.alreadyLaunched} já existente(s)",
+        details=result.model_dump(),
+    )
+    return result
 
 
 @router.get("/{grade_id}", response_model=GradeResponse)
@@ -104,7 +138,14 @@ def update_grade(
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
-    return service(request).update(grade_id, payload, current_user)
+    before = service(request).get(grade_id)
+    updated = service(request).update(grade_id, payload, current_user)
+    set_audit(
+        request,
+        summary=f"Nota de {_describe(request, updated)} alterada de {_fmt(before.grade)} para {_fmt(updated.grade)}",
+        details={"before": _snapshot(before), "after": _snapshot(updated), "studentId": updated.studentId, "classroomId": updated.classroomId},
+    )
+    return updated
 
 
 @router.delete("/{grade_id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -113,5 +154,11 @@ def delete_grade(
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
+    before = service(request).get(grade_id)
     service(request).delete(grade_id)
+    set_audit(
+        request,
+        summary=f"Nota {_fmt(before.grade)} de {_describe(request, before)} excluída",
+        details={"before": _snapshot(before), "studentId": before.studentId, "classroomId": before.classroomId},
+    )
     return Response(status_code=status.HTTP_204_NO_CONTENT)

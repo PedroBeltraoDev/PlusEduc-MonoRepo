@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     jwt_expiration_ms: int = Field(default=28_800_000, ge=1_000)
     jwt_refresh_expiration_ms: int = Field(default=604_800_000, ge=1_000)
 
+    audit_enabled: bool | None = None  # None: ligado, exceto quando APP_ENV começa com "test"
+
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
     gemini_api_version: str = "v1"
