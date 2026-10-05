@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { createPortal } from "react-dom";
-import { Plus, Search, Users, Calendar, TrendingUp, Loader2, AlertCircle, BookOpen, ArrowLeft, GraduationCap, UserCheck, User, Mail, Hash, ArrowRightLeft, Trash2, ClipboardList, Download } from "lucide-react";
+import { Plus, Search, Users, Calendar, TrendingUp, Loader2, AlertCircle, BookOpen, ArrowLeft, GraduationCap, UserCheck, User, Mail, Hash, ArrowRightLeft, Trash2, ClipboardList, ClipboardCheck, Download } from "lucide-react";
 import { useApiList, useApi } from "@/hooks/useApi";
 import { activitiesService, classroomsService, studentsService, subjectsService, CreateClassroomRequest } from "@/services";
 import type { Activity, Classroom, Student, LearningGap, Subject } from "@/types";
@@ -1827,9 +1827,19 @@ export function Turmas() {
                 {selectedClassroom.gradeLevel} • Ano {selectedClassroom.year}
               </p>
             </div>
-            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedClassroom.active)}`}>
-              {getStatusText(selectedClassroom.active)}
-            </span>
+            <div className="flex flex-col items-end gap-2">
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(selectedClassroom.active)}`}>
+                {getStatusText(selectedClassroom.active)}
+              </span>
+              <button
+                type="button"
+                onClick={() => navigate(`/notas?turma=${selectedClassroom.id}`)}
+                className="flex items-center gap-2 rounded-lg bg-[#1E5AA8] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0A2463]"
+              >
+                <ClipboardCheck className="h-4 w-4" />
+                Notas e frequência
+              </button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">

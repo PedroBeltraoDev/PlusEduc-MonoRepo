@@ -12,6 +12,7 @@ from app.repositories.activity_submission_repository import ActivitySubmissionRe
 from app.repositories.classroom_repository import ClassroomRepository
 from app.repositories.student_repository import StudentRepository
 from app.schemas.activity_submission import (
+    ActivitySubmissionDetailResponse,
     PendingCorrectionResponse,
     PendingQuestionResponse,
     ReviewQuestionRequest,
@@ -108,6 +109,32 @@ class TeacherCorrectionService:
                 ) for result in pending_results],
             ))
         return pending
+
+    def list_activity_submissions(self, activity_id: str, current_user: UserPrincipal) -> list[ActivitySubmissionDetailResponse]:
+        activity = self.activity_repository.find_by_id(activity_id)
+        if not activity:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Atividade não encontrada: {activity_id}")
+        if str(current_user.role or "").upper() != "ADMIN" and not self._teacher_can_access(activity, current_user):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="A atividade não pertence a uma turma do usuário autenticado")
+
+        rows: list[ActivitySubmissionDetailResponse] = []
+        for submission in self.submission_repository.find_by_activity(activity_id):
+            stored = ActivitySubmissionService.parse_stored_result(submission.get("content", "{}"))
+            student_id = str(self._value(submission, "student_id", "studentId") or "")
+            student = self.student_repository.find_by_id(student_id) or {}
+            rows.append(ActivitySubmissionDetailResponse(
+                submissionId=self._id(submission),
+                studentId=student_id,
+                studentName=str(student.get("name", "Aluno")),
+                submittedAt=self._value(submission, "submitted_at", "submittedAt"),
+                correctCount=stored.correctCount,
+                totalQuestions=stored.totalQuestions,
+                scorePercent=stored.scorePercent,
+                pendingCount=stored.pendingCount,
+                results=stored.results,
+            ))
+        rows.sort(key=lambda row: row.studentName.lower())
+        return rows
 
     def review_question(
         self,

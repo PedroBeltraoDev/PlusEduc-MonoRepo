@@ -45,7 +45,15 @@ export const ACTIVITY_TYPES = {
   ASSIGNMENT: 'Trabalho',
   EXERCISE: 'Exercício',
   PROJECT: 'Projeto',
+  QUIZ: 'Quiz',
+  PARTICIPATION: 'Participação',
+  DEMO_SEED: 'Registro de demonstração',
 } as const;
+
+export function activityTypeLabel(type: string | null | undefined): string {
+  if (!type) return '-';
+  return (ACTIVITY_TYPES as Record<string, string>)[type] ?? type;
+}
 
 // Limites de dados
 export const LIMITS = {

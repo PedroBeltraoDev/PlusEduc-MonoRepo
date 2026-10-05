@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { Users, GraduationCap, ClipboardList, TrendingUp, CheckCircle, Clock, AlertCircle, Loader2 } from "lucide-react";
 import { studentsService, classroomsService, activitiesService } from "@/services";
 import type { ClassroomPerformance } from "@/services/classrooms";
@@ -88,31 +88,20 @@ export function Dashboard() {
     }
   };
 
+  // Status real: quantos alunos já enviaram a atividade (vem das submissões, não da idade da atividade).
   const getActivityStatus = (activity: Activity) => {
-    // Para demonstração, vamos simular diferentes status
-    const daysSinceCreated = Math.floor(
-      (Date.now() - new Date(activity.createdAt).getTime()) / (1000 * 60 * 60 * 24)
-    );
-
-    if (daysSinceCreated <= 1) {
-      return {
-        status: 'Novo',
-        color: 'text-[#4FC3F7]',
-        icon: Clock
-      };
-    } else if (daysSinceCreated <= 7) {
-      return {
-        status: 'Em andamento',
-        color: 'text-[#FF9800]',
-        icon: Clock
-      };
-    } else {
-      return {
-        status: 'Finalizada',
-        color: 'text-[#4CAF50]',
-        icon: CheckCircle
-      };
+    const participation = activity.participation;
+    if (!participation || participation.totalStudents === 0) {
+      return { status: 'Sem alunos', color: 'text-gray-500', icon: Clock };
     }
+    const label = `${participation.completedStudents}/${participation.totalStudents} entregaram`;
+    if (participation.completedStudents === participation.totalStudents) {
+      return { status: label, color: 'text-[#4CAF50]', icon: CheckCircle };
+    }
+    if (participation.completedStudents === 0) {
+      return { status: label, color: 'text-[#FF9800]', icon: Clock };
+    }
+    return { status: label, color: 'text-[#1E5AA8] dark:text-[#4FC3F7]', icon: Clock };
   };
 
   if (isLoading) {
@@ -292,9 +281,17 @@ export function Dashboard() {
             <div className="space-y-4">
               {classroomsSummary.map((item) => (
                 <div key={item.classroom.id} className="border-l-4 border-[#1E5AA8] dark:border-[#4FC3F7] pl-4 py-2">
-                  <h3 className="font-semibold text-[#0A2463] dark:text-white">
-                    {item.classroom.name}
-                  </h3>
+                  <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-semibold text-[#0A2463] dark:text-white">
+                      {item.classroom.name}
+                    </h3>
+                    <Link
+                      to={`/notas?turma=${item.classroom.id}`}
+                      className="shrink-0 text-xs font-semibold text-[#1E5AA8] hover:underline dark:text-[#4FC3F7]"
+                    >
+                      Notas e frequência
+                    </Link>
+                  </div>
                   <div className="mt-2 space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-300">Alunos:</span>

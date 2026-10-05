@@ -3,8 +3,10 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from app.core.auth import UserPrincipal
 from app.dependencies import get_current_user, require_roles
 from app.schemas.activity import ActivityCreateRequest, ActivityGenerationRequest, ActivityResponse, ActivityUpdateRequest
+from app.schemas.activity_submission import ActivitySubmissionDetailResponse
 from app.services.activity_pdf_service import ActivityPdfService
 from app.services.activity_service import ActivityService
+from app.services.teacher_correction_service import TeacherCorrectionService
 
 router = APIRouter(prefix="/api/activities", tags=["Activities"])
 
@@ -81,6 +83,16 @@ def activities_by_student(student_id: str, request: Request, current_user: UserP
 @router.get("/teacher/{teacher_id}", response_model=list[ActivityResponse])
 def activities_by_teacher(teacher_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
     return service(request).by_teacher(teacher_id)
+
+
+@router.get("/{activity_id}/submissions", response_model=list[ActivitySubmissionDetailResponse])
+def activity_submissions(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+    return TeacherCorrectionService(
+        request.app.state.activity_repository,
+        request.app.state.activity_submission_repository,
+        request.app.state.classroom_repository,
+        request.app.state.student_repository,
+    ).list_activity_submissions(activity_id, current_user)
 
 
 @router.get("/{activity_id}/export-pdf")

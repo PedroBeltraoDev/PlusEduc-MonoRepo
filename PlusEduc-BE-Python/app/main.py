@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 from typing import AsyncIterator
 
@@ -73,6 +74,11 @@ def create_app(
         application.state.subject_repository = subject_repository or SubjectRepository(mongo)
         if subject_repository is None and mongo.health() == "ok":
             application.state.subject_repository.ensure_indexes()
+        if activity_submission_repository is None and mongo.health() == "ok":
+            try:
+                application.state.activity_submission_repository.ensure_indexes()
+            except Exception:  # noqa: BLE001 - dados legados duplicados não podem impedir a API de subir
+                logging.getLogger(__name__).exception("Não foi possível criar o índice único de submissões")
         try:
             yield
         finally:

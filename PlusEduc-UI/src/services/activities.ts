@@ -6,6 +6,7 @@ import type {
   GenerateActivityRequest,
   GeneratedQuestion,
   PaginatedResponse,
+  ActivitySubmissionDetail,
   PendingCorrection,
   StudentSubmissionResult,
 } from '@/types';
@@ -105,6 +106,10 @@ class ActivitiesService {
   // Deletar atividade
   async deleteActivity(id: string): Promise<void> {
     return apiClient.delete(`/activities/${id}`);
+  }
+
+  async getActivitySubmissions(activityId: string): Promise<ActivitySubmissionDetail[]> {
+    return apiClient.get<ActivitySubmissionDetail[]>(`/activities/${activityId}/submissions`);
   }
 
   async getPendingCorrections(): Promise<PendingCorrection[]> {

@@ -152,13 +152,14 @@ def test_attendance_with_real_grades(analytics_real_context):
     payload = response.json()
 
     grades = _real_grades(student_with_grades)
-    attended = sum(1 for item in grades if item.get("attendance") is True)
-    absences = sum(1 for item in grades if item.get("attendance") is False)
+    recorded = [item for item in grades if item.get("attendance") is not None]
+    attended = sum(1 for item in recorded if item.get("attendance") is True)
+    absences = sum(1 for item in recorded if item.get("attendance") is False)
     assert payload["studentId"] == student_with_grades
-    assert payload["totalClasses"] == len(grades)
+    assert payload["totalClasses"] == len(recorded)
     assert payload["attendedClasses"] == attended
     assert payload["absences"] == absences
-    assert payload["attendanceRate"] == int(attended * 100 / len(grades))
+    assert payload["attendanceRate"] == (int(attended * 100 / len(recorded)) if recorded else 0)
 
 
 def test_attendance_without_real_grades(analytics_real_context):

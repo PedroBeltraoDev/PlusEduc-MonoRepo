@@ -8,7 +8,7 @@ from fastapi import HTTPException
 
 from app.core.auth import UserPrincipal
 from app.repositories.activity_repository import ActivityRepository
-from app.repositories.activity_submission_repository import ActivitySubmissionRepository
+from app.repositories.activity_submission_repository import ActivitySubmissionRepository, DuplicateSubmissionError
 from app.schemas.activity_submission import (
     ActivitySubmissionRequest,
     QuestionResult,
@@ -44,15 +44,18 @@ class ActivitySubmissionService:
         if self.submission_repository.find_by_activity_student(activity_id, student_id):
             raise HTTPException(status_code=409, detail="Esta atividade já foi enviada")
         result = self.calculate(activity, request)
-        self.submission_repository.insert({
-            "activity_id": activity_id,
-            "student_id": student_id,
-            "content": json.dumps({
-                "answers": [item.model_dump() for item in request.answers],
-                **result.model_dump(),
-            }, ensure_ascii=False),
-            "submitted_at": datetime.now(timezone.utc),
-        })
+        try:
+            self.submission_repository.insert({
+                "activity_id": activity_id,
+                "student_id": student_id,
+                "content": json.dumps({
+                    "answers": [item.model_dump() for item in request.answers],
+                    **result.model_dump(),
+                }, ensure_ascii=False),
+                "submitted_at": datetime.now(timezone.utc),
+            })
+        except DuplicateSubmissionError:
+            raise HTTPException(status_code=409, detail="Esta atividade já foi enviada")
         return result
 
     def get_submission(self, activity_id: str, current_user: UserPrincipal) -> StudentSubmissionResult:

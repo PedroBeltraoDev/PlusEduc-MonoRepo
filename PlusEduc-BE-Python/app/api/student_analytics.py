@@ -29,13 +29,17 @@ def recommendation_service(request: Request) -> PedagogicalRecommendationService
     )
 
 
-def ensure_recommendation_access(student_id: str, current_user: UserPrincipal) -> None:
+def ensure_student_data_access(student_id: str, current_user: UserPrincipal, detail: str = "Você não tem permissão para consultar os dados deste aluno") -> None:
     role = (current_user.role or "").upper()
     if role in {"TEACHER", "ADMIN"}:
         return
     if role == "STUDENT" and current_user.student_id and str(current_user.student_id) == str(student_id):
         return
-    raise HTTPException(status_code=403, detail="Você não tem permissão para consultar esta recomendação")
+    raise HTTPException(status_code=403, detail=detail)
+
+
+def ensure_recommendation_access(student_id: str, current_user: UserPrincipal) -> None:
+    ensure_student_data_access(student_id, current_user, "Você não tem permissão para consultar esta recomendação")
 
 
 @router.get("/{student_id}/performance", response_model=StudentPerformanceResponse)
@@ -44,6 +48,7 @@ def student_performance(
     request: Request,
     current_user: UserPrincipal = Depends(get_current_user),
 ):
+    ensure_student_data_access(student_id, current_user)
     return service(request).performance(student_id)
 
 
@@ -53,6 +58,7 @@ def student_attendance(
     request: Request,
     current_user: UserPrincipal = Depends(get_current_user),
 ):
+    ensure_student_data_access(student_id, current_user)
     return service(request).attendance(student_id)
 
 

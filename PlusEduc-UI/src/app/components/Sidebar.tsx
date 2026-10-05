@@ -1,12 +1,24 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { BookOpen, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
+import { BookOpen, ClipboardCheck, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "./ui/utils";
+
+// Rotas que pertencem a um item de menu além do próprio caminho (telas de criação, detalhe, etc.).
+const relatedPaths: Record<string, string[]> = {
+  "/atividades": ["/gerar-atividade", "/nova-atividade"],
+  "/materias": ["/materias-topicos"],
+};
+
+export const isMenuItemActive = (itemPath: string, pathname: string) =>
+  pathname === itemPath ||
+  pathname.startsWith(`${itemPath}/`) ||
+  (relatedPaths[itemPath] ?? []).some((related) => pathname === related || pathname.startsWith(`${related}/`));
 
 export const menuItems = [
   { icon: LayoutDashboard, label: "Dashboard", path: "/dashboard" },
   { icon: Users, label: "Turmas", path: "/turmas" },
   { icon: ClipboardList, label: "Atividades", path: "/atividades" },
+  { icon: ClipboardCheck, label: "Notas e Frequência", path: "/notas" },
   { icon: BookOpen, label: "Minhas matérias", path: "/materias" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
 ];
@@ -60,9 +72,8 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
       <nav className="flex-1 px-4 py-6 space-y-1">
         {menuItems.map((item) => {
           const Icon = item.icon;
-          const isActive = location.pathname === item.path || 
-            (item.path === "/atividades" && ["/gerar-atividade", "/nova-atividade"].includes(location.pathname));
-          
+          const isActive = isMenuItemActive(item.path, location.pathname);
+
           return (
             <Link
               key={item.path}

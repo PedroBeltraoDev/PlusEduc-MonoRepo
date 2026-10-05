@@ -335,7 +335,7 @@ Termo de Compromisso de Estágio) não fazem parte deste cronograma.
 | **Sprint 3** | (já entregue) | Documento técnico | Backend e frontend rodando; autenticação/perfis; cadastros (alunos, professores, turmas, currículo BNCC); CRUD principal. |
 | **Sprint 4** | 26/09/2026 | Primeiro módulo completo | Módulo de Autenticação + Turmas/Alunos completo, com persistência, validações, mensagens de erro e navegação demonstráveis. |
 | **Sprint 5** | 03/10/2026 | Segundo módulo funcionando | Próximo módulo do sistema (ex.: Atividades/Submissões ou Notas/Frequência) funcionando de ponta a ponta. |
-| **Sprint 6** | 17/10/2026 | Aprimoramento do sistema | Refinamento dos módulos entregues; correção de bugs; evolução das validações e da UX. |
+| **Sprint 6** | 17/10/2026 | Aprimoramento do sistema | Terceiro módulo (Notas e Frequência — B08, RF10/RF11) e integração com Atividades, Turmas, Dashboard e portal do aluno; correções da Pré-Banca; melhorias de interface e de navegação. |
 | **Sprint 7** | 24/10/2026 | Sistema quase completo | Integração entre os módulos já implementados; avanço do núcleo de Tópicos Avançados (predição/recomendação). |
 | **Sprint 8** | 31/10/2026 | Sistema praticamente concluído | Fechamento das funcionalidades restantes do backlog (B17–B23). |
 | **Sprint 9** | 07/11/2026 | Testes completos | Cobertura de testes automatizados (backend e frontend); correção de regressões. |

@@ -52,10 +52,7 @@ class StudentAnalyticsService:
     def attendance(self, student_id: str) -> StudentAttendanceResponse:
         self.require_student(student_id)
         grades = self.grade_repository.find_by_student(student_id)
-        total_classes = len(grades)
-        attended = sum(1 for item in grades if item.get("attendance") is True)
-        absences = sum(1 for item in grades if item.get("attendance") is not None and item.get("attendance") is False)
-        attendance_rate = int((attended * 100) / total_classes) if total_classes else 0
+        total_classes, attended, absences, attendance_rate = self.attendance_counts(grades)
         return StudentAttendanceResponse(
             studentId=student_id,
             attendanceRate=attendance_rate,
@@ -69,6 +66,17 @@ class StudentAnalyticsService:
         if not student:
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
         return student
+
+    @staticmethod
+    def attendance_counts(grades: list[dict[str, Any]]) -> tuple[int, int, int, int]:
+        # Só conta como aula o lançamento em que a presença foi registrada: notas vindas
+        # de atividades online (attendance ausente) não podem diluir a frequência.
+        recorded = [item.get("attendance") for item in grades if item.get("attendance") is not None]
+        total_classes = len(recorded)
+        attended = sum(1 for value in recorded if value is True)
+        absences = total_classes - attended
+        attendance_rate = int((attended * 100) / total_classes) if total_classes else 0
+        return total_classes, attended, absences, attendance_rate
 
     @staticmethod
     def grade_value(document: dict[str, Any]) -> float:

@@ -18,6 +18,7 @@ class GradeCreateRequest(BaseModel):
     subject: str | None = None
     activityType: str | None = None
     observations: str | None = Field(default=None, max_length=500)
+    activityId: str | None = None
     date: datetime
 
 
@@ -52,8 +53,47 @@ class GradeResponse(BaseModel):
     date: datetime
     activityType: str | None = None
     observations: str | None = None
+    activityId: str | None = None
     createdAt: datetime | None = None
 
 
 class GradeAverageResponse(BaseModel):
     average: float
+
+
+class GradeStudentSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    studentId: str
+    studentName: str
+    average: float
+    launches: int
+    totalClasses: int
+    attendedClasses: int
+    absences: int
+    attendanceRate: int
+    lastLaunchAt: datetime | None = None
+
+
+class GradeClassroomSummaryResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    classroomId: str
+    classroomName: str
+    subject: str | None = None
+    studentsCount: int
+    totalLaunches: int
+    averageGrade: float
+    attendanceRate: int
+    students: list[GradeStudentSummary]
+
+
+class ActivityGradesLaunchResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    activityId: str
+    activityTitle: str
+    launched: int
+    alreadyLaunched: int
+    awaitingCorrection: int
+    notSubmitted: int

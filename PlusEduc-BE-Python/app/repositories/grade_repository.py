@@ -28,6 +28,9 @@ class GradeRepository:
     def find_by_classroom(self, classroom_id: str) -> list[dict[str, Any]]:
         return list(self.collection.find({"classroomId": classroom_id}).sort("date", -1))
 
+    def find_by_activity(self, activity_id: str) -> list[dict[str, Any]]:
+        return list(self.collection.find({"activityId": activity_id}))
+
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)
         document["_id"] = result.inserted_id

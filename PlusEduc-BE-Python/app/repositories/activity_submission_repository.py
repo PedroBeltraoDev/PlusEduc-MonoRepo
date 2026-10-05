@@ -1,8 +1,13 @@
 from typing import Any
 
 from bson import ObjectId
+from pymongo.errors import DuplicateKeyError
 
 from app.core.database import MongoConnection
+
+
+class DuplicateSubmissionError(Exception):
+    """O aluno já enviou esta atividade (garantido pelo índice único do banco)."""
 
 
 class ActivitySubmissionRepository:
@@ -12,6 +17,16 @@ class ActivitySubmissionRepository:
     @property
     def collection(self):
         return self._mongo.database["activity_submissions"]
+
+    def ensure_indexes(self) -> None:
+        # Garante no banco o que o 409 da API só garante "na maioria das vezes": duas requisições
+        # simultâneas do mesmo aluno não conseguem gravar duas submissões da mesma atividade.
+        self.collection.create_index(
+            [("activity_id", 1), ("student_id", 1)],
+            name="submissions_activity_student_unique",
+            unique=True,
+            partialFilterExpression={"activity_id": {"$type": "string"}, "student_id": {"$type": "string"}},
+        )
 
     def find_by_activity_student(self, activity_id: str, student_id: str) -> dict[str, Any] | None:
         return self.collection.find_one({
@@ -58,6 +73,9 @@ class ActivitySubmissionRepository:
         return current
 
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
-        result = self.collection.insert_one(document)
+        try:
+            result = self.collection.insert_one(document)
+        except DuplicateKeyError as error:
+            raise DuplicateSubmissionError() from error
         document["_id"] = result.inserted_id
         return document
