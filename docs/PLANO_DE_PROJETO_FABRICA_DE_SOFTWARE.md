@@ -322,18 +322,32 @@ Priorização MoSCoW: **M** = _Must_, **S** = _Should_, **C** = _Could_.
 
 ## 9. Cronograma inicial
 
-Semestre 2026.2 · orientações semanais obrigatórias · entrega final **05/12/2026**.
-As datas podem ser ajustadas conforme o andamento; novas sprints podem ser
-adicionadas.
+Semestre 2026.2 · calendário oficial de entregas via Microsoft Teams (disciplina
+20262 - FÁBRICA DE SOFTWARE, turma GRA0790108NNB) · entrega final **05/12/2026**.
+As datas abaixo são os prazos reais publicados no Teams (não estimativas), com
+entrega sempre às 23:59 do dia indicado. Entregas de outras disciplinas (ex.:
+Termo de Compromisso de Estágio) não fazem parte deste cronograma.
 
-| Sprint | Período | Metas principais | Entregável de orientação |
+| Sprint | Prazo de entrega | Título no Teams | Metas principais |
 |---|---|---|---|
-| **Sprint 1** | 03/09 – 17/09 | Formação da equipe e papéis; escolha do tema; levantamento de requisitos; este documento; repositório criado. | Documento de projeto + repositório GitHub. |
-| **Sprint 2** | 18/09 – 02/10 | Casos de uso detalhados; modelo do banco (MongoDB); protótipo navegável das telas principais. | Modelo de dados + protótipo + backlog refinado. |
-| **Sprint 3** | 03/10 – 24/10 | Arquitetura definida; ambiente e CI; autenticação/perfis; cadastros (alunos, professores, turmas, currículo BNCC); notas/frequência; CRUD de atividades. | Backend e frontend rodando com login e cadastros. |
-| **Sprint 4** | 25/10 – 14/11 | Submissão e correção de atividades; painéis de desempenho (turma e aluno); **1ª versão do núcleo de Tópicos Avançados**: predição de risco + recomendação explicável. | Fluxo completo professor/aluno + predição e recomendação funcionando. |
-| **Sprint 5** | 15/11 – 30/11 | Clustering de perfis; otimização dos grupos de reforço; **recálculo em lote paralelo com _speedup_ medido**; dashboard; PDF; testes; documentação técnica. | Sistema integrado completo + componente de alto desempenho demonstrável. |
-| **Sprint Final** | 01/12 – 05/12 | Ajustes finais; gravação do **vídeo horizontal (16:9, até 10 min, YouTube)** e do **vídeo vertical (9:16, Instagram, marcando `@pryscillabgoncalves` e `@antenorparnaiba`)**; preparação da apresentação para a banca. | Entrega final em 05/12/2026. |
+| **Sprint 1** | (já entregue) | Plano de projeto | Formação da equipe e papéis; escolha do tema; levantamento de requisitos; documento de projeto; repositório criado. |
+| **Sprint 2** | (já entregue) | Documento técnico | Arquitetura, diagrama de classes, MER/modelo relacional, protótipo das telas, estrutura inicial do banco. |
+| **Sprint 3** | (já entregue) | Documento técnico | Backend e frontend rodando; autenticação/perfis; cadastros (alunos, professores, turmas, currículo BNCC); CRUD principal. |
+| **Sprint 4** | 26/09/2026 | Primeiro módulo completo | Módulo de Autenticação + Turmas/Alunos completo, com persistência, validações, mensagens de erro e navegação demonstráveis. |
+| **Sprint 5** | 03/10/2026 | Segundo módulo funcionando | Próximo módulo do sistema (ex.: Atividades/Submissões ou Notas/Frequência) funcionando de ponta a ponta. |
+| **Sprint 6** | 17/10/2026 | Aprimoramento do sistema | Refinamento dos módulos entregues; correção de bugs; evolução das validações e da UX. |
+| **Sprint 7** | 24/10/2026 | Sistema quase completo | Integração entre os módulos já implementados; avanço do núcleo de Tópicos Avançados (predição/recomendação). |
+| **Sprint 8** | 31/10/2026 | Sistema praticamente concluído | Fechamento das funcionalidades restantes do backlog (B17–B23). |
+| **Sprint 9** | 07/11/2026 | Testes completos | Cobertura de testes automatizados (backend e frontend); correção de regressões. |
+| **Sprint 10** | 14/11/2026 | Versão release candidate | Sistema estabilizado, sem funcionalidades pendentes críticas; preparação para homologação. |
+| **Sprint 11** | 21/11/2026 | Preparação para entrega | Documentação final, roteiro de demonstração, ensaio da apresentação. |
+| **Sprint 12** | 28/11/2026 | Versão final do sistema | Sistema completo e congelado para gravação dos vídeos. |
+| **Entrega Final** | 05/12/2026 | Entrega final — Fábrica de Software | Vídeo horizontal (16:9, até 10 min, YouTube) e vídeo vertical (9:16, Instagram, marcando `@pryscillabgoncalves` e `@antenorparnaiba`); apresentação para a banca. |
+
+O **núcleo de Tópicos Avançados** (predição de risco, clustering, recomendação
+explicável, otimização de grupos e recálculo em lote com _speedup_ medido) é
+distribuído ao longo das Sprints 6 a 9, conforme o backlog (itens B15–B19),
+em vez de concentrado em uma única sprint.
 
 ### Alinhamento com os critérios de avaliação da disciplina
 - **Desenvolvimento do projeto (60%)** — funcionamento, regras de negócio,
