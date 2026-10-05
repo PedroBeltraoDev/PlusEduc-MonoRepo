@@ -1,9 +1,17 @@
-import { useMemo, useState } from "react";
-import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Download, Info, Loader2, RotateCcw, Users, XCircle } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowLeft, CheckCircle2, ChevronDown, ChevronUp, ClipboardCheck, Download, GraduationCap, Info, Loader2, RotateCcw, Users, XCircle } from "lucide-react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/useApi";
-import { activitiesService } from "@/services";
+import { activitiesService, gradesService } from "@/services";
+import type { ActivitySubmissionDetail } from "@/types";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/app/components/ui/dialog";
 
 function optionLabel(index: number) {
   return String.fromCharCode(65 + index);
@@ -39,11 +47,35 @@ export function ProfessorAtividadeDetalhe() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [graded, setGraded] = useState(false);
   const [downloading, setDownloading] = useState(false);
+  const [launchingGrades, setLaunchingGrades] = useState(false);
+  const [submissions, setSubmissions] = useState<ActivitySubmissionDetail[]>([]);
+  const [openSubmission, setOpenSubmission] = useState<ActivitySubmissionDetail | null>(null);
   const [expandedParticipantList, setExpandedParticipantList] = useState<"completed" | "pending" | null>(null);
 
   const { data: activity, loading, error } = useApi(
     () => activitiesService.getActivityById(id!),
     [id],
+  );
+
+  useEffect(() => {
+    if (!id) return;
+    let mounted = true;
+    void activitiesService
+      .getActivitySubmissions(id)
+      .then((items) => {
+        if (mounted) setSubmissions(items);
+      })
+      .catch(() => {
+        if (mounted) setSubmissions([]);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, [id, launchingGrades]);
+
+  const submissionByStudent = useMemo(
+    () => new Map(submissions.map((item) => [item.studentId, item])),
+    [submissions],
   );
 
   const questions = activity?.questions ?? [];
@@ -100,6 +132,27 @@ export function ProfessorAtividadeDetalhe() {
     }
   };
 
+  const handleLaunchGrades = async () => {
+    if (!activity) return;
+
+    try {
+      setLaunchingGrades(true);
+      const result = await gradesService.launchFromActivity(activity.id);
+      const parts = [
+        `${result.launched} nota(s) lançada(s)`,
+        result.alreadyLaunched ? `${result.alreadyLaunched} já estavam no boletim` : null,
+        result.awaitingCorrection ? `${result.awaitingCorrection} aguardando correção` : null,
+        result.notSubmitted ? `${result.notSubmitted} sem entrega` : null,
+      ].filter(Boolean);
+      if (result.launched > 0) toast.success(parts.join(" • "));
+      else toast.info(parts.join(" • "));
+    } catch (launchError) {
+      toast.error(launchError instanceof Error ? launchError.message : "Não foi possível lançar as notas.");
+    } finally {
+      setLaunchingGrades(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
@@ -151,15 +204,39 @@ export function ProfessorAtividadeDetalhe() {
               </p>
             ) : null}
           </div>
-          <button
-            type="button"
-            onClick={handleDownloadPdf}
-            disabled={downloading}
-            className="inline-flex w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-[#1E5AA8] px-4 py-2 text-sm font-semibold text-[#1E5AA8] transition-colors hover:bg-[#1E5AA8] hover:text-white disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
-          >
-            {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
-            Baixar PDF
-          </button>
+          <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto">
+            <button
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={downloading}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-[#1E5AA8] px-4 py-2 text-sm font-semibold text-[#1E5AA8] transition-colors hover:bg-[#1E5AA8] hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+              Baixar PDF
+            </button>
+            <button
+              type="button"
+              onClick={handleLaunchGrades}
+              disabled={launchingGrades || !activity.participation || activity.participation.completedStudents === 0}
+              title={
+                activity.participation?.completedStudents
+                  ? "Cria no boletim a nota de cada aluno que já enviou a atividade"
+                  : "Disponível quando algum aluno enviar a atividade"
+              }
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-[#1E5AA8] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#0A2463] disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {launchingGrades ? <Loader2 className="h-4 w-4 animate-spin" /> : <GraduationCap className="h-4 w-4" />}
+              Lançar notas no boletim
+            </button>
+            {activity.classroomId ? (
+              <Link
+                to={`/notas?turma=${activity.classroomId}`}
+                className="text-center text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#4FC3F7]"
+              >
+                Ver notas e frequência da turma
+              </Link>
+            ) : null}
+          </div>
         </div>
       </section>
 
@@ -219,6 +296,21 @@ export function ProfessorAtividadeDetalhe() {
                         <p className="font-medium text-gray-800 dark:text-gray-100">{participant.studentName}</p>
                         {expandedParticipantList === "completed" && participant.submittedAt ? (
                           <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Enviada em {new Date(participant.submittedAt).toLocaleString("pt-BR")}</p>
+                        ) : null}
+                        {expandedParticipantList === "completed" && submissionByStudent.get(participant.studentId) ? (
+                          <div className="mt-2 flex flex-wrap items-center justify-between gap-2">
+                            <span className="text-xs font-semibold text-[#1E5AA8] dark:text-[#4FC3F7]">
+                              {submissionByStudent.get(participant.studentId)!.correctCount}/{submissionByStudent.get(participant.studentId)!.totalQuestions} acertos • {submissionByStudent.get(participant.studentId)!.scorePercent}%
+                              {submissionByStudent.get(participant.studentId)!.pendingCount > 0 ? " • aguardando correção" : ""}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => setOpenSubmission(submissionByStudent.get(participant.studentId)!)}
+                              className="rounded-md border border-[#1E5AA8] px-2 py-1 text-xs font-semibold text-[#1E5AA8] transition hover:bg-[#1E5AA8] hover:text-white dark:border-[#4FC3F7] dark:text-[#4FC3F7]"
+                            >
+                              Ver respostas
+                            </button>
+                          </div>
                         ) : null}
                       </li>
                     ))}
@@ -357,6 +449,58 @@ export function ProfessorAtividadeDetalhe() {
           );
         })}
       </div>
+
+      <Dialog open={openSubmission !== null} onOpenChange={(open) => !open && setOpenSubmission(null)}>
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Respostas de {openSubmission?.studentName}</DialogTitle>
+            <DialogDescription>
+              {openSubmission
+                ? `${openSubmission.correctCount} de ${openSubmission.totalQuestions} acertos (${openSubmission.scorePercent}%)${openSubmission.pendingCount > 0 ? ` • ${openSubmission.pendingCount} questão(ões) aguardando correção` : ""}`
+                : ""}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            {openSubmission?.results.map((result) => (
+              <div
+                key={result.questionIndex}
+                className={`rounded-xl border p-4 ${
+                  result.reviewStatus === "PENDING"
+                    ? "border-amber-300 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/20"
+                    : result.correct
+                      ? "border-green-300 bg-green-50 dark:border-green-800 dark:bg-green-950/20"
+                      : "border-red-300 bg-red-50 dark:border-red-800 dark:bg-red-950/20"
+                }`}
+              >
+                <p className="font-semibold text-[#0A2463] dark:text-white">
+                  Questão {result.questionIndex + 1}: {result.questionText}
+                </p>
+                <p className="mt-2 text-sm text-gray-700 dark:text-gray-200">
+                  <span className="font-semibold">Resposta do aluno:</span> {result.selectedAnswer || "(em branco)"}
+                </p>
+                {result.reviewStatus === "PENDING" ? (
+                  <p className="mt-1 text-sm font-semibold text-amber-700 dark:text-amber-300">Aguardando correção manual.</p>
+                ) : (
+                  <>
+                    {result.correctAnswer ? (
+                      <p className="mt-1 text-sm text-gray-700 dark:text-gray-200">
+                        <span className="font-semibold">Gabarito:</span> {result.correctAnswer}
+                      </p>
+                    ) : null}
+                    <p className={`mt-1 flex items-center gap-1 text-sm font-semibold ${result.correct ? "text-green-700 dark:text-green-300" : "text-red-700 dark:text-red-300"}`}>
+                      {result.correct ? <CheckCircle2 className="h-4 w-4" /> : <XCircle className="h-4 w-4" />}
+                      {result.correct ? "Correta" : "Incorreta"}
+                    </p>
+                  </>
+                )}
+                {result.teacherFeedback ? (
+                  <p className="mt-1 text-sm italic text-gray-600 dark:text-gray-300">Comentário: {result.teacherFeedback}</p>
+                ) : null}
+              </div>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -230,6 +230,18 @@ export interface StudentSubmissionResult {
   results: QuestionResult[];
 }
 
+export interface ActivitySubmissionDetail {
+  submissionId: string;
+  studentId: string;
+  studentName: string;
+  submittedAt?: string | null;
+  correctCount: number;
+  totalQuestions: number;
+  scorePercent: number;
+  pendingCount: number;
+  results: QuestionResult[];
+}
+
 export interface PendingQuestion {
   questionIndex: number;
   questionText: string;
@@ -275,9 +287,10 @@ export interface GradeRecord {
   classroomId: string;
   subject: string;
   grade: number;
-  attendance: boolean;
+  attendance?: boolean | null;
   activityType: string;
   observations?: string;
+  activityId?: string | null;
   date: string;
   createdAt?: string;
 }

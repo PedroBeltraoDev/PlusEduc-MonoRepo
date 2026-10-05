@@ -2,27 +2,8 @@ import { createBrowserRouter, Navigate } from "react-router";
 import { DashboardLayout } from "./components/DashboardLayout";
 import { StudentLayout } from "./components/StudentLayout";
 import { Login } from "./pages/Login";
-import { ForgotPassword } from "./pages/ForgotPassword";
-import { Dashboard } from "./pages/Dashboard";
-import { Turmas } from "./pages/Turmas";
-import { Atividades } from "./pages/Atividades";
-import { GerarAtividade } from "./pages/GerarAtividade";
-import { NovaAtividade } from "./pages/NovaAtividade";
-import { Configuracoes } from "./pages/Configuracoes";
-import { MateriasTopicos } from "./pages/MateriasTopicos";
-import { Materias } from "./pages/Materias";
-import { MateriaTurmas } from "./pages/MateriaTurmas";
-import { MateriaTurmaDesempenho } from "./pages/MateriaTurmaDesempenho";
-import { AlunoHome } from "./pages/student/AlunoHome";
-import { AlunoAtividades } from "./pages/student/AlunoAtividades";
-import { AlunoAtividadeDetalhe } from "./pages/student/AlunoAtividadeDetalhe";
-import { ProfessorAtividadeDetalhe } from "./pages/ProfessorAtividadeDetalhe";
-import { AlunoTurma } from "./pages/student/AlunoTurma";
-import { AlunoProfessores } from "./pages/student/AlunoProfessores";
-import { AlunoNotas } from "./pages/student/AlunoNotas";
-import { AlunoDesempenho } from "./pages/student/AlunoDesempenho";
-import { AlunoConfiguracoes } from "./pages/student/AlunoConfiguracoes";
 
+// Cada página é carregada sob demanda (code splitting por rota): o bundle inicial traz só o login e os layouts.
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -34,7 +15,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/esqueci-senha",
-    element: <ForgotPassword />,
+    lazy: async () => ({ Component: (await import("./pages/ForgotPassword")).ForgotPassword }),
   },
   {
     path: "/",
@@ -42,47 +23,51 @@ export const router = createBrowserRouter([
     children: [
       {
         path: "dashboard",
-        element: <Dashboard />,
+        lazy: async () => ({ Component: (await import("./pages/Dashboard")).Dashboard }),
       },
       {
         path: "turmas",
-        element: <Turmas />,
+        lazy: async () => ({ Component: (await import("./pages/Turmas")).Turmas }),
+      },
+      {
+        path: "notas",
+        lazy: async () => ({ Component: (await import("./pages/Notas")).Notas }),
       },
       {
         path: "atividades",
-        element: <Atividades />,
+        lazy: async () => ({ Component: (await import("./pages/Atividades")).Atividades }),
       },
       {
         path: "atividades/:id",
-        element: <ProfessorAtividadeDetalhe />,
+        lazy: async () => ({ Component: (await import("./pages/ProfessorAtividadeDetalhe")).ProfessorAtividadeDetalhe }),
       },
       {
         path: "gerar-atividade",
-        element: <GerarAtividade />,
+        lazy: async () => ({ Component: (await import("./pages/GerarAtividade")).GerarAtividade }),
       },
       {
         path: "nova-atividade",
-        element: <NovaAtividade />,
+        lazy: async () => ({ Component: (await import("./pages/NovaAtividade")).NovaAtividade }),
       },
       {
         path: "configuracoes",
-        element: <Configuracoes />,
+        lazy: async () => ({ Component: (await import("./pages/Configuracoes")).Configuracoes }),
       },
       {
         path: "materias",
-        element: <Materias />,
+        lazy: async () => ({ Component: (await import("./pages/Materias")).Materias }),
       },
       {
         path: "materias/:subjectId/turmas",
-        element: <MateriaTurmas />,
+        lazy: async () => ({ Component: (await import("./pages/MateriaTurmas")).MateriaTurmas }),
       },
       {
         path: "materias/:subjectId/turmas/:classroomId/desempenho",
-        element: <MateriaTurmaDesempenho />,
+        lazy: async () => ({ Component: (await import("./pages/MateriaTurmaDesempenho")).MateriaTurmaDesempenho }),
       },
       {
         path: "materias-topicos",
-        element: <MateriasTopicos />,
+        lazy: async () => ({ Component: (await import("./pages/MateriasTopicos")).MateriasTopicos }),
       },
     ],
   },
@@ -92,35 +77,35 @@ export const router = createBrowserRouter([
     children: [
       {
         index: true,
-        element: <AlunoHome />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoHome")).AlunoHome }),
       },
       {
         path: "atividades",
-        element: <AlunoAtividades />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoAtividades")).AlunoAtividades }),
       },
       {
         path: "atividades/:id",
-        element: <AlunoAtividadeDetalhe />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoAtividadeDetalhe")).AlunoAtividadeDetalhe }),
       },
       {
         path: "turma",
-        element: <AlunoTurma />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoTurma")).AlunoTurma }),
       },
       {
         path: "professores",
-        element: <AlunoProfessores />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoProfessores")).AlunoProfessores }),
       },
       {
         path: "notas",
-        element: <AlunoNotas />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoNotas")).AlunoNotas }),
       },
       {
         path: "desempenho",
-        element: <AlunoDesempenho />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoDesempenho")).AlunoDesempenho }),
       },
       {
         path: "configuracoes",
-        element: <AlunoConfiguracoes />,
+        lazy: async () => ({ Component: (await import("./pages/student/AlunoConfiguracoes")).AlunoConfiguracoes }),
       },
     ],
   },
