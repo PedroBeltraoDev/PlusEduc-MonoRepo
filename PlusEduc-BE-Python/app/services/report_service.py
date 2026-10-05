@@ -354,7 +354,7 @@ class ReportService:
         avgs = [r["average"] for r in rows if r["average"] is not None]
         columns = [
             ReportColumn(key="classroom", label="Turma"), ReportColumn(key="student", label="Aluno"),
-            ReportColumn(key="matricula", label="Matrícula"), ReportColumn(key="average", label="Média", type="number"),
+            ReportColumn(key="matricula", label="Matrícula"), ReportColumn(key="average", label="Média", type="decimal"),
             ReportColumn(key="attendanceRate", label="Frequência", type="percent"),
             ReportColumn(key="launches", label="Lançamentos", type="number"), ReportColumn(key="status", label="Situação"),
         ]
@@ -384,8 +384,8 @@ class ReportService:
         rows.sort(key=lambda r: (r["classroom"].lower(), r["subject"].lower()))
         columns = [
             ReportColumn(key="classroom", label="Turma"), ReportColumn(key="subject", label="Disciplina"),
-            ReportColumn(key="average", label="Média", type="number"), ReportColumn(key="min", label="Menor nota", type="number"),
-            ReportColumn(key="max", label="Maior nota", type="number"), ReportColumn(key="launches", label="Lançamentos", type="number"),
+            ReportColumn(key="average", label="Média", type="decimal"), ReportColumn(key="min", label="Menor nota", type="decimal"),
+            ReportColumn(key="max", label="Maior nota", type="decimal"), ReportColumn(key="launches", label="Lançamentos", type="number"),
             ReportColumn(key="students", label="Alunos", type="number"),
         ]
         all_vals = [self._value(g) for g in data["grades"]]
@@ -405,7 +405,7 @@ class ReportService:
         } for r in rows]
         columns = [
             ReportColumn(key="classroom", label="Turma"), ReportColumn(key="student", label="Aluno"),
-            ReportColumn(key="average", label="Média", type="number"), ReportColumn(key="attendanceRate", label="Frequência", type="percent"),
+            ReportColumn(key="average", label="Média", type="decimal"), ReportColumn(key="attendanceRate", label="Frequência", type="percent"),
             ReportColumn(key="reason", label="Motivo"),
         ]
         return columns, out, [ReportSummaryItem(label="Alunos em atenção", value=str(len(out)))]

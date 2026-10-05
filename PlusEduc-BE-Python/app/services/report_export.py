@@ -28,6 +28,8 @@ def _text(column: ReportColumn, value) -> str:
         return "-"
     if column.type == "percent":
         return f"{value}%"
+    if column.type == "decimal" and isinstance(value, (int, float)):
+        return f"{value:.2f}".replace(".", ",")
     if column.type == "number" and isinstance(value, float):
         return f"{value:.2f}".replace(".", ",")
     if column.type == "date" and isinstance(value, str) and len(value) >= 10:
@@ -82,7 +84,7 @@ def to_xlsx(report: ReportResponse) -> bytes:
     for index, column in enumerate(report.columns, start=1):
         letter = get_column_letter(index)
         for cell in sheet[letter][header_row:]:
-            if column.type == "number" and isinstance(cell.value, float):
+            if column.type == "decimal" and isinstance(cell.value, (int, float)):
                 cell.number_format = "0.00"
             elif column.type == "percent" and isinstance(cell.value, (int, float)):
                 cell.number_format = '0"%"'

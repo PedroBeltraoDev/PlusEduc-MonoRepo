@@ -20,25 +20,36 @@ class SearchService:
         self.activities = activities
 
     @staticmethod
-    def _score(term: str, *fields: Any) -> int | None:
+    def _field_score(token: str, *fields: Any) -> int | None:
         best = None
         for index, field in enumerate(fields):
             text = norm(field)
             if not text:
                 continue
-            if text == term:
+            if text == token:
                 score = 0
-            elif text.startswith(term):
+            elif text.startswith(token):
                 score = 1
-            elif any(word.startswith(term) for word in text.split()):
+            elif any(word.startswith(token) for word in text.split()):
                 score = 2
-            elif term in text:
+            elif token in text:
                 score = 3
             else:
                 continue
             score = score * 10 + index
             best = score if best is None else min(best, score)
         return best
+
+    @classmethod
+    def _score(cls, term: str, *fields: Any) -> int | None:
+        # Várias palavras: todas precisam aparecer (em qualquer campo e em qualquer ordem).
+        total = 0
+        for token in term.split():
+            score = cls._field_score(token, *fields)
+            if score is None:
+                return None
+            total += score
+        return total
 
     def search(self, query: str, kinds: list[str] | None, limit: int) -> SearchResponse:
         term = norm(query)

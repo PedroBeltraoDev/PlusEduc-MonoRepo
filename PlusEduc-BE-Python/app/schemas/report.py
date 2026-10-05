@@ -11,7 +11,7 @@ class ReportColumn(BaseModel):
 
     key: str
     label: str
-    type: str = "text"  # text | number | percent | date | datetime
+    type: str = "text"  # text | number | decimal | percent | date | datetime
 
 
 class ReportSummaryItem(BaseModel):

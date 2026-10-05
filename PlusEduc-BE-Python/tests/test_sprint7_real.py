@@ -263,3 +263,14 @@ def test_students_cannot_manage_classrooms_students_or_teachers(ctx):
     assert client.delete(f"/api/classrooms/{classroom_id}/unenroll/{student_id}").status_code == 403
     for path in ("/api/classrooms", f"/api/classrooms/{classroom_id}", "/api/students", f"/api/students/{student_id}", "/api/teachers"):
         assert client.get(path).status_code == 403, path
+
+
+def test_search_requires_every_word_in_any_order(ctx):
+    client, _, _, _, student = ctx
+    words = student["name"].split()
+    if len(words) < 2:
+        pytest.skip("aluno de teste com nome de uma palavra só")
+    query = f"{words[-1].upper()} {norm(words[0])}"
+    found = client.get("/api/search", params={"q": query, "types": "students"}).json()
+    assert any(hit["id"] == str(student["_id"]) for hit in found["results"])
+    assert client.get("/api/search", params={"q": f"{words[0]} zzzqqq"}).json()["total"] == 0
