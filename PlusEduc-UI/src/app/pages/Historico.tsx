@@ -3,6 +3,7 @@ import { ChevronDown, ChevronLeft, ChevronRight, ChevronUp, FilterX, History, Lo
 import { reportsService } from "@/services/reports";
 import type { AuditFilters, AuditLogEntry, AuditLogPage } from "@/services/reports";
 import { useAuth } from "@/contexts/AuthContext";
+import { activityTypeLabel, formatDate } from "@/utils";
 
 const PAGE_SIZE = 15;
 const ENTITIES: [string, string][] = [
@@ -43,7 +44,15 @@ const FIELD_LABELS: Record<string, string> = {
 const inputClass =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-[#1E5AA8] dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100";
 
-const show = (value: unknown) => (value === null || value === undefined || value === "" ? "-" : value === true ? "Presente" : value === false ? "Faltou" : String(value));
+const show = (value: unknown, key?: string) => {
+  if (value === null || value === undefined || value === "") return "-";
+  if (value === true) return "Presente";
+  if (value === false) return "Faltou";
+  if (key === "grade" && typeof value === "number") return value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+  if (key === "date" && typeof value === "string") return formatDate(value);
+  if (key === "activityType" && typeof value === "string") return activityTypeLabel(value);
+  return String(value);
+};
 
 function Details({ entry }: { entry: AuditLogEntry }) {
   const before = entry.details.before as Record<string, unknown> | undefined;
@@ -61,12 +70,12 @@ function Details({ entry }: { entry: AuditLogEntry }) {
         </thead>
         <tbody>
           {keys.map((key) => {
-            const changed = before && after && show(before[key]) !== show(after[key]);
+            const changed = before && after && show(before[key], key) !== show(after[key], key);
             return (
               <tr key={key} className={changed ? "font-semibold text-[#0A2463] dark:text-white" : "text-gray-600 dark:text-gray-300"}>
                 <td className="pr-6">{FIELD_LABELS[key]}</td>
-                {before && <td className="pr-6">{show(before[key])}</td>}
-                {after && <td>{show(after[key])}</td>}
+                {before && <td className="pr-6">{show(before[key], key)}</td>}
+                {after && <td>{show(after[key], key)}</td>}
               </tr>
             );
           })}
