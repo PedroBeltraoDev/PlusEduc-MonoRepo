@@ -67,6 +67,20 @@ class PendingCorrectionResponse(BaseModel):
     questions: list[PendingQuestionResponse] = Field(default_factory=list)
 
 
+class ActivitySubmissionDetailResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    submissionId: str
+    studentId: str
+    studentName: str
+    submittedAt: datetime | None = None
+    correctCount: int
+    totalQuestions: int
+    scorePercent: int
+    pendingCount: int = 0
+    results: list[QuestionResult] = Field(default_factory=list)
+
+
 class ReviewQuestionRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
