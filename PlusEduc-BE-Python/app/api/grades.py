@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.core.auth import UserPrincipal
-from app.dependencies import get_current_user, require_roles
+from app.dependencies import require_roles
 from app.schemas.grade import (
+    ActivityGradesLaunchResponse,
     GradeAverageResponse,
+    GradeClassroomSummaryResponse,
     GradeCreateRequest,
     GradeResponse,
     GradeUpdateRequest,
@@ -18,6 +20,8 @@ def service(request: Request) -> GradeService:
         request.app.state.grade_repository,
         request.app.state.student_repository,
         request.app.state.classroom_repository,
+        request.app.state.activity_repository,
+        request.app.state.activity_submission_repository,
     )
 
 
@@ -33,7 +37,7 @@ def create_grade(
 @router.get("", response_model=list[GradeResponse])
 def list_grades(
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).list_all()
 
@@ -42,7 +46,7 @@ def list_grades(
 def average_by_student(
     student_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).average_by_student(student_id)
 
@@ -51,7 +55,7 @@ def average_by_student(
 def grades_by_student(
     student_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).by_student(student_id)
 
@@ -60,16 +64,35 @@ def grades_by_student(
 def grades_by_classroom(
     classroom_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).by_classroom(classroom_id)
+
+
+@router.get("/classroom/{classroom_id}/summary", response_model=GradeClassroomSummaryResponse)
+def classroom_summary(
+    classroom_id: str,
+    request: Request,
+    subject: str | None = None,
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+):
+    return service(request).classroom_summary(classroom_id, subject)
+
+
+@router.post("/from-activity/{activity_id}", response_model=ActivityGradesLaunchResponse)
+def launch_grades_from_activity(
+    activity_id: str,
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+):
+    return service(request).launch_from_activity(activity_id, current_user)
 
 
 @router.get("/{grade_id}", response_model=GradeResponse)
 def get_grade(
     grade_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).get(grade_id)
 
