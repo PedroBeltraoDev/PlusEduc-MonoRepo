@@ -120,6 +120,35 @@ def test_activities_crud_queries_and_submission_on_real_mongodb(activities_real_
         assert db.activities.find_one({"_id": ObjectId(activity_id)}) is None
 
 
+def test_student_cannot_read_activities_outside_the_portal(activities_real_context):
+    client, db, student_id, teacher_id, classroom_id = activities_real_context
+    created = client.post("/api/activities", json=activity_payload(classroom_id, student_id))
+    assert created.status_code == 201
+    activity_id = created.json()["id"]
+
+    student_user = UserPrincipal(user_id=student_id, email="student-activities@local", role="STUDENT", student_id=student_id)
+    teacher_user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="TEACHER", student_id=student_id)
+    try:
+        client.app.dependency_overrides[get_current_user] = lambda: student_user
+        for path in (
+            "/api/activities",
+            f"/api/activities/{activity_id}",
+            f"/api/activities/classroom/{classroom_id}",
+            f"/api/activities/student/{student_id}",
+            f"/api/activities/teacher/{teacher_id}",
+        ):
+            assert client.get(path).status_code == 403, path
+
+        portal = client.get(f"/api/student-portal/activities/{activity_id}")
+        assert portal.status_code == 200
+        assert "correctAnswer" not in json.dumps(portal.json())
+    finally:
+        client.app.dependency_overrides[get_current_user] = lambda: teacher_user
+        deleted = client.delete(f"/api/activities/{activity_id}")
+        assert deleted.status_code == 204
+        assert db.activities.find_one({"_id": ObjectId(activity_id)}) is None
+
+
 def test_activity_data_collections_are_real_and_unchanged_after_cleanup(activities_real_context):
     _, db, _, _, _ = activities_real_context
     assert db.activities.count_documents({}) >= 1

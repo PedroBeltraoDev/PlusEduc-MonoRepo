@@ -111,13 +111,37 @@ def test_performance_student_without_real_grades(analytics_real_context):
     }
 
 
+def _real_grades(student_id):
+    mongo = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000, connectTimeoutMS=3000)
+    try:
+        return list(mongo["escola_db"].grades.find({"studentId": student_id}))
+    finally:
+        mongo.close()
+
+
+def _grade_value(document):
+    return float(document.get("grade", document.get("gradeValue")) or 0)
+
+
 def test_average_calculation_matches_real_grade_data(analytics_real_context):
     client, student_with_grades, _ = analytics_real_context
     response = client.get(f"/api/students/{student_with_grades}/performance")
     assert response.status_code == 200
     payload = response.json()
-    assert payload["averageGrade"] == 8.5
-    assert payload["subjectPerformance"][0]["average"] == 8.5
+
+    grades = _real_grades(student_with_grades)
+    values = [_grade_value(item) for item in grades]
+    assert payload["totalActivities"] == len(grades)
+    assert payload["averageGrade"] == pytest.approx(sum(values) / len(values))
+
+    first_subject = payload["subjectPerformance"][0]
+    subject_values = [
+        _grade_value(item)
+        for item in grades
+        if (item.get("subject") or "Sem disciplina") == first_subject["subject"]
+    ]
+    assert first_subject["count"] == len(subject_values)
+    assert first_subject["average"] == pytest.approx(sum(subject_values) / len(subject_values))
 
 
 def test_attendance_with_real_grades(analytics_real_context):
@@ -126,11 +150,15 @@ def test_attendance_with_real_grades(analytics_real_context):
 
     assert response.status_code == 200
     payload = response.json()
+
+    grades = _real_grades(student_with_grades)
+    attended = sum(1 for item in grades if item.get("attendance") is True)
+    absences = sum(1 for item in grades if item.get("attendance") is False)
     assert payload["studentId"] == student_with_grades
-    assert payload["totalClasses"] == 1
-    assert payload["attendedClasses"] == 1
-    assert payload["absences"] == 0
-    assert payload["attendanceRate"] == 100
+    assert payload["totalClasses"] == len(grades)
+    assert payload["attendedClasses"] == attended
+    assert payload["absences"] == absences
+    assert payload["attendanceRate"] == int(attended * 100 / len(grades))
 
 
 def test_attendance_without_real_grades(analytics_real_context):

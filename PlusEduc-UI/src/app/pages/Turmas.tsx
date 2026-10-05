@@ -1,12 +1,22 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router";
 import { createPortal } from "react-dom";
-import { Plus, Search, MoreVertical, Users, Calendar, TrendingUp, Loader2, AlertCircle, BookOpen, ArrowLeft, GraduationCap, UserCheck, User, Mail, Hash, ArrowRightLeft, Trash2, ClipboardList, Download } from "lucide-react";
+import { Plus, Search, Users, Calendar, TrendingUp, Loader2, AlertCircle, BookOpen, ArrowLeft, GraduationCap, UserCheck, User, Mail, Hash, ArrowRightLeft, Trash2, ClipboardList, Download } from "lucide-react";
 import { useApiList, useApi } from "@/hooks/useApi";
 import { activitiesService, classroomsService, studentsService, subjectsService, CreateClassroomRequest } from "@/services";
 import type { Activity, Classroom, Student, LearningGap, Subject } from "@/types";
 import { formatDate } from "@/utils";
 import { toast } from "sonner";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/app/components/ui/alert-dialog";
 
 type ViewMode = 'classrooms' | 'classroom-details' | 'student-details';
 
@@ -602,6 +612,10 @@ export function Turmas() {
   const [transferTargetClassroom, setTransferTargetClassroom] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingClassroomId, setDeletingClassroomId] = useState<string | null>(null);
+  const [deletingStudentId, setDeletingStudentId] = useState<string | null>(null);
+  const [classroomToDelete, setClassroomToDelete] = useState<Classroom | null>(null);
+  const [studentToDelete, setStudentToDelete] = useState<Student | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     year: new Date().getFullYear(),
@@ -854,11 +868,49 @@ export function Turmas() {
         subjects: []
       });
       refetch();
+      toast.success('Turma criada com sucesso.');
     } catch (err) {
       console.error('Erro ao criar turma:', err);
-      // TODO: Mostrar notificação de erro
+      toast.error(err instanceof Error ? err.message : 'Não foi possível criar a turma. Tente novamente.');
     } finally {
       setIsCreating(false);
+    }
+  };
+
+  const handleDeleteClassroom = async () => {
+    if (!classroomToDelete) return;
+
+    const classroom = classroomToDelete;
+    try {
+      setDeletingClassroomId(classroom.id);
+      await classroomsService.deleteClassroom(classroom.id);
+      setClassroomToDelete(null);
+      await refetch();
+      toast.success('Turma excluída com sucesso.');
+    } catch (err) {
+      console.error('Erro ao excluir turma:', err);
+      toast.error(err instanceof Error ? err.message : 'Não foi possível excluir a turma. Tente novamente.');
+    } finally {
+      setDeletingClassroomId(null);
+    }
+  };
+
+  const handleDeleteStudent = async () => {
+    if (!studentToDelete) return;
+
+    const student = studentToDelete;
+    try {
+      setDeletingStudentId(student.id);
+      await studentsService.deleteStudent(student.id);
+      setStudentToDelete(null);
+      await Promise.all([refetch(), refetchUnassigned(), refetchAllStudents()]);
+      setViewMode('classroom-details');
+      toast.success('Aluno excluído com sucesso.');
+    } catch (err) {
+      console.error('Erro ao excluir aluno:', err);
+      toast.error(err instanceof Error ? err.message : 'Não foi possível excluir o aluno. Tente novamente.');
+    } finally {
+      setDeletingStudentId(null);
     }
   };
 
@@ -1382,6 +1434,70 @@ export function Turmas() {
     />
   );
 
+  const sharedClassroomDeleteDialog = (
+    <AlertDialog
+      open={classroomToDelete !== null}
+      onOpenChange={(open) => {
+        if (!open && deletingClassroomId === null) setClassroomToDelete(null);
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir turma?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação excluirá permanentemente a turma
+            {classroomToDelete ? ` "${classroomToDelete.name}"` : ""}. Os dados não poderão ser recuperados.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deletingClassroomId !== null}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={deletingClassroomId !== null}
+            onClick={(event) => {
+              event.preventDefault();
+              void handleDeleteClassroom();
+            }}
+            className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600"
+          >
+            {deletingClassroomId !== null ? "Excluindo..." : "Sim, excluir turma"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
+  const sharedStudentDeleteDialog = (
+    <AlertDialog
+      open={studentToDelete !== null}
+      onOpenChange={(open) => {
+        if (!open && deletingStudentId === null) setStudentToDelete(null);
+      }}
+    >
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Excluir aluno?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação excluirá permanentemente o aluno
+            {studentToDelete ? ` "${studentToDelete.name}"` : ""}. Os dados não poderão ser recuperados.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={deletingStudentId !== null}>Cancelar</AlertDialogCancel>
+          <AlertDialogAction
+            disabled={deletingStudentId !== null}
+            onClick={(event) => {
+              event.preventDefault();
+              void handleDeleteStudent();
+            }}
+            className="bg-red-600 text-white hover:bg-red-700 focus:ring-red-600"
+          >
+            {deletingStudentId !== null ? "Excluindo..." : "Sim, excluir aluno"}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -1490,6 +1606,22 @@ export function Turmas() {
                 >
                   <ArrowRightLeft className="w-4 h-4" />
                   Transferir Turma
+                </button>
+                <button
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setStudentToDelete(selectedStudent);
+                  }}
+                  disabled={deletingStudentId === selectedStudent.id}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white px-4 py-2 rounded-lg transition-colors"
+                >
+                  {deletingStudentId === selectedStudent.id ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Trash2 className="w-4 h-4" />
+                  )}
+                  Excluir Aluno
                 </button>
               </div>
             </div>
@@ -1661,6 +1793,8 @@ export function Turmas() {
       </div>
       {sharedStudentModal}
       {sharedTransferModal}
+      {sharedClassroomDeleteDialog}
+      {sharedStudentDeleteDialog}
       </>
     );
   }
@@ -1961,6 +2095,8 @@ export function Turmas() {
       </div>
       {sharedStudentModal}
       {sharedTransferModal}
+      {sharedClassroomDeleteDialog}
+      {sharedStudentDeleteDialog}
       </>
     );
   }
@@ -2214,11 +2350,17 @@ export function Turmas() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        // TODO: Implementar menu de opções
+                        setClassroomToDelete(classroom);
                       }}
-                      className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                      disabled={deletingClassroomId === classroom.id}
+                      title="Excluir turma"
+                      className="text-gray-400 hover:text-red-600 dark:hover:text-red-400 transition-colors disabled:opacity-50"
                     >
-                      <MoreVertical className="w-5 h-5" />
+                      {deletingClassroomId === classroom.id ? (
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                      ) : (
+                        <Trash2 className="w-5 h-5" />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -2316,6 +2458,8 @@ export function Turmas() {
     {sharedStudentModal}
     {sharedTransferModal}
     {sharedUnassignedModal}
+    {sharedClassroomDeleteDialog}
+    {sharedStudentDeleteDialog}
     </>
   );
 }

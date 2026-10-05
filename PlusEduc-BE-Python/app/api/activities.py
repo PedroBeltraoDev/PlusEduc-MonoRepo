@@ -64,23 +64,22 @@ def generate_activity(payload: ActivityGenerationRequest, request: Request, curr
 
 
 @router.get("", response_model=list[ActivityResponse])
-def list_activities(request: Request, current_user: UserPrincipal = Depends(get_current_user)):
-    include_participation = current_user.role.upper() in {"TEACHER", "ADMIN"}
-    return service(request).list_all(include_participation=include_participation)
+def list_activities(request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+    return service(request).list_all(include_participation=True)
 
 
 @router.get("/classroom/{classroom_id}", response_model=list[ActivityResponse])
-def activities_by_classroom(classroom_id: str, request: Request, current_user: UserPrincipal = Depends(get_current_user)):
+def activities_by_classroom(classroom_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
     return service(request).by_classroom(classroom_id)
 
 
 @router.get("/student/{student_id}", response_model=list[ActivityResponse])
-def activities_by_student(student_id: str, request: Request, current_user: UserPrincipal = Depends(get_current_user)):
+def activities_by_student(student_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
     return service(request).by_student(student_id)
 
 
 @router.get("/teacher/{teacher_id}", response_model=list[ActivityResponse])
-def activities_by_teacher(teacher_id: str, request: Request, current_user: UserPrincipal = Depends(get_current_user)):
+def activities_by_teacher(teacher_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
     return service(request).by_teacher(teacher_id)
 
 
@@ -104,9 +103,8 @@ def export_activity_pdf(
 
 
 @router.get("/{activity_id}", response_model=ActivityResponse)
-def get_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(get_current_user)):
-    include_participation = current_user.role.upper() in {"TEACHER", "ADMIN"}
-    return service(request).get(activity_id, include_participation=include_participation)
+def get_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+    return service(request).get(activity_id, include_participation=True)
 
 
 @router.put("/{activity_id}", response_model=ActivityResponse)
