@@ -11,3 +11,4 @@ class HealthResponse(BaseModel):
     environment: str
     database: str = Field(description="Estado da conexão MongoDB")
     timestamp: datetime
+    opencl: dict[str, bool | int | str | None] = Field(description="Estado do processamento OpenCL das estatísticas de notas")

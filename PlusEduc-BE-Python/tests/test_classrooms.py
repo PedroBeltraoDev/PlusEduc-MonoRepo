@@ -89,6 +89,9 @@ class FakeStudentRepository:
     def find_by_id(self, student_id):
         return next((item for item in self.items if str(item.get("_id")) == student_id), None)
 
+    def find_by_ids(self, ids):
+        return {str(item_id): found for item_id in ids if (found := self.find_by_id(str(item_id)))}
+
     def update(self, student_id, updates):
         item = self.find_by_id(student_id)
         if item:
@@ -122,6 +125,9 @@ class FakeTeacherRepository:
 
     def find_by_id(self, teacher_id):
         return next((item for item in self.items if str(item.get("_id")) == teacher_id), None)
+
+    def find_by_ids(self, ids):
+        return {str(item_id): found for item_id in ids if (found := self.find_by_id(str(item_id)))}
 
     def find_by_email(self, email):
         return next((item for item in self.items if item.get("email") == email), None)

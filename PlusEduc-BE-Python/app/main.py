@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.activities import router as activities_router
+from app.compute import configure as configure_compute
 from app.api.auth import router as auth_router
 from app.api.classrooms import router as classrooms_router
 from app.api.grades import router as grades_router
@@ -56,6 +57,7 @@ def create_app(
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     configure_logging(resolved_settings.log_level)
+    configure_compute(resolved_settings)
 
     @asynccontextmanager
     async def lifespan(application: FastAPI) -> AsyncIterator[None]:

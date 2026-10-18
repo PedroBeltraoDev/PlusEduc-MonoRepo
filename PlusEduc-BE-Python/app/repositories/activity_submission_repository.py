@@ -55,6 +55,20 @@ class ActivitySubmissionRepository:
             ]
         }).sort("submitted_at", -1))
 
+    def find_by_activities(self, activity_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
+        """Submissões de várias atividades numa consulta só, agrupadas por activity_id."""
+        if not activity_ids:
+            return {}
+        grouped: dict[str, list[dict[str, Any]]] = {}
+        for submission in self.collection.find({
+            "$or": [
+                {"activity_id": {"$in": activity_ids}},
+                {"activityId": {"$in": activity_ids}},
+            ]
+        }).sort("submitted_at", -1):
+            grouped.setdefault(str(submission.get("activity_id", submission.get("activityId"))), []).append(submission)
+        return grouped
+
     def find_by_id(self, submission_id: str) -> dict[str, Any] | None:
         candidates: list[Any] = [submission_id]
         if ObjectId.is_valid(submission_id):

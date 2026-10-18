@@ -3,7 +3,9 @@ from typing import Any
 
 from fastapi import HTTPException
 
+from app.compute import stats_by
 from app.core.auth import UserPrincipal
+from app.core.parallel import run_parallel
 from app.repositories.classroom_repository import ClassroomRepository
 from app.repositories.grade_repository import GradeRepository
 from app.repositories.student_repository import StudentRepository
@@ -74,7 +76,7 @@ class ClassroomService:
         return self.to_response(self.repository.insert(document))
 
     def list_active(self) -> list[ClassroomResponse]:
-        return [self.to_response(item) for item in self.repository.find_active()]
+        return self.to_responses(self.repository.find_active())
 
     def page(self, page: int, size: int) -> ClassroomPageResponse:
         page = max(page, 0)
@@ -85,7 +87,7 @@ class ClassroomService:
         total = len(items)
         total_pages = (total + size - 1) // size if total else 0
         return ClassroomPageResponse(
-            content=[self.to_response(item) for item in content],
+            content=self.to_responses(content),
             totalPages=total_pages,
             totalElements=total,
             size=size,
@@ -100,36 +102,29 @@ class ClassroomService:
             raise HTTPException(status_code=404, detail=f"Turma não encontrada: {classroom_id}")
 
         grades = self.grade_repository.find_by_classroom(classroom_id) if self.grade_repository else []
-        values = [self.grade_value(grade) for grade in grades]
-        subject_values: dict[str, list[float]] = {}
+        stats = stats_by(grades, lambda grade: str(grade.get("subject") or "Sem disciplina"))
         subject_students: dict[str, set[str]] = {}
-        for grade, value in zip(grades, values):
-            subject = str(grade.get("subject") or "Sem disciplina")
-            subject_values.setdefault(subject, []).append(value)
+        for grade in grades:
             student_id = grade.get("studentId", grade.get("student_id"))
             if student_id:
-                subject_students.setdefault(subject, set()).add(str(student_id))
+                subject_students.setdefault(str(grade.get("subject") or "Sem disciplina"), set()).add(str(student_id))
 
         subject_performance = [
             ClassroomSubjectPerformance(
                 subject=subject,
-                average=sum(subject_values[subject]) / len(subject_values[subject]),
+                average=item.average,
                 studentsCount=len(subject_students.get(subject, set())),
             )
-            for subject in sorted(subject_values)
+            for subject, item in sorted(stats.items())
         ]
+        total = sum(item.total for item in stats.values())
         student_ids = classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or []
         return ClassroomPerformanceResponse(
             classroomId=classroom_id,
-            averageGrade=sum(values) / len(values) if values else 0.0,
+            averageGrade=total / len(grades) if grades else 0.0,
             studentsCount=len(set(str(student_id) for student_id in student_ids)),
             subjectPerformance=subject_performance,
         )
-
-    @staticmethod
-    def grade_value(document: dict[str, Any]) -> float:
-        value = document.get("grade", document.get("gradeValue"))
-        return float(value or 0)
 
     def get(self, classroom_id: str) -> ClassroomResponse:
         item = self.repository.find_by_id(classroom_id)
@@ -138,13 +133,13 @@ class ClassroomService:
         return self.to_response(item)
 
     def by_teacher(self, teacher_id: str) -> list[ClassroomResponse]:
-        return [self.to_response(item) for item in self.repository.find_active_by_teacher(teacher_id)]
+        return self.to_responses(self.repository.find_active_by_teacher(teacher_id))
 
     def by_student(self, student_id: str) -> list[ClassroomResponse]:
-        return [self.to_response(item) for item in self.repository.find_active_by_student(student_id)]
+        return self.to_responses(self.repository.find_active_by_student(student_id))
 
     def by_year(self, year: int) -> list[ClassroomResponse]:
-        return [self.to_response(item) for item in self.repository.find_active_by_year(year)]
+        return self.to_responses(self.repository.find_active_by_year(year))
 
     def update(self, classroom_id: str, request: ClassroomUpdateRequest) -> ClassroomResponse:
         current = self.repository.find_by_id(classroom_id)
@@ -217,7 +212,8 @@ class ClassroomService:
         self.student_repository.update(student_id, {"class_id": None, "updated_at": datetime.now(timezone.utc)})
 
     def validate_students_exist(self, student_ids: list[str]) -> None:
-        missing = [student_id for student_id in student_ids if self.student_repository.find_by_id(student_id) is None]
+        found = self.student_repository.find_by_ids(student_ids)
+        missing = [student_id for student_id in student_ids if str(student_id) not in found]
         if missing:
             raise HTTPException(status_code=400, detail=f"Alunos não encontrados: {', '.join(missing)}")
 
@@ -227,28 +223,58 @@ class ClassroomService:
         if year < 2020 or year > current_year + 2:
             raise HTTPException(status_code=400, detail="Ano da turma fora do intervalo permitido")
 
+    @staticmethod
+    def _student_ids(document: dict[str, Any]) -> list[Any]:
+        return list(document.get("students", document.get("student_ids", document.get("studentIds", []))) or [])
+
+    @staticmethod
+    def _assignments(document: dict[str, Any]) -> list[dict[str, Any]]:
+        return [item for item in document.get("subjectTeachers", []) or [] if isinstance(item, dict)]
+
+    @staticmethod
+    def _assignment_teacher_id(assignment: dict[str, Any]) -> str:
+        return str(assignment.get("teacherId", assignment.get("teacher_id", "")))
+
     def to_response(self, document: dict[str, Any]) -> ClassroomResponse:
+        return self.to_responses([document])[0]
+
+    def to_responses(self, documents: list[dict[str, Any]]) -> list[ClassroomResponse]:
+        """Monta as respostas resolvendo professores e alunos de todas as turmas em 2 consultas."""
+        teacher_ids: set[str] = set()
+        student_ids: set[str] = set()
+        for document in documents:
+            teacher_ids.add(str(document.get("teacher_id", document.get("teacherId", ""))))
+            student_ids.update(str(value) for value in self._student_ids(document))
+            teacher_ids.update(self._assignment_teacher_id(item) for item in self._assignments(document))
+        teachers, students = run_parallel(
+            lambda: self.teacher_repository.find_by_ids(teacher_ids),
+            lambda: self.student_repository.find_by_ids(student_ids),
+        )
+        return [self._build_response(document, teachers, students) for document in documents]
+
+    def _build_response(
+        self,
+        document: dict[str, Any],
+        teachers: dict[str, dict[str, Any]],
+        students: dict[str, dict[str, Any]],
+    ) -> ClassroomResponse:
         raw_id = document.get("_id", document.get("id"))
-        student_ids = list(document.get("students", document.get("student_ids", document.get("studentIds", []))) or [])
+        student_ids = self._student_ids(document)
         teacher_id = document.get("teacher_id", document.get("teacherId", ""))
-        teacher = self.teacher_repository.find_by_id(teacher_id)
-        students = []
-        for student_id in student_ids:
-            student = self.student_repository.find_by_id(student_id)
-            if student:
-                students.append(
-                    StudentSummary(
-                        id=str(student.get("_id", student.get("id"))),
-                        name=student.get("name", ""),
-                        learningGaps=StudentService.to_response(student).learningGaps,
-                    )
-                )
+        teacher = teachers.get(str(teacher_id))
+        members = [
+            StudentSummary(
+                id=str(student.get("_id", student.get("id"))),
+                name=student.get("name", ""),
+                learningGaps=StudentService.to_response(student).learningGaps,
+            )
+            for student in (students.get(str(student_id)) for student_id in student_ids)
+            if student
+        ]
         subject_teachers = []
-        for assignment in document.get("subjectTeachers", []) or []:
-            if not isinstance(assignment, dict):
-                continue
-            assigned_teacher_id = str(assignment.get("teacherId", assignment.get("teacher_id", "")))
-            assigned_teacher = self.teacher_repository.find_by_id(assigned_teacher_id)
+        for assignment in self._assignments(document):
+            assigned_teacher_id = self._assignment_teacher_id(assignment)
+            assigned_teacher = teachers.get(assigned_teacher_id)
             subject_teachers.append(
                 SubjectTeacherSummary(
                     subjectId=str(assignment.get("subjectId", assignment.get("subject_id", ""))),
@@ -266,7 +292,7 @@ class ClassroomService:
             teacherId=teacher_id,
             teacherName=teacher.get("name") if teacher else None,
             studentIds=student_ids,
-            students=students,
+            students=members,
             subjects=list(document.get("subjects", []) or []),
             subjectTeachers=subject_teachers,
             active=document.get("active"),

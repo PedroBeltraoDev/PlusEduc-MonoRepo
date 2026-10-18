@@ -1,9 +1,12 @@
 from datetime import datetime, timezone
+from functools import partial
 from typing import Any
 
 from fastapi import HTTPException
 
+from app.compute import GroupStats, stats_by
 from app.core.auth import UserPrincipal
+from app.core.parallel import run_parallel
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.activity_submission_repository import ActivitySubmissionRepository
 from app.repositories.classroom_repository import ClassroomRepository
@@ -11,7 +14,6 @@ from app.repositories.grade_repository import GradeRepository
 from app.repositories.student_repository import StudentRepository
 from app.schemas.grade import (
     ActivityGradesLaunchResponse,
-    GradeAverageResponse,
     GradeClassroomSummaryResponse,
     GradeCreateRequest,
     GradeResponse,
@@ -19,7 +21,6 @@ from app.schemas.grade import (
     GradeUpdateRequest,
 )
 from app.services.activity_submission_service import ActivitySubmissionService
-from app.services.student_analytics_service import StudentAnalyticsService
 
 
 def _subject_key(value: Any) -> str:
@@ -118,46 +119,47 @@ class GradeService:
         classroom = self.classroom_repository.find_by_id(classroom_id)
         if not classroom:
             raise HTTPException(status_code=404, detail=f"Turma não encontrada: {classroom_id}")
-        grades = self.repository.find_by_classroom(classroom_id)
+        grades, enrolled = run_parallel(
+            lambda: self.repository.find_by_classroom(classroom_id),
+            lambda: self.student_repository.find_active_by_class(classroom_id),
+        )
         if subject:
             grades = [item for item in grades if _subject_key(item.get("subject")) == _subject_key(subject)]
 
-        by_student: dict[str, list[dict[str, Any]]] = {}
-        for item in grades:
-            by_student.setdefault(str(item.get("studentId", item.get("student_id", ""))), []).append(item)
+        by_student = stats_by(
+            grades,
+            lambda item: str(item.get("studentId", item.get("student_id", ""))),
+            lambda item: _as_naive_utc(item.get("date")),
+        )
 
         rows: list[GradeStudentSummary] = []
-        for student in self.student_repository.find_active_by_class(classroom_id):
+        enrolled_stats: list[GroupStats] = []
+        for student in enrolled:
             student_id = str(student.get("_id", student.get("id")))
-            items = by_student.get(student_id, [])
-            values = [self.grade_value(item) for item in items]
-            total_classes, attended, absences, rate = StudentAnalyticsService.attendance_counts(items)
-            dates = [parsed for parsed in (_as_naive_utc(item.get("date")) for item in items) if parsed]
+            item = by_student.get(student_id, GroupStats())
+            enrolled_stats.append(item)
             rows.append(GradeStudentSummary(
                 studentId=student_id,
                 studentName=str(student.get("name", "")),
-                average=round(sum(values) / len(values), 2) if values else 0.0,
-                launches=len(items),
-                totalClasses=total_classes,
-                attendedClasses=attended,
-                absences=absences,
-                attendanceRate=rate,
-                lastLaunchAt=max(dates) if dates else None,
+                average=round(item.average, 2),
+                launches=item.count,
+                totalClasses=item.recorded,
+                attendedClasses=item.attended,
+                absences=item.absences,
+                attendanceRate=item.attendance_rate,
+                lastLaunchAt=item.last,
             ))
         rows.sort(key=lambda row: row.studentName.lower())
 
-        enrolled_ids = {row.studentId for row in rows}
-        class_items = [item for item in grades if str(item.get("studentId", item.get("student_id", ""))) in enrolled_ids]
-        class_values = [self.grade_value(item) for item in class_items]
-        _, _, _, class_rate = StudentAnalyticsService.attendance_counts(class_items)
+        class_stats = GroupStats.combine(enrolled_stats)
         return GradeClassroomSummaryResponse(
             classroomId=classroom_id,
             classroomName=str(classroom.get("name", "")),
             subject=subject or None,
             studentsCount=len(rows),
-            totalLaunches=len(class_items),
-            averageGrade=round(sum(class_values) / len(class_values), 2) if class_values else 0.0,
-            attendanceRate=class_rate,
+            totalLaunches=class_stats.count,
+            averageGrade=round(class_stats.average, 2),
+            attendanceRate=class_stats.attendance_rate,
             students=rows,
         )
 
@@ -172,24 +174,31 @@ class GradeService:
         classroom_id = str(classroom_id) if classroom_id else None
         target_student = activity.get("student_id", activity.get("studentId"))
         if classroom_id:
-            recipients = [str(item.get("_id")) for item in self.student_repository.find_active_by_class(classroom_id)]
+            load_students = partial(self.student_repository.find_active_by_class, classroom_id)
         elif target_student:
-            recipients = [str(target_student)]
+            load_students = partial(self.student_repository.find_by_ids, [target_student])
         else:
             raise HTTPException(status_code=400, detail="Atividade sem turma ou aluno associado")
+
+        loaded, submission_items, launched_items = run_parallel(
+            load_students,
+            lambda: self.submission_repository.find_by_activity(activity_id),
+            lambda: self.repository.find_by_activity(activity_id),
+        )
+        if classroom_id:
+            students = {str(item.get("_id")): item for item in loaded}
+            recipients = list(students)
+        else:
+            students = loaded
+            recipients = [str(target_student)]
         if target_student:
             recipients = [item for item in recipients if item == str(target_student)]
 
-        submissions = {
-            str(item.get("student_id", item.get("studentId"))): item
-            for item in self.submission_repository.find_by_activity(activity_id)
-        }
-        already = {
-            str(item.get("studentId", item.get("student_id")))
-            for item in self.repository.find_by_activity(activity_id)
-        }
+        submissions = {str(item.get("student_id", item.get("studentId"))): item for item in submission_items}
+        already = {str(item.get("studentId", item.get("student_id"))) for item in launched_items}
 
         launched = already_launched = awaiting = not_submitted = 0
+        new_grades: list[dict[str, Any]] = []
         for student_id in recipients:
             submission = submissions.get(student_id)
             if submission is None:
@@ -202,12 +211,12 @@ class GradeService:
             if stored.pendingCount > 0:
                 awaiting += 1
                 continue
-            student = self.student_repository.find_by_id(student_id)
+            student = students.get(student_id)
             student_classroom = classroom_id or str((student or {}).get("class_id", (student or {}).get("classId", "")) or "")
             if not student or not student_classroom:
                 not_submitted += 1
                 continue
-            self.repository.insert({
+            new_grades.append({
                 "studentId": student_id,
                 "classroomId": student_classroom,
                 "grade": round(stored.scorePercent / 10, 1),
@@ -219,6 +228,7 @@ class GradeService:
                 "createdAt": datetime.now(timezone.utc),
             })
             launched += 1
+        self.repository.insert_many(new_grades)
 
         return ActivityGradesLaunchResponse(
             activityId=activity_id,
@@ -228,11 +238,6 @@ class GradeService:
             awaitingCorrection=awaiting,
             notSubmitted=not_submitted,
         )
-
-    @staticmethod
-    def grade_value(document: dict[str, Any]) -> float:
-        value = document.get("grade", document.get("gradeValue"))
-        return float(value or 0)
 
     def validate_references(self, student_id: str, classroom_id: str) -> None:
         if not self.student_repository.find_by_id(student_id):

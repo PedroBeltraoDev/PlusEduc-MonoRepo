@@ -259,7 +259,9 @@ class SubjectCatalogService:
         classrooms = self.classroom_repository.find_active_by_teacher(teacher_id)
         if not classrooms and teacher:
             teacher_classrooms = teacher.get("classrooms", teacher.get("classroomIds", [])) or []
-            classrooms = [item for item in (self.classroom_repository.find_by_id(str(classroom_id)) for classroom_id in teacher_classrooms) if item and item.get("active", True) is not False]
+            found = self.classroom_repository.find_by_ids(teacher_classrooms)
+            classrooms = [found[str(classroom_id)] for classroom_id in teacher_classrooms
+                          if str(classroom_id) in found and found[str(classroom_id)].get("active", True) is not False]
 
         result: list[SubjectClassroomResponse] = []
         for classroom in classrooms:
@@ -291,9 +293,10 @@ class SubjectCatalogService:
                 grouped.setdefault(student_id, []).append(grade)
 
         ids = student_ids or list(grouped.keys())
+        students = self.student_repository.find_by_ids(ids)
         rows: list[SubjectStudentPerformanceResponse] = []
         for student_id in ids:
-            student = self.student_repository.find_by_id(student_id) or {}
+            student = students.get(student_id) or {}
             student_grades = grouped.get(student_id, [])
             values: list[float] = []
             for grade in student_grades:
