@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, Request
 
+from app.compute import status as opencl_status
 from app.schemas.health import HealthResponse
 
 router = APIRouter(tags=["Infrastructure"])
@@ -23,4 +24,5 @@ def health_check(request: Request) -> HealthResponse:
         environment=settings.app_env,
         database=database_status,
         timestamp=datetime.now(timezone.utc),
+        opencl=opencl_status(),
     )

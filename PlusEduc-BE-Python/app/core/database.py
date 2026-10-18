@@ -1,11 +1,23 @@
 import logging
 
 from pymongo import MongoClient
-from pymongo.errors import PyMongoError
+from pymongo.errors import OperationFailure, PyMongoError
 
 from app.core.config import Settings
 
 logger = logging.getLogger(__name__)
+
+# Campos filtrados pelos repositórios (inclusive as duas grafias, snake_case e camelCase, que o
+# legado usa dentro de $or: cada ramo do $or precisa do próprio índice, senão a consulta vira scan).
+PERFORMANCE_INDEXES: dict[str, tuple[str, ...]] = {
+    "users": ("email",),
+    "teachers": ("email",),
+    "students": ("email", "class_id", "classId"),
+    "classrooms": ("teacher_id", "students"),
+    "grades": ("studentId", "classroomId", "activityId"),
+    "activities": ("classroom_id", "classroomId", "student_id", "studentId", "created_by"),
+    "activity_submissions": ("activity_id", "activityId", "student_id", "studentId"),
+}
 
 
 class MongoConnection:
@@ -35,12 +47,28 @@ class MongoConnection:
                     sparse=True,
                     name="students_matricula_unique",
                 )
+            self.ensure_performance_indexes()
             logger.info("Conexão MongoDB inicializada")
         except PyMongoError as exc:
             logger.warning("MongoDB indisponível durante o startup: %s", type(exc).__name__)
             if self._settings.mongodb_required:
                 self.close()
                 raise
+
+    def ensure_performance_indexes(self) -> None:
+        """Cria índices simples nas coleções que já existem (nunca cria coleções novas).
+
+        Um índice equivalente já existente (outro nome ou opções, como ``unique``) é respeitado.
+        """
+        existing = set(self._database.list_collection_names())
+        for collection, fields in PERFORMANCE_INDEXES.items():
+            if collection not in existing:
+                continue
+            for field in fields:
+                try:
+                    self._database[collection].create_index(field)
+                except OperationFailure as exc:
+                    logger.debug("Índice %s.%s não criado: %s", collection, field, exc.code)
 
     def health(self) -> str:
         if self._client is None:

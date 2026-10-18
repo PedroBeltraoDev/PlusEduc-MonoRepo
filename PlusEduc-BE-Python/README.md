@@ -109,6 +109,52 @@ A API está organizada pelos seguintes domínios:
 
 Os endpoints protegidos exigem `Authorization: Bearer <accessToken>`. O login usa o e-mail como subject do JWT e retorna os campos previstos pelo frontend, incluindo `accessToken`, `refreshToken`, `expiresIn`, `userId`, `userEmail`, `role`, `studentId` quando aplicável e `name` quando disponível.
 
+## Build e execução em produção
+
+```powershell
+# Backend: gera build\app apenas com bytecode (.pyc), usando o mesmo Python que vai rodar o servidor
+.\.venv\Scripts\python.exe scripts\build_backend.py
+
+# Sobe o build compilado com vários processos (padrão: um por núcleo, no máximo 4; ou WEB_CONCURRENCY)
+Set-Location build
+..\.venv\Scripts\python.exe scripts\serve.py --port 8080 --workers 4
+
+# Frontend: gera PlusEduc-UI\dist (bundle de produção com code splitting por rota)
+Set-Location ..\..\PlusEduc-UI
+npm ci
+npm run build
+```
+
+Ao conectar, a API cria índices simples nas coleções **já existentes** (`users.email`, `grades.studentId`, `activities.classroom_id` etc.; lista em `PERFORMANCE_INDEXES` de `app/core/database.py`). Índices equivalentes que você já tenha são respeitados.
+
+Para medir consultas e tempo dos serviços mais pesados num banco temporário (criado e apagado pelo script):
+
+```powershell
+.\.venv\Scripts\python.exe scripts\benchmark_services.py --latency-ms 20
+```
+
+## Paralelismo com OpenCL
+
+As estatísticas de notas (média por disciplina e por aluno, frequência, última data) são calculadas por um
+kernel OpenCL (`app/compute/grade_stats.cl`): redução segmentada com um work-group por grupo, árvore em memória local
+e `barrier`, sem operações atômicas. É usado em `/api/students/{id}/performance`, `/attendance`, no desempenho da turma
+(`/api/classrooms/{id}/performance`), no resumo de notas da turma e no portal do aluno.
+
+Requer `pyopencl` e `numpy` (já em `requirements.txt`) e um dispositivo OpenCL com fp64 (GPU de preferência). Sem eles a API
+continua funcionando pelo caminho em Python, que é também o oracle dos testes.
+
+| Variável | Padrão | Efeito |
+|---|---|---|
+| `OPENCL_ENABLED` | `true` | Liga/desliga o OpenCL. |
+| `OPENCL_MIN_RECORDS` | `0` | Abaixo desse número de lançamentos usa Python. O ponto de equilíbrio medido fica perto de 100 mil registros; em produção use algo como `50000`. |
+| `OPENCL_DEVICE` | vazio | Trecho do nome do dispositivo (ex.: `Radeon`); vazio escolhe a primeira GPU. |
+
+`GET /health` mostra o estado em `opencl` (dispositivo, se está ativo e quantas execuções do kernel já ocorreram). Para comparar Python x GPU:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\benchmark_opencl.py
+```
+
 ## Testes
 
 Execute a suíte completa com o ambiente virtual do projeto:

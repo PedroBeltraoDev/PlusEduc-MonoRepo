@@ -12,7 +12,6 @@ from app.repositories.classroom_repository import ClassroomRepository
 from app.repositories.grade_repository import GradeRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.teacher_repository import TeacherRepository
-from app.schemas.activity import ActivityResponse
 from app.schemas.activity_submission import ActivitySubmissionRequest, StudentSubmissionResult
 from app.schemas.student_portal_schema import (
     Classmate,
@@ -150,7 +149,10 @@ class StudentPortalService:
             str(item.get("activity_id", item.get("activityId")))
             for item in self.activity_submission_repository.find_by_student(self._id(student))
         }
-        result = [self.to_student_activity(item, self._id(item) in submitted_ids) for item in accessible]
+        classrooms = self.classroom_repository.find_by_ids(
+            self._first(item, "classroom_id", "classroomId") for item in accessible
+        )
+        result = [self.to_student_activity(item, self._id(item) in submitted_ids, classrooms) for item in accessible]
         return sorted(result, key=lambda item: item.createdAt or datetime.min, reverse=True)
 
     def activity_detail(self, activity_id: str, current_user: UserPrincipal) -> StudentActivityDetail:
@@ -212,8 +214,7 @@ class StudentPortalService:
             self.grade_repository,
             self.classroom_repository,
         )
-        performance = analytics.performance(self._id(student))
-        attendance = analytics.attendance(self._id(student))
+        performance, attendance = analytics.overview(self._id(student))
         return StudentPortalPerformance(
             studentId=performance.studentId,
             averageGrade=performance.averageGrade,
@@ -252,8 +253,14 @@ class StudentPortalService:
                 return activity
         raise HTTPException(status_code=404, detail=f"Atividade não encontrada: {activity_id}")
 
-    def to_student_activity(self, activity: dict[str, Any], submitted: bool) -> StudentActivity:
+    def to_student_activity(
+        self,
+        activity: dict[str, Any],
+        submitted: bool,
+        classrooms: dict[str, dict[str, Any]],
+    ) -> StudentActivity:
         classroom_id = self._first(activity, "classroom_id", "classroomId")
+        classroom = classrooms.get(str(classroom_id)) if classroom_id else None
         return StudentActivity(
             id=self._id(activity),
             title=activity.get("title", ""),
@@ -262,7 +269,7 @@ class StudentPortalService:
             difficultyLevel=self._first(activity, "difficulty_level", "difficultyLevel") or "",
             format=activity.get("format", ""),
             classroomId=str(classroom_id) if classroom_id else None,
-            classroomName=self.class_name(classroom_id),
+            classroomName=classroom.get("name") if classroom else None,
             submitted=submitted,
             createdAt=self._first(activity, "created_at", "createdAt"),
         )

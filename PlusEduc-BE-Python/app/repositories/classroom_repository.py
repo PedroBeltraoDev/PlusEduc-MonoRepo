@@ -1,8 +1,8 @@
+from collections.abc import Iterable
 from typing import Any
 
-from bson import ObjectId
-
 from app.core.database import MongoConnection
+from app.repositories.base import find_by_ids, id_candidates
 
 
 class ClassroomRepository:
@@ -14,10 +14,10 @@ class ClassroomRepository:
         return self._mongo.database["classrooms"]
 
     def find_by_id(self, classroom_id: str) -> dict[str, Any] | None:
-        candidates: list[Any] = [classroom_id]
-        if ObjectId.is_valid(classroom_id):
-            candidates.append(ObjectId(classroom_id))
-        return self.collection.find_one({"_id": {"$in": candidates}})
+        return self.collection.find_one({"_id": {"$in": id_candidates([classroom_id])}})
+
+    def find_by_ids(self, ids: Iterable[Any]) -> dict[str, dict[str, Any]]:
+        return find_by_ids(self.collection, ids)
 
     def exists_by_id(self, classroom_id: str) -> bool:
         return self.find_by_id(classroom_id) is not None

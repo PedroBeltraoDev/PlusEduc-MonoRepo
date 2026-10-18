@@ -36,6 +36,10 @@ class GradeRepository:
         document["_id"] = result.inserted_id
         return document
 
+    def insert_many(self, documents: list[dict[str, Any]]) -> None:
+        if documents:
+            self.collection.insert_many(documents)
+
     def update(self, grade_id: str, updates: dict[str, Any]) -> dict[str, Any] | None:
         current = self.find_by_id(grade_id)
         if current is None:

@@ -51,13 +51,23 @@ class TeacherCorrectionService:
     def _matches_user(value: Any, current_user: UserPrincipal) -> bool:
         return str(value or "") in {str(current_user.user_id), str(current_user.email)}
 
-    def _teacher_can_access(self, activity: dict[str, Any], current_user: UserPrincipal) -> bool:
+    def _teacher_can_access(
+        self,
+        activity: dict[str, Any],
+        current_user: UserPrincipal,
+        classrooms: dict[str, dict[str, Any]] | None = None,
+    ) -> bool:
         creator = self._value(activity, "created_by", "createdBy")
         if creator is not None and self._matches_user(creator, current_user):
             return True
 
         classroom_id = self._value(activity, "classroom_id", "classroomId")
-        classroom = self.classroom_repository.find_by_id(str(classroom_id)) if classroom_id else None
+        if not classroom_id:
+            return False
+        classroom = (
+            classrooms.get(str(classroom_id)) if classrooms is not None
+            else self.classroom_repository.find_by_id(str(classroom_id))
+        )
         if not classroom:
             return False
         teacher_id = self._value(classroom, "teacher_id", "teacherId")
@@ -75,22 +85,34 @@ class TeacherCorrectionService:
         ]
 
     def list_pending(self, current_user: UserPrincipal) -> list[PendingCorrectionResponse]:
-        pending: list[PendingCorrectionResponse] = []
-        for submission in self.submission_repository.find_all():
-            activity_id = str(self._value(submission, "activity_id", "activityId") or "")
-            activity = self.activity_repository.find_by_id(activity_id)
-            if not activity or not self._teacher_can_access(activity, current_user):
-                continue
+        submissions = self.submission_repository.find_all()
+        activities = self.activity_repository.find_by_ids(
+            self._value(submission, "activity_id", "activityId") for submission in submissions
+        )
+        classrooms = self.classroom_repository.find_by_ids(
+            self._value(activity, "classroom_id", "classroomId") for activity in activities.values()
+        )
 
+        candidates: list[tuple[dict[str, Any], dict[str, Any], list[Any]]] = []
+        for submission in submissions:
+            activity = activities.get(str(self._value(submission, "activity_id", "activityId") or ""))
+            if not activity or not self._teacher_can_access(activity, current_user, classrooms):
+                continue
             stored = ActivitySubmissionService.parse_stored_result(submission.get("content", "{}"))
             pending_results = self._pending_results(stored)
-            if not pending_results:
-                continue
+            if pending_results:
+                candidates.append((submission, activity, pending_results))
 
+        students = self.student_repository.find_by_ids(
+            self._value(submission, "student_id", "studentId") for submission, _, _ in candidates
+        )
+        pending: list[PendingCorrectionResponse] = []
+        for submission, activity, pending_results in candidates:
+            activity_id = self._id(activity)
             student_id = str(self._value(submission, "student_id", "studentId") or "")
-            student = self.student_repository.find_by_id(student_id) or {}
+            student = students.get(student_id) or {}
             classroom_id = self._value(activity, "classroom_id", "classroomId")
-            classroom = self.classroom_repository.find_by_id(str(classroom_id)) if classroom_id else None
+            classroom = classrooms.get(str(classroom_id)) if classroom_id else None
             pending.append(PendingCorrectionResponse(
                 submissionId=self._id(submission),
                 activityId=activity_id,
@@ -118,10 +140,14 @@ class TeacherCorrectionService:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="A atividade não pertence a uma turma do usuário autenticado")
 
         rows: list[ActivitySubmissionDetailResponse] = []
-        for submission in self.submission_repository.find_by_activity(activity_id):
+        submissions = self.submission_repository.find_by_activity(activity_id)
+        students = self.student_repository.find_by_ids(
+            self._value(submission, "student_id", "studentId") for submission in submissions
+        )
+        for submission in submissions:
             stored = ActivitySubmissionService.parse_stored_result(submission.get("content", "{}"))
             student_id = str(self._value(submission, "student_id", "studentId") or "")
-            student = self.student_repository.find_by_id(student_id) or {}
+            student = students.get(student_id) or {}
             rows.append(ActivitySubmissionDetailResponse(
                 submissionId=self._id(submission),
                 studentId=student_id,
