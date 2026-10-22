@@ -10,7 +10,9 @@ export { subjectTopicsService } from './subjectTopics';
 export { subjectsService } from './subjects';
 export { teachersService } from './teachers';
 export { gradesService } from './grades';
+export { appUpdateService } from './appUpdate';
 
+export type { AppUpdateStatus } from './appUpdate';
 export type { PaginatedResponse, ApiError } from './api';
 export type { CreateStudentRequest, UpdateStudentRequest } from './students';
 export type { CreateClassroomRequest, UpdateClassroomRequest } from './classrooms';
