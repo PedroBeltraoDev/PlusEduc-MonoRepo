@@ -1,4 +1,4 @@
-; Instalador do PlusEduc (Inno Setup 6). Compile com: python scripts/build_exe.py --installer
+; Instalador do PlusEduc (Inno Setup 6). Compile com: python scripts/build_exe.py --installer  (ou --installer --nuitka para o backend compilado)
 #ifndef AppVersion
   #define AppVersion "0.0.0"
 #endif
