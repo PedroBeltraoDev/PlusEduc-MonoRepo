@@ -41,9 +41,6 @@ class Settings(BaseSettings):
     gemini_read_timeout_seconds: float = Field(default=45.0, gt=0.0)
     ai_demo_fallback_enabled: bool = True
 
-    # Pasta da interface compilada (PlusEduc-UI/dist); quando preenchida, a API também serve a interface.
-    frontend_dist: str = ""
-
     # Estatísticas de notas em GPU/CPU via OpenCL (usa o caminho em Python se não houver dispositivo).
     opencl_enabled: bool = True
     opencl_min_records: int = Field(default=0, ge=0)  # abaixo disso, o Python é mais rápido que o envio à GPU
