@@ -4,6 +4,8 @@ from typing import Annotated
 from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+from app.version import __version__
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -14,7 +16,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "PlusEduc API"
-    app_version: str = "0.1.0"
+    app_version: str = __version__
     app_env: str = "development"
     log_level: str = "INFO"
 
@@ -48,6 +50,13 @@ class Settings(BaseSettings):
     opencl_enabled: bool = True
     opencl_min_records: int = Field(default=0, ge=0)  # abaixo disso, o Python é mais rápido que o envio à GPU
     opencl_device: str = ""  # trecho do nome do dispositivo (ex.: "Radeon"); vazio = a primeira GPU
+
+    # Atualização do aplicativo de desktop: consulta a última release publicada no GitHub (repositório público).
+    update_check_enabled: bool = True
+    update_repo: str = "PedroBeltraoDev/PlusEduc-MonoRepo"  # "dono/repositório"; o instalador só é baixado dele
+    update_api_base: str = "https://api.github.com"  # só para testes: aceita um servidor local em http://127.0.0.1
+    update_check_interval_hours: float = Field(default=6.0, ge=0.1)
+    update_request_timeout_seconds: float = Field(default=5.0, gt=0.0)
 
     smtp_host: str = "smtp.gmail.com"
     smtp_port: int = 587

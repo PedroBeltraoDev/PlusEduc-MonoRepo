@@ -38,6 +38,9 @@ MONGODB_DATABASE=escola_db
 JWT_SECRET={secret}
 # Opcional: chave do Gemini para gerar atividades por IA (vazio usa o modo de demonstração)
 GEMINI_API_KEY=
+# Atualização automática: consulta a última release do GitHub ao abrir (nunca impede o app de iniciar sem internet)
+# UPDATE_CHECK_ENABLED=true
+# UPDATE_REPO=PedroBeltraoDev/PlusEduc-MonoRepo
 """
 
 
@@ -91,6 +94,26 @@ def open_window(address: str) -> None:
     webview.start(private_mode=False, storage_path=str(CONFIG_DIR / "webview"))  # mantém o login entre execuções
 
 
+def start_update_check(server, headless: bool) -> None:
+    """Liga a verificação de atualização (em segundo plano) e informa como encerrar o app para o instalador."""
+    from app.main import app
+
+    def request_exit() -> None:
+        server.should_exit = True
+        try:
+            import webview
+
+            for window in list(webview.windows):
+                window.destroy()
+        except Exception:  # noqa: BLE001 - sem janela (modo --browser) só o servidor precisa parar
+            pass
+        threading.Timer(20, os._exit, args=(0,)).start()  # garante que nada segure os arquivos que o instalador troca
+
+    manager = app.state.update_manager
+    manager.configure_runtime(headless=headless, request_exit=request_exit)
+    manager.start()
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="PlusEduc: API e interface web")
     parser.add_argument("--host", default="127.0.0.1", help="use 0.0.0.0 para aceitar outras máquinas da rede")
@@ -115,6 +138,7 @@ def main() -> None:
     print(f"PlusEduc em {address}" + (f" (porta {args.port} em uso)" if port != args.port else ""))
 
     server = uvicorn.Server(uvicorn.Config(app, host=args.host, port=port))
+    start_update_check(server, headless=args.headless)
     if args.headless:
         server.run()
         return

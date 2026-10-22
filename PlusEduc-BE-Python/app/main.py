@@ -9,6 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.activities import router as activities_router
+from app.api.app_update import router as app_update_router
 from app.compute import configure as configure_compute
 from app.api.auth import router as auth_router
 from app.api.classrooms import router as classrooms_router
@@ -43,6 +44,7 @@ from app.repositories.subject_topic_repository import SubjectTopicRepository
 from app.repositories.subject_repository import SubjectRepository
 from app.repositories.teacher_repository import TeacherRepository
 from app.repositories.user_repository import UserRepository
+from app.services.update_service import UpdateManager
 
 
 def create_app(
@@ -56,6 +58,7 @@ def create_app(
     activity_submission_repository=None,
     subject_topic_repository=None,
     subject_repository=None,
+    update_manager: UpdateManager | None = None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     configure_logging(resolved_settings.log_level)
@@ -108,7 +111,10 @@ def create_app(
     application.add_exception_handler(StarletteHTTPException, http_exception_handler)
     application.add_exception_handler(RequestValidationError, validation_exception_handler)
     application.add_exception_handler(Exception, unhandled_exception_handler)
+    # A verificação só começa quando o aplicativo de desktop chama update_manager.start() (run_server.py).
+    application.state.update_manager = update_manager or UpdateManager(resolved_settings)
     application.include_router(health_router)
+    application.include_router(app_update_router)
     application.include_router(auth_router)
     application.include_router(students_router)
     application.include_router(student_analytics_router)

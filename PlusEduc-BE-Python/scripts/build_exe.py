@@ -51,7 +51,7 @@ def find_iscc() -> Path:
 
 
 def app_version() -> str:
-    match = re.search(r'app_version: str = "([^"]+)"', (ROOT / "app" / "core" / "config.py").read_text(encoding="utf-8"))
+    match = re.search(r'__version__ = "([^"]+)"', (ROOT / "app" / "version.py").read_text(encoding="utf-8"))
     return match.group(1) if match else "0.0.0"
 
 

@@ -22,6 +22,8 @@ Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
 CloseApplications=yes
+; Quem reabre o app após uma atualização silenciosa é o [Run] abaixo (evita duas janelas).
+RestartApplications=no
 
 [Languages]
 Name: "brazilianportuguese"; MessagesFile: "compiler:Languages\BrazilianPortuguese.isl"
@@ -38,5 +40,7 @@ Name: "{autodesktop}\PlusEduc"; Filename: "{app}\PlusEduc.exe"; Tasks: desktopic
 
 [Run]
 Filename: "{app}\PlusEduc.exe"; Description: "Abrir o PlusEduc agora"; Flags: nowait postinstall skipifsilent
+; Atualização iniciada pelo próprio PlusEduc (/SILENT): reabre o aplicativo já na versão nova.
+Filename: "{app}\PlusEduc.exe"; Flags: nowait postinstall skipifnotsilent
 
 ; A configuração e o log do usuário (%APPDATA%\PlusEduc) são mantidos ao desinstalar.

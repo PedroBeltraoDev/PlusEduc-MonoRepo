@@ -23,6 +23,8 @@ O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta
 | `app/schemas/` | Schemas Pydantic de entrada e saída. |
 | `app/compute/` | Estatísticas de notas com kernel OpenCL (`grade_stats.cl`) e caminho de reserva em Python. |
 | `app/core/parallel.py` | `run_parallel`: consultas independentes ao MongoDB executadas ao mesmo tempo. |
+| `app/version.py` | Versão do aplicativo (fonte única, lida pelo build do instalador e pela verificação de atualização). |
+| `app/services/update_service.py` | Verificação de nova versão no GitHub, download validado do instalador e disparo da atualização (`/api/app/*`). |
 | `app/core/spa.py` | Serve a interface compilada (React) na mesma porta da API quando `FRONTEND_DIST` está definido. |
 | `run_server.py` | Ponto de entrada do aplicativo de desktop: sobe a API e abre a janela própria. |
 | `installer/PlusEduc.iss` | Script do instalador (Inno Setup 6). |
@@ -173,8 +175,33 @@ porta. A interface React compilada vai embutida no pacote e é servida pela pró
 a janela o servidor é encerrado. O login fica salvo em `%APPDATA%\PlusEduc\webview`. O executável é gerado sem console: tudo
 o que seria impresso vai para `%APPDATA%\PlusEduc\PlusEduc.log`.
 
-**Atualizar:** execute o novo `PlusEduc-Setup-<versão>.exe` por cima (o `AppId` é o mesmo, então ele substitui a versão
-anterior e preserva a configuração). **Testar sem instalar:** rode `scripts\build_exe.py` e abra `dist\PlusEduc\PlusEduc.exe`.
+**Atualizar (automático).** Ao abrir, o aplicativo consulta em segundo plano a última release do GitHub
+(`https://api.github.com/repos/<UPDATE_REPO>/releases/latest`). Se a versão publicada for maior que a instalada, aparece no
+canto da tela o aviso **"Nova versão X disponível"** com **Atualizar** e **Lembrar depois** (adia por 4 horas). **Atualizar**
+baixa o `PlusEduc-Setup.exe` da release para uma pasta temporária, confere tamanho e SHA-256 (informados pelo GitHub) e o
+executa com `/SILENT`; o aplicativo fecha, o instalador (mesmo `AppId`) substitui os arquivos preservando
+`%APPDATA%\PlusEduc` e o PlusEduc abre de novo na versão nova. A verificação nunca atrasa nem impede a abertura: sem internet,
+sem nenhuma release publicada (404), com o limite de consultas do GitHub ou com qualquer erro, o aviso simplesmente não aparece
+(o motivo fica no log). Repete a cada 6 horas.
+
+| Variável (`%APPDATA%\PlusEduc\.env`) | Padrão | Efeito |
+|---|---|---|
+| `UPDATE_CHECK_ENABLED` | `true` | `false` desliga a verificação (nenhuma conexão ao GitHub). |
+| `UPDATE_REPO` | `PedroBeltraoDev/PlusEduc-MonoRepo` | `dono/repositório` público onde ficam as releases. O instalador só é baixado de `https://github.com/<UPDATE_REPO>/releases/download/...`. |
+| `UPDATE_CHECK_INTERVAL_HOURS` | `6` | Intervalo entre verificações. |
+| `UPDATE_REQUEST_TIMEOUT_SECONDS` | `5` | Tempo máximo de cada consulta ao GitHub. |
+
+*Publicar uma versão (para quem mantém o projeto):* altere `__version__` em `app/version.py` (fonte única da versão: o
+instalador, o `/health` e a verificação a leem de lá), gere o instalador (`scriptsuild_exe.py --installer`) e crie no GitHub
+uma release com a tag `v<versão>` anexando o instalador **com o nome fixo `PlusEduc-Setup.exe`** (o mesmo nome que o site de
+download usa em `releases/latest/download/`). Rascunhos e pré-lançamentos são ignorados. Estado e ações:
+`GET /api/app/version`, `GET /api/app/update`, `POST /api/app/update/check` e `POST /api/app/update/install` (exige o cabeçalho
+`X-PlusEduc-Update: 1`, para que outro site aberto no computador não consiga acioná-lo).
+
+Limites: a instalação automática só funciona no aplicativo instalado (`PlusEduc.exe`, Windows) e com janela; em `--headless`,
+rodando pelo código-fonte ou em outro sistema o aviso aparece com um link para a página da versão. Com `--browser` a
+atualização funciona, mas o aplicativo reabre na janela própria. Atualização manual continua valendo: execute o novo
+`PlusEduc-Setup.exe` por cima. **Testar sem instalar:** rode `scriptsuild_exe.py` e abra `dist\PlusEduc\PlusEduc.exe`.
 
 Opções do executável: `--port` (se estiver em uso, usa a próxima livre), `--browser` (abre no navegador em vez da janela),
 `--headless` (só o servidor; com `--host 0.0.0.0` outras máquinas acessam). Um `.env` ao lado do `.exe` tem prioridade

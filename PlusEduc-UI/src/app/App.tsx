@@ -4,6 +4,7 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import { UserThemeSync } from "./components/UserThemeSync";
+import { UpdateNotice } from "./components/UpdateNotice";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <UserThemeSync />
         <RouterProvider router={router} />
         <Toaster position="top-right" richColors />
+        <UpdateNotice />
       </AuthProvider>
     </ThemeProvider>
   );

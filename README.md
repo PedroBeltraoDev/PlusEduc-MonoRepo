@@ -21,6 +21,11 @@ criada na primeira execução.
 **Gerar o instalador:** dê dois cliques em `PlusEduc-BE-Python\Compilar_PlusEduc.bat`. Pré-requisitos: Python 3.11+,
 Node.js e o Inno Setup 6 (`winget install JRSoftware.InnoSetup`). O instalador sai em `PlusEduc-BE-Python\dist\installer`.
 
+**Atualização automática:** o aplicativo avisa quando existe uma versão mais nova no GitHub (releases do repositório) e o botão
+**Atualizar** baixa e executa o instalador. Configurável por `UPDATE_CHECK_ENABLED` e `UPDATE_REPO` (ver `.env.example`).
+Para publicar uma versão: altere `PlusEduc-BE-Python/app/version.py`, gere o instalador e anexe-o à release `v<versão>` com o nome
+`PlusEduc-Setup.exe`.
+
 Detalhes, opções e solução de problemas: [PlusEduc-BE-Python/README.md](PlusEduc-BE-Python/README.md).
 
 ## Execução local (desenvolvimento)
