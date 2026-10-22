@@ -1,17 +1,19 @@
-"""Gera o executável do PlusEduc (API + interface web) com o PyInstaller.
+"""Gera o aplicativo de desktop do PlusEduc (janela própria) com o PyInstaller e, opcionalmente, o instalador.
 
-    python scripts/build_exe.py            # pasta dist/PlusEduc/ com PlusEduc.exe (inicia mais rápido)
-    python scripts/build_exe.py --onefile  # um único dist/PlusEduc.exe (extrai para uma pasta temporária ao abrir)
-    python scripts/build_exe.py --skip-ui  # não recompila a interface (usa PlusEduc-UI/dist existente)
+    python scripts/build_exe.py --installer  # dist/installer/PlusEduc-Setup-<versão>.exe (precisa do Inno Setup 6)
+    python scripts/build_exe.py              # pasta dist/PlusEduc/ com PlusEduc.exe (inicia mais rápido)
+    python scripts/build_exe.py --onefile    # um único dist/PlusEduc.exe (extrai para uma pasta temporária ao abrir)
+    python scripts/build_exe.py --skip-ui    # não recompila a interface (usa PlusEduc-UI/dist existente)
+    python scripts/build_exe.py --console    # mantém o console (útil para depurar; o padrão é sem console)
 
-Requer ``pip install pyinstaller`` e Node.js (para compilar a interface). O executável só depende do
-MongoDB: coloque o ``.env`` ao lado do .exe (veja ``.env.example``, copiado junto). Gera para o sistema e o
-Python em que for executado.
+Requer ``pip install -r requirements-build.txt`` e Node.js (para compilar a interface). O aplicativo só depende
+do MongoDB. Gera para o sistema e o Python em que for executado.
 """
 from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -36,11 +38,38 @@ def build_ui() -> Path:
     return UI_ROOT / "dist"
 
 
+def find_iscc() -> Path:
+    local_programs = Path(os.environ.get("LOCALAPPDATA", "")) / "Programs"
+    candidates = [shutil.which("ISCC")] + [
+        base / "Inno Setup 6" / "ISCC.exe"
+        for base in (local_programs, Path(os.environ.get("ProgramFiles(x86)", "")), Path(os.environ.get("ProgramFiles", "")))
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return Path(candidate)
+    raise SystemExit("Inno Setup 6 não encontrado. Instale com: winget install JRSoftware.InnoSetup")
+
+
+def app_version() -> str:
+    match = re.search(r'app_version: str = "([^"]+)"', (ROOT / "app" / "core" / "config.py").read_text(encoding="utf-8"))
+    return match.group(1) if match else "0.0.0"
+
+
+def build_installer() -> Path:
+    version = app_version()
+    subprocess.run([str(find_iscc()), f"/DAppVersion={version}", str(ROOT / "installer" / "PlusEduc.iss")], check=True)
+    return DIST / "installer" / f"PlusEduc-Setup-{version}.exe"
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--onefile", action="store_true")
     parser.add_argument("--skip-ui", action="store_true")
+    parser.add_argument("--console", action="store_true")
+    parser.add_argument("--installer", action="store_true", help="também gera o instalador (Setup.exe)")
     args = parser.parse_args()
+    if args.installer and args.onefile:
+        raise SystemExit("--installer usa a pasta dist/PlusEduc: rode sem --onefile")
 
     ui_dist = UI_ROOT / "dist" if args.skip_ui else build_ui()
     if not (ui_dist / "index.html").is_file():
@@ -51,21 +80,24 @@ def main() -> None:
     command = [
         sys.executable, "-m", "PyInstaller", str(ROOT / "run_server.py"),
         "--name", "PlusEduc", "--noconfirm", "--clean", "--onefile" if args.onefile else "--onedir",
+        "--console" if args.console else "--noconsole",
         "--distpath", str(DIST), "--workpath", str(WORK), "--specpath", str(WORK),
-        "--paths", str(ROOT),
+        "--paths", str(ROOT), "--icon", str(ROOT / "assets" / "pluseduc.ico"),
         "--add-data", f"{ROOT / 'app' / 'compute' / 'grade_stats.cl'}{os.pathsep}app/compute",
+        "--add-data", f"{ui_dist}{os.pathsep}web",  # interface embutida; uma pasta web ao lado do .exe a substitui
         "--collect-data", "reportlab",
+        "--collect-all", "webview",  # janela nativa (pywebview + Edge WebView2)
     ]
     for module in HIDDEN_IMPORTS:
         command += ["--hidden-import", module]
     subprocess.run(command, check=True)
 
     target = DIST if args.onefile else DIST / "PlusEduc"
-    shutil.copytree(ui_dist, target / "web")
     shutil.copy2(ROOT / ".env.example", target / ".env.example")
-    executable = target / "PlusEduc.exe"
     size = sum(f.stat().st_size for f in target.rglob("*") if f.is_file()) / 2**20
-    print(f"\nExecutável: {executable}  ({size:.0f} MB no total)")
+    print(f"\nAplicativo: {target / 'PlusEduc.exe'}  ({size:.0f} MB no total)")
+    if args.installer:
+        print(f"Instalador: {build_installer()}")
 
 
 if __name__ == "__main__":

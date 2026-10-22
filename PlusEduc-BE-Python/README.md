@@ -133,22 +133,32 @@ Para medir consultas e tempo dos serviços mais pesados num banco temporário (c
 .\.venv\Scripts\python.exe scripts\benchmark_services.py --latency-ms 20
 ```
 
-## Executável (PlusEduc.exe)
+## Aplicativo de desktop e instalador (PlusEduc-Setup)
 
-Gera um executável do Windows com Python, dependências, kernel OpenCL e a interface web embutidos. A única
-dependência externa é o MongoDB. O `.env` e a pasta `web` ficam ao lado do `.exe`.
+O PlusEduc também roda como **aplicativo instalado no Windows**, com janela própria (sem navegador e sem console).
+O pacote inclui Python, dependências, o kernel OpenCL e a interface; a única dependência externa é o MongoDB.
+
+**Para quem usa:** baixe `PlusEduc-Setup-<versão>.exe`, execute (não pede administrador), conclua o assistente e abra o
+PlusEduc pelo Menu Iniciar ou pelo atalho da Área de Trabalho. Na primeira execução ele cria
+`%APPDATA%\PlusEduc\.env` (MongoDB local, banco `escola_db`, `JWT_SECRET` gerado) e o log `PlusEduc.log` na mesma pasta;
+edite o `.env` para trocar o banco ou informar a chave do Gemini. A desinstalação (Configurações > Aplicativos) mantém
+essa pasta. Requer o Microsoft Edge WebView2 (já vem no Windows 10/11 atualizados).
+
+**Para gerar o instalador:** dê dois cliques em `Compilar_PlusEduc.bat` (instala dependências, compila a interface, empacota
+com o PyInstaller e monta o instalador com o Inno Setup; leva alguns minutos). O resultado fica em `dist\installer`.
 
 ```powershell
+winget install JRSoftware.InnoSetup                          # uma vez
 .\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
-.\.venv\Scripts\python.exe scripts\build_exe.py              # pasta dist\PlusEduc\ (abre mais rápido)
-.\.venv\Scripts\python.exe scripts\build_exe.py --onefile    # arquivo único dist\PlusEduc.exe
+.\.venv\Scripts\python.exe scripts\build_exe.py --installer  # dist\installer\PlusEduc-Setup-<versão>.exe
+.\.venv\Scripts\python.exe scripts\build_exe.py              # só a pasta dist\PlusEduc\ (sem instalador)
 ```
 
-Para usar: copie `.env.example` (gerado junto) para `.env`, preencha `JWT_SECRET` e rode `PlusEduc.exe`. Ele abre o navegador em
-`http://127.0.0.1:8080` (API em `/api`, documentação em `/docs`). Opções: `--port`, `--host 0.0.0.0` (aceitar a rede),
-`--no-browser`. Sem `JWT_SECRET`, gera um segredo temporário e as sessões caem ao reiniciar. O executável vale para o
-Windows e o Python em que foi gerado; para outra máquina, gere nela. Em desenvolvimento a interface continua sendo
-servida pelo Vite; o backend só a serve quando `FRONTEND_DIST` aponta para `PlusEduc-UI\dist`.
+Opções do executável: `--port` (se estiver em uso, usa a próxima livre), `--browser` (abre no navegador em vez da janela),
+`--headless` (só o servidor; com `--host 0.0.0.0` outras máquinas acessam). Um `.env` ao lado do `.exe` tem prioridade
+(uso portátil). O pacote vale para o Windows e o Python em que foi gerado. Em desenvolvimento a interface continua no Vite;
+o backend só a serve quando `FRONTEND_DIST` aponta para `PlusEduc-UI\dist`. O ícone vem de `assets\pluseduc.ico`
+(`scripts\make_icon.py` o regenera).
 
 ## Paralelismo com OpenCL
 
