@@ -3,6 +3,11 @@ chcp 65001 >nul
 title Gerar instalador do PlusEduc
 cd /d "%~dp0"
 
+rem Uso: Compilar_PlusEduc.bat           -> PyInstaller (padrao: ~3 min, bytecode)
+rem      Compilar_PlusEduc.bat nuitka    -> Nuitka (backend em codigo nativo: ~30 min na 1a vez, ~5 min depois; baixa ~250 MB de MinGW)
+set "MODO=--installer"
+if /i "%~1"=="nuitka" set "MODO=--installer --nuitka"
+
 rem Python do ambiente virtual do projeto (PLUSEDUC_PYTHON permite usar outro interpretador).
 if not defined PLUSEDUC_PYTHON set "PLUSEDUC_PYTHON=.venv\Scripts\python.exe"
 if not exist "%PLUSEDUC_PYTHON%" (

@@ -21,6 +21,10 @@ criada na primeira execução.
 **Gerar o instalador:** dê dois cliques em `PlusEduc-BE-Python\Compilar_PlusEduc.bat`. Pré-requisitos: Python 3.11+,
 Node.js e o Inno Setup 6 (`winget install JRSoftware.InnoSetup`). O instalador sai em `PlusEduc-BE-Python\dist\installer`.
 
+**Backend compilado (opcional):** `PlusEduc-BE-Python\Compilar_PlusEduc.bat nuitka` compila o backend para código nativo com o
+Nuitka (demora ~30 min na primeira vez e baixa um compilador C; instalador de 42 MB contra 37 MB). O ganho de desempenho medido é
+modesto e inconsistente, então o padrão continua sendo o PyInstaller. Detalhes e medições no README do backend.
+
 **Atualização automática:** o aplicativo avisa quando existe uma versão mais nova no GitHub (releases do repositório) e o botão
 **Atualizar** baixa e executa o instalador. Configurável por `UPDATE_CHECK_ENABLED` e `UPDATE_REPO` (ver `.env.example`).
 Para publicar uma versão: altere `PlusEduc-BE-Python/app/version.py`, gere o instalador e anexe-o à release `v<versão>` com o nome

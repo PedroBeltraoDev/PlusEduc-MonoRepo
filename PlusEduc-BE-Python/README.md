@@ -29,12 +29,12 @@ O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta
 | `run_server.py` | Ponto de entrada do aplicativo de desktop: sobe a API e abre a janela própria. |
 | `installer/PlusEduc.iss` | Script do instalador (Inno Setup 6). |
 | `assets/pluseduc.ico` | Ícone do aplicativo e do instalador. |
-| `scripts/` | `build_exe.py` (aplicativo e instalador), `build_backend.py` (bytecode), `serve.py` (vários processos), `benchmark_*.py`, `make_icon.py`, `seed_demo_population.py`. |
-| `Compilar_PlusEduc.bat` | Clique para gerar o instalador. |
+| `scripts/` | `build_exe.py` (aplicativo e instalador; `--nuitka` compila o backend para código nativo), `build_backend.py` (bytecode), `serve.py` (vários processos), `benchmark_*.py`, `make_icon.py`, `seed_demo_population.py`. |
+| `Compilar_PlusEduc.bat` | Clique para gerar o instalador (PyInstaller). Com o argumento `nuitka`, gera com o backend compilado. |
 | `tests/` | Testes automatizados da API e dos serviços. |
 | `.env` | Configuração local; não deve ser versionado nem publicado. |
 | `requirements.txt` | Dependências Python do backend (inclui `numpy` e `pyopencl`). |
-| `requirements-build.txt` | Dependências só para empacotar: `pyinstaller` e `pywebview`. |
+| `requirements-build.txt` | Dependências só para empacotar: `pyinstaller`, `pywebview` e, para o modo `--nuitka`, `nuitka`. |
 
 ## Configuração do ambiente
 
@@ -168,6 +168,45 @@ winget install JRSoftware.InnoSetup                          # uma vez
 .\.venv\Scripts\python.exe scripts\build_exe.py --installer  # dist\installer\PlusEduc-Setup-<versão>.exe
 .\.venv\Scripts\python.exe scripts\build_exe.py              # só a pasta dist\PlusEduc\ (sem instalador)
 ```
+
+**Backend compilado para código nativo (Nuitka, opcional).** O padrão acima (PyInstaller) guarda o backend como bytecode,
+executado pela VM do CPython. Para traduzir `app/`, `run_server.py` e as bibliotecas Python para C e compilá-las em
+código nativo use o Nuitka. O frontend (build do Vite, servido pela API e exibido no WebView2) e o kernel OpenCL
+(`app/compute/grade_stats.cl`, compilado pelo driver ao executar) não mudam. A estrutura de saída é a mesma
+(`dist\PlusEduc\PlusEduc.exe`), então o `installer\PlusEduc.iss` (mesmo `AppId`, atualização por cima, `%APPDATA%\PlusEduc`
+preservado) e a atualização automática funcionam sem alterações.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe scriptsuild_exe.py --nuitka --installer   # ou: Compilar_PlusEduc.bat nuitka
+.\.venv\Scripts\python.exe scriptsuild_exe.py --nuitka --skip-ui     # só a pasta dist\PlusEduc, sem recompilar a interface
+```
+
+Requisitos: o mesmo do modo padrão mais o `nuitka` (em `requirements-build.txt`) e um compilador C. Sem MSVC instalado o
+Nuitka baixa sozinho um MinGW64 (gcc 15, ~250 MB) para o cache do usuário na primeira vez. Com o Python da Microsoft Store
+o `build_exe.py` usa o cache `C:\nuitka-cache` (o caminho padrão é longo demais e a extração do MinGW falha); defina
+`NUITKA_CACHE_DIR` para usar outra pasta. Foi validado com Python 3.12, Nuitka 4.3 e gcc 15.2. `pywebview` (com
+`pythonnet`/`clr_loader`) é tratado pelo plugin do próprio Nuitka: não use `--include-package=webview`, que gera conflito.
+Dados incluídos por flag: `reportlab`, `pyopencl`, `grade_stats.cl`, a interface (`web`) e os módulos do `uvicorn`.
+
+Medições desta máquina (Windows 11, Python 3.12, Radeon RX 580, MongoDB local; instalador sem recompilar a interface):
+
+| | PyInstaller (padrão) | Nuitka |
+|---|---|---|
+| Tempo de build (app + instalador) | 2 min 35 s, já incluindo `npm ci` e a interface | 32 min na 1ª vez (baixa o MinGW; sem a interface nem o instalador); 5 min com o cache do ccache aquecido (já com o instalador) |
+| Instalador `PlusEduc-Setup-0.1.0.exe` | 36,8 MB | 42,1 MB |
+| Pasta `dist\PlusEduc` | 89 MB (316 arquivos) | 174 MB (171 arquivos) |
+| Janela visível (mediana de 6 aberturas) | 4,13 s | 3,98 s |
+| API pronta em `/health` (mediana de 6) | 3,85 s | 3,85 s |
+| Mesmo, com OpenCL desligado | 3,14 s | 3,17 s |
+
+Latência de rotas e PDF (200 requisições sequenciais, mesmo banco): em duas rodadas com a ordem invertida o Nuitka saiu
+de 5–12% mais rápido a 10–30% mais lento nas rotas de API e entre ~35% mais rápido e ~12% mais lento na geração de PDF,
+ou seja, **sem ganho consistente**: o tempo do app é dominado por E/S do MongoDB e pela importação das bibliotecas na
+inicialização (~3 s, igual nos dois). Por isso o **PyInstaller continua o padrão e o fallback**; o Nuitka serve para
+quem quer distribuir o backend como binário nativo (sem `.pyc`), ao custo de build bem mais demorado e pasta maior.
+Limites conhecidos: roda no Windows e no Python em que foi compilado; `--nuitka --onefile` gera um único `.exe`, mas não
+foi testado com o instalador (que usa a pasta) e extrai tudo para uma pasta temporária a cada abertura.
 
 **Como funciona.** O `PlusEduc.exe` sobe o servidor FastAPI numa thread, em `127.0.0.1` (só esta máquina) na porta 8080 ou na
 próxima livre, espera ele ficar pronto e abre a janela (pywebview, que usa o Edge WebView2 do sistema) apontando para essa

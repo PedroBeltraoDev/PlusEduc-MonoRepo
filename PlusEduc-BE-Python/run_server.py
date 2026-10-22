@@ -24,7 +24,8 @@ import time
 import webbrowser
 from pathlib import Path
 
-FROZEN = getattr(sys, "frozen", False)
+# PyInstaller marca sys.frozen; o Nuitka define __compiled__ no módulo principal compilado.
+FROZEN = bool(getattr(sys, "frozen", False)) or "__compiled__" in globals()
 BASE_DIR = Path(sys.executable).parent if FROZEN else Path(__file__).resolve().parent
 # Instalado em "Arquivos de Programas" a pasta pode ser somente leitura: configuração e log vão para o perfil do usuário.
 if FROZEN and not (BASE_DIR / ".env").is_file():
@@ -44,13 +45,18 @@ GEMINI_API_KEY=
 """
 
 
+def has_console() -> bool:
+    return os.name != "nt" or bool(ctypes.windll.kernel32.GetConsoleWindow())
+
+
 def prepare_environment() -> None:
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     os.chdir(CONFIG_DIR)  # o .env é lido do diretório atual
     env_file = CONFIG_DIR / ".env"
     if FROZEN and not env_file.exists():
         env_file.write_text(DEFAULT_ENV.format(secret=secrets.token_urlsafe(48)), encoding="utf-8")
-    if sys.stdout is None or sys.stderr is None:  # executável sem console: o log vai para um arquivo
+    if sys.stdout is None or sys.stderr is None or (FROZEN and not has_console()):
+        # executável sem console (o Nuitka deixa stdout/stderr apontando para o nada): o log vai para um arquivo
         sys.stdout = sys.stderr = open(LOG_FILE, "a", encoding="utf-8", buffering=1)
     # Uma pasta "web" ao lado do executável tem prioridade; senão, a interface embutida no pacote.
     bundled = Path(getattr(sys, "_MEIPASS", BASE_DIR)) / "web"
@@ -110,7 +116,7 @@ def start_update_check(server, headless: bool) -> None:
         threading.Timer(20, os._exit, args=(0,)).start()  # garante que nada segure os arquivos que o instalador troca
 
     manager = app.state.update_manager
-    manager.configure_runtime(headless=headless, request_exit=request_exit)
+    manager.configure_runtime(headless=headless, request_exit=request_exit, frozen=FROZEN)
     manager.start()
 
 

@@ -379,10 +379,15 @@ class UpdateManager:
 
     # configuração do processo -------------------------------------------------------------------------------
 
-    def configure_runtime(self, *, headless: bool, request_exit: Callable[[], None] | None) -> None:
-        """Informado por ``run_server``: sem janela (headless) não há usuário para acompanhar o instalador."""
+    def configure_runtime(self, *, headless: bool, request_exit: Callable[[], None] | None, frozen: bool | None = None) -> None:
+        """Informado por ``run_server``: sem janela (headless) não há usuário para acompanhar o instalador.
+
+        ``frozen`` cobre o executável compilado pelo Nuitka, que não define ``sys.frozen`` como o PyInstaller.
+        """
         self._headless = headless
         self._request_exit = request_exit
+        if frozen is not None:
+            self._frozen = frozen
 
     @property
     def can_install(self) -> bool:

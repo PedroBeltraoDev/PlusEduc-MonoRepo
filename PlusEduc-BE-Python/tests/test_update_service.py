@@ -473,6 +473,14 @@ def test_install_refused_when_not_installed_app_or_headless(tmp_path, frozen, pl
         manager.request_install()
 
 
+def test_runtime_can_declare_the_app_as_installed_for_nuitka_builds(tmp_path):
+    """O Nuitka não define ``sys.frozen``: ``run_server`` informa por ``configure_runtime(frozen=True)``."""
+    manager = manager_for(httpx.Response(200, json=release_payload()), tmp_path, frozen=False, platform="win32")
+    manager.configure_runtime(headless=False, request_exit=None, frozen=True)
+    manager.check_now()
+    assert manager.snapshot()["canInstall"] is True
+
+
 def test_install_refused_without_available_update(tmp_path):
     manager = manager_for(httpx.Response(404), tmp_path)
     manager.check_now()
