@@ -8,6 +8,10 @@ O ambiente local requer **Python 3.11 ou superior**, **MongoDB em execução** e
 
 O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta somente o backend localizado em `PlusEduc-BE-Python`.
 
+> **Branch `feat/desktop-installer`:** além da API, esta branch empacota o PlusEduc como **aplicativo instalável do Windows**
+> (janela própria, sem navegador), descrito em [Aplicativo de desktop e instalador](#aplicativo-de-desktop-e-instalador-pluseduc-setup).
+> A versão que roda no navegador (API + frontend separados) fica na `main`.
+
 ## Estrutura principal
 
 | Diretório/arquivo | Finalidade |
@@ -17,9 +21,18 @@ O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta
 | `app/services/` | Regras de negócio e orquestração dos casos de uso. |
 | `app/repositories/` | Acesso às collections do MongoDB. |
 | `app/schemas/` | Schemas Pydantic de entrada e saída. |
+| `app/compute/` | Estatísticas de notas com kernel OpenCL (`grade_stats.cl`) e caminho de reserva em Python. |
+| `app/core/parallel.py` | `run_parallel`: consultas independentes ao MongoDB executadas ao mesmo tempo. |
+| `app/core/spa.py` | Serve a interface compilada (React) na mesma porta da API quando `FRONTEND_DIST` está definido. |
+| `run_server.py` | Ponto de entrada do aplicativo de desktop: sobe a API e abre a janela própria. |
+| `installer/PlusEduc.iss` | Script do instalador (Inno Setup 6). |
+| `assets/pluseduc.ico` | Ícone do aplicativo e do instalador. |
+| `scripts/` | `build_exe.py` (aplicativo e instalador), `build_backend.py` (bytecode), `serve.py` (vários processos), `benchmark_*.py`, `make_icon.py`, `seed_demo_population.py`. |
+| `Compilar_PlusEduc.bat` | Clique para gerar o instalador. |
 | `tests/` | Testes automatizados da API e dos serviços. |
 | `.env` | Configuração local; não deve ser versionado nem publicado. |
-| `requirements.txt` | Dependências Python do backend. |
+| `requirements.txt` | Dependências Python do backend (inclui `numpy` e `pyopencl`). |
+| `requirements-build.txt` | Dependências só para empacotar: `pyinstaller` e `pywebview`. |
 
 ## Configuração do ambiente
 
@@ -154,6 +167,15 @@ winget install JRSoftware.InnoSetup                          # uma vez
 .\.venv\Scripts\python.exe scripts\build_exe.py              # só a pasta dist\PlusEduc\ (sem instalador)
 ```
 
+**Como funciona.** O `PlusEduc.exe` sobe o servidor FastAPI numa thread, em `127.0.0.1` (só esta máquina) na porta 8080 ou na
+próxima livre, espera ele ficar pronto e abre a janela (pywebview, que usa o Edge WebView2 do sistema) apontando para essa
+porta. A interface React compilada vai embutida no pacote e é servida pela própria API, então não há CORS nem proxy. Ao fechar
+a janela o servidor é encerrado. O login fica salvo em `%APPDATA%\PlusEduc\webview`. O executável é gerado sem console: tudo
+o que seria impresso vai para `%APPDATA%\PlusEduc\PlusEduc.log`.
+
+**Atualizar:** execute o novo `PlusEduc-Setup-<versão>.exe` por cima (o `AppId` é o mesmo, então ele substitui a versão
+anterior e preserva a configuração). **Testar sem instalar:** rode `scripts\build_exe.py` e abra `dist\PlusEduc\PlusEduc.exe`.
+
 Opções do executável: `--port` (se estiver em uso, usa a próxima livre), `--browser` (abre no navegador em vez da janela),
 `--headless` (só o servidor; com `--host 0.0.0.0` outras máquinas acessam). Um `.env` ao lado do `.exe` tem prioridade
 (uso portátil). O pacote vale para o Windows e o Python em que foi gerado. Em desenvolvimento a interface continua no Vite;
@@ -234,6 +256,18 @@ Confirme se `GEMINI_API_KEY`, `GEMINI_MODEL=gemini-3.5-flash-lite` e `GEMINI_API
 ### MongoDB não conecta
 
 Confirme se o serviço local está ativo e se `MONGODB_URI` e `MONGODB_DATABASE` correspondem ao ambiente esperado. O backend não deve criar collections novas como parte do funcionamento normal.
+
+### Aplicativo de desktop: a janela não abre ou fecha sozinha
+
+Abra `%APPDATA%\PlusEduc\PlusEduc.log` (o aplicativo não tem console). Causas comuns: o **MongoDB está parado** (a janela mostra a tela de login, mas o login falha; inicie o serviço `MongoDB`), o **Microsoft Edge WebView2** não está instalado (a janela não abre e o motivo fica no log; instale o "WebView2 Runtime" da Microsoft ou use `PlusEduc.exe --browser`) ou o `.env` em `%APPDATA%\PlusEduc` tem um valor inválido. Para ver as mensagens ao vivo, gere com `python scripts\build_exe.py --console`.
+
+### Aplicativo de desktop: não vejo meus dados
+
+O `.env` criado na primeira execução usa o banco `escola_db`. Se os seus dados estão em outro banco ou outro servidor, edite `MONGODB_DATABASE` e `MONGODB_URI` em `%APPDATA%\PlusEduc\.env` e reabra o aplicativo.
+
+### Compilar_PlusEduc.bat falha
+
+Confirme se o Inno Setup está instalado (`winget install JRSoftware.InnoSetup`) e se o Node.js está no `PATH` (a interface é compilada com `npm`). Em pasta recém-clonada o `.bat` cria o `.venv` e instala as dependências sozinho; a primeira execução baixa pacotes e demora mais.
 
 ## Segurança e Git
 
