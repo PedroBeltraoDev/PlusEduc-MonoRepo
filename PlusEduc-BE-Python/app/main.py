@@ -1,6 +1,5 @@
 import logging
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import AsyncIterator
 
 from fastapi import FastAPI
@@ -33,7 +32,6 @@ from app.core.errors import (
     validation_exception_handler,
 )
 from app.core.logging_config import configure_logging
-from app.core.spa import SPAStaticFiles
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.activity_submission_repository import ActivitySubmissionRepository
 from app.repositories.classroom_repository import ClassroomRepository
@@ -122,9 +120,6 @@ def create_app(
     application.include_router(activity_submissions_router)
     application.include_router(teacher_corrections_router)
     application.include_router(teacher_corrections_legacy_router)
-    if resolved_settings.frontend_dist and Path(resolved_settings.frontend_dist).is_dir():
-        # Por último: rotas da API, /docs e /health têm prioridade sobre a interface.
-        application.mount("/", SPAStaticFiles(directory=resolved_settings.frontend_dist, html=True), name="web")
     return application
 
 
