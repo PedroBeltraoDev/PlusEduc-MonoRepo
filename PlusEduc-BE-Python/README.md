@@ -133,6 +133,23 @@ Para medir consultas e tempo dos serviços mais pesados num banco temporário (c
 .\.venv\Scripts\python.exe scripts\benchmark_services.py --latency-ms 20
 ```
 
+## Executável (PlusEduc.exe)
+
+Gera um executável do Windows com Python, dependências, kernel OpenCL e a interface web embutidos. A única
+dependência externa é o MongoDB. O `.env` e a pasta `web` ficam ao lado do `.exe`.
+
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements-build.txt
+.\.venv\Scripts\python.exe scripts\build_exe.py              # pasta dist\PlusEduc\ (abre mais rápido)
+.\.venv\Scripts\python.exe scripts\build_exe.py --onefile    # arquivo único dist\PlusEduc.exe
+```
+
+Para usar: copie `.env.example` (gerado junto) para `.env`, preencha `JWT_SECRET` e rode `PlusEduc.exe`. Ele abre o navegador em
+`http://127.0.0.1:8080` (API em `/api`, documentação em `/docs`). Opções: `--port`, `--host 0.0.0.0` (aceitar a rede),
+`--no-browser`. Sem `JWT_SECRET`, gera um segredo temporário e as sessões caem ao reiniciar. O executável vale para o
+Windows e o Python em que foi gerado; para outra máquina, gere nela. Em desenvolvimento a interface continua sendo
+servida pelo Vite; o backend só a serve quando `FRONTEND_DIST` aponta para `PlusEduc-UI\dist`.
+
 ## Paralelismo com OpenCL
 
 As estatísticas de notas (média por disciplina e por aluno, frequência, última data) são calculadas por um
