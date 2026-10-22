@@ -115,6 +115,10 @@ Os endpoints protegidos exigem `Authorization: Bearer <accessToken>`. O login us
 # Backend: gera build\app apenas com bytecode (.pyc), usando o mesmo Python que vai rodar o servidor
 .\.venv\Scripts\python.exe scripts\build_backend.py
 
+# Alternativa: o pacote app traduzido para C e compilado em código nativo (build\app.<tag>.pyd), com o Nuitka
+.\.venv\Scripts\python.exe -m pip install -r requirements-compile.txt
+.\.venv\Scripts\python.exe scripts\build_backend.py --nuitka
+
 # Sobe o build compilado com vários processos (padrão: um por núcleo, no máximo 4; ou WEB_CONCURRENCY)
 Set-Location build
 ..\.venv\Scripts\python.exe scripts\serve.py --port 8080 --workers 4
@@ -124,6 +128,17 @@ Set-Location ..\..\PlusEduc-UI
 npm ci
 npm run build
 ```
+
+**Compilação nativa (opcional).** Como as `.class` do Java, o resultado dos dois modos não é um executável: é o backend
+sem os fontes `.py`, que continua rodando no interpretador Python (`serve.py` ou `uvicorn app.main:app`, com a API e as
+rotas iguais). `--nuitka` gera uma única extensão nativa `build\app.cp312-win_amd64.pyd` com todo o pacote `app/`
+(só o código do projeto é compilado; as bibliotecas continuam as instaladas no ambiente) e copia ao lado dela o kernel
+OpenCL `grade_stats.cl`, que o driver compila ao executar. Requer o mesmo Python (3.12 foi o validado) no build e na
+execução, `requirements-compile.txt` e um compilador C: sem MSVC, o Nuitka baixa um MinGW64 (~250 MB) na primeira vez.
+O build leva cerca de 2 minutos (80 arquivos C; menos com o cache do compilador aquecido). O ganho de desempenho é
+modesto porque o tempo da API é dominado por E/S do MongoDB; o bytecode (padrão) é o caminho mais simples e o fallback.
+Com o Python da Microsoft Store o script usa o cache `C:\nuitka-cache` (o padrão tem caminho longo demais para extrair o
+MinGW); defina `NUITKA_CACHE_DIR` para usar outra pasta.
 
 Ao conectar, a API cria índices simples nas coleções **já existentes** (`users.email`, `grades.studentId`, `activities.classroom_id` etc.; lista em `PERFORMANCE_INDEXES` de `app/core/database.py`). Índices equivalentes que você já tenha são respeitados.
 
