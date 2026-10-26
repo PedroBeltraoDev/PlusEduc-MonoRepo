@@ -646,6 +646,7 @@ export function Notas() {
                 Data
                 <input
                   type="date"
+                  max={todayIso()}
                   value={form.date}
                   onChange={(event) => setForm((current) => ({ ...current, date: event.target.value }))}
                   className={`${inputClass} mt-1`}

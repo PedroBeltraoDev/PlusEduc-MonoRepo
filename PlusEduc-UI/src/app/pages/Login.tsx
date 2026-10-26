@@ -3,6 +3,16 @@ import { Link, useLocation, useNavigate } from "react-router";
 import { AlertCircle, CheckCircle2, Lock, Mail, UserRound } from "lucide-react";
 import { Logo } from "../components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
+import { SESSION_EXPIRED_FLAG } from "@/services/authKeys";
+
+// Aviso deixado quando a sessão foi encerrada pelo servidor (a marca é apagada depois que a tela abre).
+function sessionExpiredNotice(): boolean {
+  try {
+    return sessionStorage.getItem(SESSION_EXPIRED_FLAG) === "1";
+  } catch {
+    return false;
+  }
+}
 
 type LoginMode = "login" | "registerStudent" | "registerTeacher";
 
@@ -22,12 +32,20 @@ export function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState(() => (sessionExpiredNotice() ? "Sua sessão expirou. Entre novamente." : ""));
   const [successMessage, setSuccessMessage] = useState(
     (location.state as { passwordResetSuccess?: boolean } | null)?.passwordResetSuccess
       ? "Senha redefinida com sucesso. Faça login com sua nova senha."
       : "",
   );
+
+  useEffect(() => {
+    try {
+      sessionStorage.removeItem(SESSION_EXPIRED_FLAG);
+    } catch {
+      // sem sessionStorage: nada a limpar
+    }
+  }, []);
 
   useEffect(() => {
     if (isAuthenticated) {

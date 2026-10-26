@@ -1565,10 +1565,6 @@ export function Turmas() {
                   <Hash className="w-4 h-4" />
                   Matrícula: {selectedStudent.matricula || 'Não cadastrada'}
                 </p>
-                <p className="text-gray-600 dark:text-gray-300 mt-1 flex items-center gap-2">
-                  <Hash className="w-4 h-4" />
-                  ID: {selectedStudent.id}
-                </p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -2065,7 +2061,7 @@ export function Turmas() {
                       {student.email && (
                         <p className="text-sm text-gray-600 dark:text-gray-300 truncate">{student.email}</p>
                       )}
-                      <p className="text-xs text-gray-500 dark:text-gray-400">ID: {student.id}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">Matrícula: {student.matricula || "não cadastrada"}</p>
                       <div className="flex items-center justify-between mt-2">
                         <div className="flex items-center gap-1">
                           {student.active ? (
@@ -2248,7 +2244,7 @@ export function Turmas() {
                     <p className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       {getStudentClassroomName(student)}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">ID: {student.id}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Matrícula: {student.matricula || "não cadastrada"}</p>
                   </div>
                   <button
                     type="button"

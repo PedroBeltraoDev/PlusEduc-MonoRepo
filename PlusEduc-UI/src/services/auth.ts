@@ -1,6 +1,7 @@
 // Serviço de autenticação
 
 import { apiClient } from './api';
+import { AUTH_KEYS } from './authKeys';
 import type {
   AuthResponse,
   LoginRequest,
@@ -10,18 +11,6 @@ import type {
   User,
 } from '@/types';
 
-const AUTH_KEYS = {
-  accessToken: 'accessToken',
-  refreshToken: 'refreshToken',
-  tokenType: 'tokenType',
-  expiresIn: 'expiresIn',
-  loginTime: 'loginTime',
-  userId: 'userId',
-  userEmail: 'userEmail',
-  role: 'role',
-  studentId: 'studentId',
-  userName: 'userName',
-} as const;
 
 class AuthService {
   async login(credentials: LoginRequest): Promise<AuthResponse> {
