@@ -140,6 +140,43 @@ modesto porque o tempo da API é dominado por E/S do MongoDB; o bytecode (padrã
 Com o Python da Microsoft Store o script usa o cache `C:\nuitka-cache` (o padrão tem caminho longo demais para extrair o
 MinGW); defina `NUITKA_CACHE_DIR` para usar outra pasta.
 
+**Servidor inteiro compilado (`--standalone`, opcional).** Compila também as bibliotecas Python (FastAPI, Starlette,
+Uvicorn, Pydantic, PyMongo, ReportLab...) e embute o runtime do Python numa pasta que não precisa do interpretador
+instalado nem de nenhum `.py`:
+
+```powershell
+.\.venv\Scripts\python.exe scripts\build_backend.py --standalone     # build\PlusEduc-API\PlusEduc-API.exe
+Copy-Item .env.example build\PlusEduc-API\.env                        # edite: JWT_SECRET, MongoDB...
+build\PlusEduc-API\PlusEduc-API.exe --host 0.0.0.0 --port 8080 --workers 4
+```
+
+O ponto de entrada é `run_api.py` (`--host`, `--port`, `--workers`, como `serve.py`; `--check` só importa a aplicação).
+O `.env` é lido da pasta do executável, o kernel OpenCL `app/compute/grade_stats.cl` vai ao lado (sem GPU a API usa o
+caminho em Python) e cada worker é um processo próprio. É só a API: o frontend continua separado (`PlusEduc-UI`).
+
+Medido nesta máquina (Windows 11, Python 3.12, Nuitka 4.3, MinGW gcc 15.2, Radeon RX 580, MongoDB local, 2 workers):
+
+| | `serve.py` (interpretado) | `PlusEduc-API.exe` |
+|---|---|---|
+| Build | segundos (bytecode) | 28 min (primeira compilação das bibliotecas) |
+| Tamanho | só os fontes/bytecode (usa o Python e os pacotes do venv) | 165 MB, 113 arquivos |
+| Subida até `/health` (mediana de 3) | 2,55 s | 1,77 s |
+| `GET /api/classrooms/{id}/performance` (mediana) | 5,1 ms | 6,0 ms |
+| `GET /api/students/paginated` (mediana) | 2,8 ms | 3,6 ms |
+| PDF de 10 questões (mediana) | 29–31 ms | 32 ms |
+
+A subida é mais rápida, mas **as rotas não ficaram mais rápidas** (nas duas ordens de medição o executável saiu ~15–30%
+mais lento nas rotas curtas): o tempo da API é dominado por E/S do MongoDB, validação e serialização, e o código das
+bibliotecas compilado não compensa. Por isso o bytecode segue o padrão; `--standalone` vale para distribuir o servidor sem
+exigir Python instalado nem expor os fontes. Verificado: executável iniciado com `PATH` sem Python, `/health` com banco e
+OpenCL ativos, registro, login, aluno, turma, notas (kernel OpenCL executado), atividade e PDF, com 2 workers.
+
+**O que ainda não é compilado por nós** (vai para a pasta como está): o runtime e as DLLs do Python (`python312.dll`,
+`vcruntime`, OpenSSL, SQLite) e os módulos nativos que o pip já entrega prontos, como `numpy`, `pydantic-core` (Rust),
+`bcrypt`, `pymongo._cmessage`/`bson._cbson`, `pyopencl` e a DLL `OpenCL.dll`, `httptools`, `websockets`, `watchfiles`,
+`Pillow`, `yaml` e `zstandard`. O kernel OpenCL (`grade_stats.cl`) é compilado pelo driver da GPU ao executar. Só o código
+Python (nosso e das bibliotecas) vira C; o resultado depende do Windows e do Python em que foi gerado.
+
 Ao conectar, a API cria índices simples nas coleções **já existentes** (`users.email`, `grades.studentId`, `activities.classroom_id` etc.; lista em `PERFORMANCE_INDEXES` de `app/core/database.py`). Índices equivalentes que você já tenha são respeitados.
 
 Para medir consultas e tempo dos serviços mais pesados num banco temporário (criado e apagado pelo script):
