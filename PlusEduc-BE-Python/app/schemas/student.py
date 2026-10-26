@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import date, datetime
 from typing import Any
 
-from pydantic import AliasChoices, BaseModel, ConfigDict, Field
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 
 class LearningGapInput(BaseModel):
@@ -50,6 +50,19 @@ class LearningGapResponse(BaseModel):
     improved: bool | None = None
 
 
+def validate_birth_date(value: str | None) -> str | None:
+    """Rejeita nascimento no futuro ou antes de 1900; formatos que não sejam ISO passam sem checagem."""
+    if not value:
+        return value
+    try:
+        born = date.fromisoformat(str(value).strip()[:10])
+    except ValueError:
+        return value
+    if born > date.today() or born.year < 1900:
+        raise ValueError("Data de nascimento inválida")
+    return value
+
+
 class StudentCreateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
 
@@ -59,6 +72,8 @@ class StudentCreateRequest(BaseModel):
     classId: str | None = None
     learningGaps: list[LearningGapInput] | None = None
     active: bool | None = True
+
+    _check_birth_date = field_validator("birthDate")(validate_birth_date)
 
 
 class StudentUpdateRequest(BaseModel):
@@ -70,6 +85,8 @@ class StudentUpdateRequest(BaseModel):
     classId: str | None = None
     learningGaps: list[LearningGapInput] | None = None
     active: bool | None = None
+
+    _check_birth_date = field_validator("birthDate")(validate_birth_date)
 
 
 class EnableStudentAccessRequest(BaseModel):

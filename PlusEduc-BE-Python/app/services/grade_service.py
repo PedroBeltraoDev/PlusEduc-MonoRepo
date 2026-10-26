@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from typing import Any
 
@@ -55,7 +55,8 @@ class GradeService:
         self.submission_repository = submission_repository
 
     def create(self, request: GradeCreateRequest, current_user: UserPrincipal) -> GradeResponse:
-        self.validate_references(request.studentId, request.classroomId)
+        self.validate_references(request.studentId, request.classroomId, require_enrollment=True)
+        self.validate_date(request.date)
         document = {
             "studentId": request.studentId,
             "classroomId": request.classroomId,
@@ -87,7 +88,12 @@ class GradeService:
         values = request.model_dump(exclude_unset=True)
         student_id = values.get("studentId", current.get("studentId"))
         classroom_id = values.get("classroomId", current.get("classroomId"))
-        self.validate_references(student_id, classroom_id)
+        # A matrícula só é exigida quando o lançamento muda de aluno ou de turma: ajustar uma nota
+        # antiga de quem já foi transferido de turma continua permitido.
+        moved = "studentId" in values or "classroomId" in values
+        self.validate_references(student_id, classroom_id, require_enrollment=moved)
+        if values.get("date") is not None:
+            self.validate_date(values["date"])
         updates = {key: value for key, value in values.items() if value is not None}
         updated = self.repository.update(grade_id, updates)
         return self.to_response(updated)
@@ -239,11 +245,31 @@ class GradeService:
             notSubmitted=not_submitted,
         )
 
-    def validate_references(self, student_id: str, classroom_id: str) -> None:
-        if not self.student_repository.find_by_id(student_id):
+    def validate_references(self, student_id: str, classroom_id: str, require_enrollment: bool = False) -> None:
+        student = self.student_repository.find_by_id(student_id)
+        if not student:
             raise HTTPException(status_code=400, detail=f"Aluno não encontrado: {student_id}")
-        if not self.classroom_repository.find_by_id(classroom_id):
+        classroom = self.classroom_repository.find_by_id(classroom_id)
+        if not classroom:
             raise HTTPException(status_code=400, detail=f"Turma não encontrada: {classroom_id}")
+        if require_enrollment and not self.is_enrolled(student, classroom, student_id, classroom_id):
+            raise HTTPException(status_code=400, detail="O aluno não está matriculado na turma informada")
+
+    @staticmethod
+    def is_enrolled(student: dict[str, Any], classroom: dict[str, Any], student_id: str, classroom_id: str) -> bool:
+        # A matrícula existe em dois lugares (class_id do aluno e lista de alunos da turma): vale qualquer um.
+        if str(student.get("class_id", student.get("classId")) or "") == str(classroom_id):
+            return True
+        members = classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or []
+        return str(student_id) in {str(member) for member in members}
+
+    @staticmethod
+    def validate_date(value: datetime) -> None:
+        # Tolerância de um dia para diferenças de fuso entre o navegador e o servidor.
+        limit = datetime.now(timezone.utc) + timedelta(days=1)
+        moment = value if value.tzinfo else value.replace(tzinfo=timezone.utc)
+        if moment > limit:
+            raise HTTPException(status_code=422, detail="A data do lançamento não pode estar no futuro")
 
     @staticmethod
     def to_response(document: dict[str, Any]) -> GradeResponse:

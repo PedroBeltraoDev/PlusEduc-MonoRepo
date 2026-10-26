@@ -194,11 +194,25 @@ class ClassroomService:
         student = self.student_repository.find_by_id(student_id)
         if not student:
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
+        self._leave_previous_classroom(student, student_id, classroom_id)
         student_ids = list(classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or [])
         if student_id not in student_ids:
             student_ids.append(student_id)
         updated = self.repository.update(classroom_id, {"students": student_ids, "updated_at": datetime.now(timezone.utc)})
         self.student_repository.update(student_id, {"class_id": classroom_id, "updated_at": datetime.now(timezone.utc)})
+
+    def _leave_previous_classroom(self, student: dict[str, Any], student_id: str, new_classroom_id: str) -> None:
+        """Um aluno pertence a uma única turma: matricular em outra o retira da anterior."""
+        previous_id = str(student.get("class_id", student.get("classId")) or "")
+        if not previous_id or previous_id == str(new_classroom_id):
+            return
+        previous = self.repository.find_by_id(previous_id)
+        if not previous:
+            return
+        members = previous.get("students", previous.get("student_ids", previous.get("studentIds", []))) or []
+        remaining = [item for item in members if str(item) != str(student_id)]
+        if len(remaining) != len(members):
+            self.repository.update(previous_id, {"students": remaining, "updated_at": datetime.now(timezone.utc)})
 
     def unenroll(self, classroom_id: str, student_id: str) -> None:
         classroom = self.repository.find_by_id(classroom_id)
