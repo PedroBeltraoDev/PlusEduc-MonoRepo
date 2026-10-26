@@ -1,4 +1,4 @@
-# Só para `python scripts/build_backend.py --nuitka` (compilar o backend para código nativo)
+# Só para `python scripts/build_backend.py --nuitka` ou `--standalone` (compilar o backend para código nativo)
 nuitka>=4.0,<5.0
 ordered-set>=4.1
 zstandard>=0.23
