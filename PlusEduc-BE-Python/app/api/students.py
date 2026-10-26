@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 
 from app.core.auth import UserPrincipal
-from app.dependencies import get_current_user, require_roles
+from app.core.audit_middleware import set_audit
+from app.dependencies import require_roles
 from app.schemas.student import (
     EnableStudentAccessRequest,
     StudentCreateRequest,
@@ -28,13 +29,15 @@ def create_student(
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER")),
 ):
-    return service(request).create(payload, current_user)
+    created = service(request).create(payload, current_user)
+    set_audit(request, entityId=created.id, summary=f"Aluno {created.name} cadastrado", details={"name": created.name})
+    return created
 
 
 @router.get("", response_model=list[StudentResponse])
 def list_students(
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).list_active()
 
@@ -53,7 +56,7 @@ def list_students_paginated(
     page: int = Query(default=0, ge=0),
     size: int = Query(default=20, ge=1, le=100),
     sort: str | None = None,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).page(page, size)
 
@@ -62,7 +65,7 @@ def list_students_paginated(
 def list_students_by_class(
     class_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).by_class(class_id)
 
@@ -71,7 +74,7 @@ def list_students_by_class(
 def list_students_by_learning_gap(
     subject: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).by_learning_gap(subject)
 
@@ -80,7 +83,7 @@ def list_students_by_learning_gap(
 def get_student(
     student_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(get_current_user),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).get(student_id)
 
@@ -92,7 +95,9 @@ def update_student(
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER")),
 ):
-    return service(request).update(student_id, payload, current_user)
+    updated = service(request).update(student_id, payload, current_user)
+    set_audit(request, summary=f"Aluno {updated.name} alterado", details={"fields": sorted(payload.model_dump(exclude_unset=True))})
+    return updated
 
 
 @router.post("/{student_id}/enable-access", status_code=status.HTTP_204_NO_CONTENT)
@@ -112,5 +117,7 @@ def delete_student(
     request: Request,
     current_user: UserPrincipal = Depends(require_roles("TEACHER")),
 ):
+    before = service(request).get(student_id)
     service(request).delete(student_id)
+    set_audit(request, summary=f"Aluno {before.name} excluído", details={"name": before.name})
     return Response(status_code=status.HTTP_204_NO_CONTENT)

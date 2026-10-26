@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
+from app.core.audit_middleware import set_audit
 from app.dependencies import get_current_user
 from app.core.auth import UserPrincipal
 from app.schemas.auth import (
@@ -51,6 +52,7 @@ def register_student(request: Request, payload: StudentRegistrationRequest) -> A
         request.app.state.teacher_repository,
         request.app.state.student_repository,
     )
+    set_audit(request, actorEmail=payload.email)
     return service.register_student(payload)
 
 
@@ -67,6 +69,7 @@ def register_teacher(request: Request, payload: TeacherRegistrationRequest) -> A
         request.app.state.teacher_repository,
         request.app.state.student_repository,
     )
+    set_audit(request, actorEmail=payload.email)
     return service.register_teacher(payload)
 
 
@@ -83,7 +86,10 @@ def login(request: Request, payload: AuthenticationRequest) -> AuthenticationRes
         request.app.state.teacher_repository,
         request.app.state.student_repository,
     )
-    return service.login(payload)
+    set_audit(request, actorEmail=payload.email)  # fica registrado mesmo se o login falhar
+    response = service.login(payload)
+    set_audit(request, actorName=response.name, actorRole=response.role, summary=f"Login de {payload.email}")
+    return response
 
 
 @router.post(
@@ -98,6 +104,7 @@ def forgot_password(request: Request, payload: ForgotPasswordRequest) -> ForgotP
         request.app.state.teacher_repository,
         request.app.state.student_repository,
     )
+    set_audit(request, actorEmail=payload.email)
     return service.request_password_reset(payload)
 
 
@@ -113,4 +120,5 @@ def reset_password(request: Request, payload: ResetPasswordRequest) -> ResetPass
         request.app.state.teacher_repository,
         request.app.state.student_repository,
     )
+    set_audit(request, actorEmail=payload.email)
     return service.reset_password(payload)

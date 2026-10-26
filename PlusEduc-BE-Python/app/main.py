@@ -9,6 +9,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.api.activities import router as activities_router
 from app.compute import configure as configure_compute
+from app.api.audit import router as audit_router
 from app.api.auth import router as auth_router
 from app.api.classrooms import router as classrooms_router
 from app.api.grades import router as grades_router
@@ -19,11 +20,13 @@ from app.api.teacher_corrections import (
     legacy_router as teacher_corrections_legacy_router,
     router as teacher_corrections_router,
 )
+from app.api.reports import dashboard_router, reports_router, search_router
 from app.api.students import router as students_router
 from app.api.student_portal import router as student_portal_router
 from app.api.subject_topics import router as subject_topics_router
 from app.api.subject_catalog import router as subject_catalog_router
 from app.api.teachers import router as teachers_router
+from app.core.audit_middleware import AuditMiddleware
 from app.core.config import Settings, get_settings
 from app.core.database import MongoConnection
 from app.core.errors import (
@@ -35,6 +38,7 @@ from app.core.logging_config import configure_logging
 from app.repositories.activity_repository import ActivityRepository
 from app.repositories.activity_submission_repository import ActivitySubmissionRepository
 from app.repositories.classroom_repository import ClassroomRepository
+from app.repositories.audit_repository import AuditRepository
 from app.repositories.grade_repository import GradeRepository
 from app.repositories.student_repository import StudentRepository
 from app.repositories.subject_topic_repository import SubjectTopicRepository
@@ -54,6 +58,7 @@ def create_app(
     activity_submission_repository=None,
     subject_topic_repository=None,
     subject_repository=None,
+    audit_repository=None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
     configure_logging(resolved_settings.log_level)
@@ -74,8 +79,14 @@ def create_app(
         application.state.activity_submission_repository = activity_submission_repository or ActivitySubmissionRepository(mongo)
         application.state.subject_topic_repository = subject_topic_repository or SubjectTopicRepository(mongo)
         application.state.subject_repository = subject_repository or SubjectRepository(mongo)
+        application.state.audit_repository = audit_repository or AuditRepository(mongo)
         if subject_repository is None and mongo.health() == "ok":
             application.state.subject_repository.ensure_indexes()
+        if audit_repository is None and mongo.health() == "ok":
+            try:
+                application.state.audit_repository.ensure_indexes()
+            except Exception:  # noqa: BLE001
+                logging.getLogger(__name__).exception("Não foi possível criar os índices do histórico de operações")
         if activity_submission_repository is None and mongo.health() == "ok":
             try:
                 application.state.activity_submission_repository.ensure_indexes()
@@ -103,6 +114,7 @@ def create_app(
         allow_headers=["*"],
         expose_headers=["Content-Disposition"],
     )
+    application.add_middleware(AuditMiddleware)
     application.add_exception_handler(StarletteHTTPException, http_exception_handler)
     application.add_exception_handler(RequestValidationError, validation_exception_handler)
     application.add_exception_handler(Exception, unhandled_exception_handler)
@@ -120,6 +132,10 @@ def create_app(
     application.include_router(activity_submissions_router)
     application.include_router(teacher_corrections_router)
     application.include_router(teacher_corrections_legacy_router)
+    application.include_router(audit_router)
+    application.include_router(reports_router)
+    application.include_router(dashboard_router)
+    application.include_router(search_router)
     return application
 
 

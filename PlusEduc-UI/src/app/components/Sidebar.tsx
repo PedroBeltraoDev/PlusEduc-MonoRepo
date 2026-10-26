@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router";
-import { BookOpen, ClipboardCheck, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
+import { BarChart3, BookOpen, ClipboardCheck, History, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "./ui/utils";
 
@@ -19,6 +19,8 @@ export const menuItems = [
   { icon: Users, label: "Turmas", path: "/turmas" },
   { icon: ClipboardList, label: "Atividades", path: "/atividades" },
   { icon: ClipboardCheck, label: "Notas e Frequência", path: "/notas" },
+  { icon: BarChart3, label: "Relatórios", path: "/relatorios" },
+  { icon: History, label: "Histórico", path: "/historico" },
   { icon: BookOpen, label: "Minhas matérias", path: "/materias" },
   { icon: Settings, label: "Configurações", path: "/configuracoes" },
 ];

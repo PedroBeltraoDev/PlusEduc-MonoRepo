@@ -11,3 +11,4 @@ reportlab>=4.2,<5.0
 pypdf>=5.0,<6.0
 numpy>=2.0,<3.0
 pyopencl>=2024.1
+openpyxl>=3.1,<4.0

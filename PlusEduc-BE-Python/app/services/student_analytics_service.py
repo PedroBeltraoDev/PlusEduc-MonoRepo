@@ -75,3 +75,15 @@ class StudentAnalyticsService:
         if not student:
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
         return student
+
+    @staticmethod
+    def attendance_counts(grades: list[dict[str, Any]]) -> tuple[int, int, int, int]:
+        """Totais de frequência (aulas, presenças, faltas, taxa %) de uma lista de notas.
+
+        Mesma regra de GroupStats: só conta como aula o lançamento com presença registrada.
+        Usado pelos relatórios e pelo dashboard, que agrupam as notas por conta própria."""
+        recorded = [item.get("attendance") for item in grades if item.get("attendance") is not None]
+        total_classes = len(recorded)
+        attended = sum(1 for value in recorded if value is True)
+        attendance_rate = int((attended * 100) / total_classes) if total_classes else 0
+        return total_classes, attended, total_classes - attended, attendance_rate

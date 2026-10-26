@@ -13,6 +13,8 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { classroomsService, gradesService } from "@/services";
+import { reportsService } from "@/services/reports";
+import type { ExportFormat } from "@/services/reports";
 import type { GradeClassroomSummary, GradeFormData, GradeStudentSummary } from "@/services";
 import type { Classroom, GradeRecord } from "@/types";
 import { ACTIVITY_TYPES, activityTypeLabel, formatDate } from "@/utils";
@@ -94,6 +96,7 @@ export function Notas() {
   const [editing, setEditing] = useState<GradeRecord | null>(null);
   const [form, setForm] = useState<GradeFormState>(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [exporting, setExporting] = useState<ExportFormat | null>(null);
   const [recordToDelete, setRecordToDelete] = useState<GradeRecord | null>(null);
   const [deleting, setDeleting] = useState(false);
 
@@ -227,6 +230,18 @@ export function Notas() {
     }
   };
 
+  const handleExport = async (format: ExportFormat) => {
+    try {
+      setExporting(format);
+      const filename = await reportsService.exportReport("boletim", format, { classroomId, subject: subject || undefined });
+      toast.success(`Boletim exportado: ${filename}`);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Não foi possível exportar o boletim.");
+    } finally {
+      setExporting(null);
+    }
+  };
+
   const handleDelete = async () => {
     if (!recordToDelete) return;
     try {
@@ -350,9 +365,24 @@ export function Notas() {
                   {subject ? ` Filtrando por ${subject}.` : ""}
                 </p>
               </div>
-              <Link to="/turmas" className="text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#4FC3F7]">
-                Gerenciar alunos da turma
-              </Link>
+              <div className="flex flex-wrap items-center gap-3">
+                <span className="text-sm text-gray-500 dark:text-gray-400">Exportar boletim:</span>
+                {(["csv", "xlsx", "pdf"] as const).map((format) => (
+                  <button
+                    key={format}
+                    type="button"
+                    onClick={() => void handleExport(format)}
+                    disabled={exporting !== null || summary.students.length === 0}
+                    className="inline-flex items-center gap-1 rounded-lg border border-[#1E5AA8] px-3 py-1.5 text-sm font-semibold text-[#1E5AA8] transition hover:bg-[#1E5AA8] hover:text-white disabled:opacity-50 dark:border-[#4FC3F7] dark:text-[#4FC3F7]"
+                  >
+                    {exporting === format ? <Loader2 className="h-3 w-3 animate-spin" /> : null}
+                    {format === "xlsx" ? "Excel" : format.toUpperCase()}
+                  </button>
+                ))}
+                <Link to="/turmas" className="text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#4FC3F7]">
+                  Gerenciar alunos da turma
+                </Link>
+              </div>
             </div>
 
             {summary.students.length === 0 ? (
