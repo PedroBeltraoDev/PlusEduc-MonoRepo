@@ -7,6 +7,8 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 from app.core.config import Settings
 
 ALGORITHM = "HS256"
+ACCESS_TOKEN = "access"
+REFRESH_TOKEN = "refresh"
 
 
 class TokenError(ValueError):
@@ -19,10 +21,11 @@ def _secret(settings: Settings) -> str:
     return settings.jwt_secret
 
 
-def _create_token(subject: str, settings: Settings, expiration_ms: int) -> str:
+def _create_token(subject: str, settings: Settings, expiration_ms: int, token_type: str) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "sub": subject,
+        "type": token_type,
         "iat": now,
         "exp": now + timedelta(milliseconds=expiration_ms),
     }
@@ -30,17 +33,22 @@ def _create_token(subject: str, settings: Settings, expiration_ms: int) -> str:
 
 
 def create_access_token(subject: str, settings: Settings) -> str:
-    return _create_token(subject, settings, settings.jwt_expiration_ms)
+    return _create_token(subject, settings, settings.jwt_expiration_ms, ACCESS_TOKEN)
 
 
 def create_refresh_token(subject: str, settings: Settings) -> str:
-    return _create_token(subject, settings, settings.jwt_refresh_expiration_ms)
+    return _create_token(subject, settings, settings.jwt_refresh_expiration_ms, REFRESH_TOKEN)
 
 
-def decode_token(token: str, settings: Settings) -> dict[str, Any]:
+def decode_token(token: str, settings: Settings, expected_type: str = ACCESS_TOKEN) -> dict[str, Any]:
+    """Valida assinatura, validade e finalidade do token (acesso x refresh)."""
     try:
-        return jwt.decode(token, _secret(settings), algorithms=[ALGORITHM])
+        payload = jwt.decode(token, _secret(settings), algorithms=[ALGORITHM])
     except ExpiredSignatureError as exc:
         raise TokenError("Token expirado") from exc
     except InvalidTokenError as exc:
         raise TokenError("Token inválido") from exc
+    # O refresh token (7 dias) não pode abrir a API: só serve para renovar o acesso.
+    if payload.get("type") != expected_type:
+        raise TokenError("Tipo de token inválido")
+    return payload

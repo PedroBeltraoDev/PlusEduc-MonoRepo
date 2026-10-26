@@ -40,12 +40,8 @@ class EmailService:
         )
 
         if not self.is_configured:
-            logger.warning(
-                "SMTP não configurado; código de recuperação não foi enviado por e-mail "
-                "(conta=%s, código=%s)",
-                account_email,
-                code,
-            )
+            # O código nunca vai para o log (RNF04); sem SMTP, use PASSWORD_RESET_DEMO_MODE=true.
+            logger.warning("SMTP não configurado; código de recuperação não foi enviado (conta=%s)", account_email)
             return
 
         try:

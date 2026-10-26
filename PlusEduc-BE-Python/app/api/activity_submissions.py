@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
+from app.api.student_portal import service as portal_service
 from app.core.auth import UserPrincipal
 from app.dependencies import require_roles
 from app.schemas.activity_submission import ActivitySubmissionRequest, StudentSubmissionResult
@@ -25,7 +26,9 @@ def service(request: Request) -> ActivitySubmissionService:
 
 @router.post("/activities/{activity_id}/submissions", response_model=StudentSubmissionResult)
 def submit_activity(activity_id: str, payload: ActivitySubmissionRequest, request: Request, current_user: UserPrincipal = Depends(require_roles("STUDENT"))):
-    return service(request).submit(activity_id, payload, current_user)
+    # O serviço do portal só aceita atividades da turma do aluno (ou atribuídas a ele); sem essa
+    # checagem, qualquer aluno poderia enviar respostas a atividades de outras turmas.
+    return portal_service(request).submit_activity(activity_id, payload, current_user)
 
 
 @router.get("/activities/{activity_id}/submissions", response_model=StudentSubmissionResult)

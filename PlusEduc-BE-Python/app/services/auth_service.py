@@ -1,4 +1,6 @@
 import hmac
+import logging
+import secrets
 from dataclasses import replace
 from datetime import datetime, timedelta, timezone
 
@@ -23,16 +25,18 @@ from app.schemas.auth import (
     StudentRegistrationRequest,
     TeacherRegistrationRequest,
 )
-from app.services.email_service import EmailService
+from app.services.email_service import EmailDeliveryError, EmailService
+
+logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
 GENERIC_RESET_REQUEST_MESSAGE = "Se o e-mail informado existir, um código de verificação foi enviado."
 INVALID_RESET_CODE_MESSAGE = "Código inválido ou expirado"
 MAX_PASSWORD_RESET_ATTEMPTS = 5
 
-# Modo de demonstração local: nenhum e-mail é enviado de fato, o código é fixo
-# e devolvido na própria resposta para a equipe apresentar o fluxo completo
-# (inclusive a troca real de senha no banco) sem depender de SMTP configurado.
+# Modo de demonstração local (PASSWORD_RESET_DEMO_MODE=true): nenhum e-mail é enviado, o código
+# é fixo e devolvido na própria resposta para a equipe apresentar o fluxo completo (inclusive a
+# troca real de senha no banco) sem SMTP. Desligado por padrão: ver Settings.password_reset_demo_mode.
 DEMO_PASSWORD_RESET_CODE = "123456"
 
 
@@ -277,15 +281,24 @@ class AuthService:
         user = self._repository.find_active_by_email(normalized_email)
         demo_code = None
         if user:
+            demo_mode = self._settings.password_reset_demo_mode
+            code = DEMO_PASSWORD_RESET_CODE if demo_mode else f"{secrets.randbelow(1_000_000):06d}"
             expires_at = datetime.now(timezone.utc) + timedelta(
                 minutes=self._settings.password_reset_code_ttl_minutes
             )
             self._repository.set_password_reset_code(
                 normalized_email,
-                self._hash_reset_code(normalized_email, DEMO_PASSWORD_RESET_CODE),
+                self._hash_reset_code(normalized_email, code),
                 expires_at,
             )
-            demo_code = DEMO_PASSWORD_RESET_CODE
+            if demo_mode:
+                demo_code = code
+            else:
+                try:
+                    self._email_service.send_password_reset_code(account_email=normalized_email, code=code)
+                except EmailDeliveryError:
+                    # A resposta continua genérica: não revela se a conta existe nem se o envio falhou.
+                    logger.warning("Código de recuperação gerado, mas o e-mail não pôde ser enviado")
         return ForgotPasswordResponse(message=GENERIC_RESET_REQUEST_MESSAGE, demoCode=demo_code)
 
     def reset_password(self, request: ResetPasswordRequest) -> ResetPasswordResponse:

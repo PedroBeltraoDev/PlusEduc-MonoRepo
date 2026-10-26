@@ -27,7 +27,7 @@ def service(request: Request) -> StudentService:
 def create_student(
     payload: StudentCreateRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER")),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     created = service(request).create(payload, current_user)
     set_audit(request, entityId=created.id, summary=f"Aluno {created.name} cadastrado", details={"name": created.name})
@@ -93,7 +93,7 @@ def update_student(
     student_id: str,
     payload: StudentUpdateRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER")),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     updated = service(request).update(student_id, payload, current_user)
     set_audit(request, summary=f"Aluno {updated.name} alterado", details={"fields": sorted(payload.model_dump(exclude_unset=True))})
@@ -105,7 +105,7 @@ def enable_student_access(
     student_id: str,
     payload: EnableStudentAccessRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER")),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     service(request).enable_access(student_id, payload)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
@@ -115,7 +115,7 @@ def enable_student_access(
 def delete_student(
     student_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER")),
+    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     before = service(request).get(student_id)
     service(request).delete(student_id)
