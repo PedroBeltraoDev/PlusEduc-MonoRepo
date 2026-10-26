@@ -5,6 +5,7 @@ from bson import ObjectId
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from tests.database import TEST_DATABASE
 from app.core.config import Settings
 from app.core.jwt import create_access_token
 from app.main import create_app
@@ -30,7 +31,7 @@ def test_subject_catalog_and_performance_on_real_mongodb():
     settings = Settings(
         app_env="test-subject-catalog",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,
@@ -100,7 +101,7 @@ def test_subject_delete_deactivates_and_reactivates_on_recreate():
     settings = Settings(
         app_env="test-subject-delete",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,
@@ -145,7 +146,7 @@ def test_subject_delete_deactivates_all_duplicate_documents():
     settings = Settings(
         app_env="test-subject-duplicate-delete",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,

@@ -8,6 +8,7 @@ from fastapi.testclient import TestClient
 from openpyxl import load_workbook
 from pymongo import MongoClient
 
+from tests.database import TEST_DATABASE
 from app.core.auth import UserPrincipal
 from app.core.config import Settings
 from app.dependencies import get_current_user
@@ -21,7 +22,7 @@ def make_settings(**extra):
     return Settings(
         app_env="test-sprint7",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,
@@ -35,7 +36,7 @@ def ctx():
     mongo = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000)
     try:
         mongo.admin.command("ping")
-        db = mongo["escola_db"]
+        db = mongo[TEST_DATABASE]
         student = db.students.find_one({"active": {"$ne": False}, "$or": [{"class_id": {"$nin": [None, ""]}}, {"classId": {"$nin": [None, ""]}}]})
         if not student:
             pytest.fail("Nenhum aluno ativo matriculado em escola_db")
@@ -170,7 +171,7 @@ def test_global_search_ignores_accents_and_case_and_is_staff_only(ctx):
 
 def test_audit_log_records_grade_changes_with_before_and_after_and_scopes_visibility():
     mongo = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000)
-    db = mongo["escola_db"]
+    db = mongo[TEST_DATABASE]
     token = uuid4().hex[:10]
     emails = [f"audit.a.{token}@professor.local", f"audit.b.{token}@professor.local", f"audit.s.{token}@aluno.local"]
     password = "Audit@12345"
@@ -240,7 +241,7 @@ def test_audit_log_records_grade_changes_with_before_and_after_and_scopes_visibi
 
 def test_audit_log_is_off_in_test_environment_by_default():
     mongo = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000)
-    db = mongo["escola_db"]
+    db = mongo[TEST_DATABASE]
     marker = f"audit.off.{uuid4().hex[:8]}@professor.local"
     try:
         with TestClient(create_app(make_settings())) as client:

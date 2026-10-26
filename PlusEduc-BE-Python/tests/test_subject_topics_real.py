@@ -3,6 +3,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from tests.database import TEST_DATABASE
 from app.core.config import Settings
 from app.core.jwt import create_access_token
 from app.main import create_app
@@ -24,7 +25,7 @@ def test_subject_topics_crud_on_real_mongodb():
     settings = Settings(
         app_env="test-subject-topics",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,
@@ -107,7 +108,7 @@ def test_subject_topic_creation_syncs_subject_catalog():
     settings = Settings(
         app_env="test-subject-topic-sync",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,
@@ -149,7 +150,7 @@ def test_subject_topics_list_does_not_create_subject_catalog_entry():
     settings = Settings(
         app_env="test-subject-topic-list",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,

@@ -6,6 +6,7 @@ from bson import ObjectId
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from tests.database import TEST_DATABASE
 from app.main import app
 from app.services.curriculum import curriculum_subjects_for_grade, normalize_curriculum_key
 
@@ -70,7 +71,7 @@ def test_subject_assignment_is_unique_and_available_subjects_shrink():
             assert duplicate.status_code == 409, duplicate.text
     finally:
         cleanup_client = MongoClient("mongodb://localhost:27017")
-        cleanup_db = cleanup_client["escola_db"]
+        cleanup_db = cleanup_client[TEST_DATABASE]
         cleanup_db["classrooms"].delete_one({"_id": classroom_id})
         teacher = cleanup_db["teachers"].find_one({"email": TEACHER_EMAIL, "active": True})
         if teacher is not None:
