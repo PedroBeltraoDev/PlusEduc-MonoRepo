@@ -1,0 +1,68 @@
+[
+ {
+  "arquivo": "b12_notas_turma.png",
+  "legenda": "Fluxo 6 — Notas e Frequência da turma 7º Ano D (nota vinda da atividade já no boletim)",
+  "url": "http://127.0.0.1:5183/notas?turma=6ac2ebfb54fb67ac5e764134",
+  "hora": "26/10/2026 16:26:27"
+ },
+ {
+  "arquivo": "b13_nota_data_futura.png",
+  "legenda": "Regra de negócio — nota com data no futuro é recusada pelo servidor (mensagem ao usuário)",
+  "url": "http://127.0.0.1:5183/notas?turma=6ac2ebfb54fb67ac5e764134",
+  "hora": "26/10/2026 16:26:31"
+ },
+ {
+  "arquivo": "b14_nota_lancada.png",
+  "legenda": "Fluxo 6 — Nota manual lançada (data de hoje): média e frequência recalculadas",
+  "url": "http://127.0.0.1:5183/notas?turma=6ac2ebfb54fb67ac5e764134",
+  "hora": "26/10/2026 16:26:35"
+ },
+ {
+  "arquivo": "b15_exportar_boletim.png",
+  "legenda": "Fluxo 6 — Exportação do boletim em Excel",
+  "url": "http://127.0.0.1:5183/notas?turma=6ac2ebfb54fb67ac5e764134",
+  "hora": "26/10/2026 16:26:38"
+ },
+ {
+  "arquivo": "b16_relatorios.png",
+  "legenda": "Fluxo 7 — Relatórios (boletim por turma com filtros e exportação)",
+  "url": "http://127.0.0.1:5183/relatorios",
+  "hora": "26/10/2026 16:26:43"
+ },
+ {
+  "arquivo": "b17_pesquisa_global.png",
+  "legenda": "Fluxo 7 — Pesquisa global (resultado agrupado por tipo)",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "26/10/2026 16:26:48"
+ },
+ {
+  "arquivo": "b18_pagina_busca.png",
+  "legenda": "Fluxo 7 — Página de resultados da pesquisa",
+  "url": "http://127.0.0.1:5183/busca?q=tabuada",
+  "hora": "26/10/2026 16:26:51"
+ },
+ {
+  "arquivo": "b19_historico_prof.png",
+  "legenda": "Fluxo 7 — Histórico de operações: lançamento de nota, envio e recusas registradas",
+  "url": "http://127.0.0.1:5183/historico",
+  "hora": "26/10/2026 16:26:55"
+ },
+ {
+  "arquivo": "b20_aluno_notas.png",
+  "legenda": "Fluxo 8 — Aluno vê as próprias notas (inclui a nota da atividade online)",
+  "url": "http://127.0.0.1:5183/aluno/notas",
+  "hora": "26/10/2026 16:27:02"
+ },
+ {
+  "arquivo": "b21_aluno_desempenho.png",
+  "legenda": "Fluxo 8 — Desempenho do aluno por disciplina",
+  "url": "http://127.0.0.1:5183/aluno/desempenho",
+  "hora": "26/10/2026 16:27:07"
+ },
+ {
+  "arquivo": "b22_recuperar_senha.png",
+  "legenda": "Recuperação de senha: a resposta é genérica e NENHUM código aparece na tela (modo demonstração desligado)",
+  "url": "http://127.0.0.1:5183/esqueci-senha",
+  "hora": "26/10/2026 16:27:12"
+ }
+]

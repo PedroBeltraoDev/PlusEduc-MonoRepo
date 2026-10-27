@@ -2,7 +2,7 @@
 
 Os testes usam repositórios em memória (sem MongoDB) para poder rodar em qualquer máquina. As
 verificações de ponta a ponta contra o MongoDB real ficam nos demais arquivos *_real.py e no
-script de avaliação descrito em docs/SPRINT_08_EVIDENCIAS.md.
+script de avaliação descrito em docs/sprint-08/README.md.
 """
 
 import re

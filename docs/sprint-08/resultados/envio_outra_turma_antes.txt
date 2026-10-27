@@ -1,0 +1,5 @@
+atividade da OUTRA turma: 6a0f1fcb20a4a3f5efdd7cc9 | título: Atividade de Reforço: Matematica - Equacoes do Segundo Grau
+HTTP 200 {"correctCount":1,"totalQuestions":3,"scorePercent":33,"pendingCount":1,"results":[{"questionIndex":0,"questionText":"Resolva a equacao x² - 5x + 6 = 0.","questionType":"MULTIPLA_ESCOLHA","options":["A) x = 2 e x = 3","B) x = 1 e x = 6","C) x = -2 e x = -3","D) x = 0 e x = 5"],"selectedAnswer":"A","
+submissões de Lucas nessa atividade: antes 0 depois 1
+resposta traz gabarito (correctAnswer)? False
+limpeza feita

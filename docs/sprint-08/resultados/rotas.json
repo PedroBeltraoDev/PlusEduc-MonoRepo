@@ -1,0 +1,804 @@
+[
+ {
+  "method": "GET",
+  "path": "/api/activities",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/activities",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/classroom/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/activities/generate",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/student/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/teacher/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/activities/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/activities/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/{activity_id}/export-pdf",
+  "roles": null,
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/{activity_id}/submissions",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/audit-logs",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/forgot-password",
+  "roles": null,
+  "auth": false
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/login",
+  "roles": null,
+  "auth": false
+ },
+ {
+  "method": "PUT",
+  "path": "/api/auth/profile",
+  "roles": null,
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/register/student",
+  "roles": null,
+  "auth": false
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/register/teacher",
+  "roles": null,
+  "auth": false
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/reset-password",
+  "roles": null,
+  "auth": false
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/classrooms",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/paginated",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/student/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/teacher/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/year/{year}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/classrooms/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/classrooms/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/classrooms/{classroom_id}/enroll/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/{classroom_id}/performance",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/classrooms/{classroom_id}/unenroll/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/dashboard/overview",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/grades",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/classroom/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/classroom/{classroom_id}/summary",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/grades/from-activity/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/student/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/student/{student_id}/average",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/grades/{grade_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/{grade_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/grades/{grade_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/reports",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/reports/{report_type}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/reports/{report_type}/export",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/search",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities/{activity_id}",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities/{activity_id}/export-pdf",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities/{activity_id}/submissions",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/student-portal/activities/{activity_id}/submissions",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/classmates",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/classroom",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/grades",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/me",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/performance",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/teachers",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/students",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/class/{class_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/learning-gap/{subject}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/paginated",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/unassigned",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/students/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/students/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}/attendance",
+  "roles": null,
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/students/{student_id}/enable-access",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}/pedagogical-recommendation",
+  "roles": null,
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}/performance",
+  "roles": null,
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/subject-topics",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/subject-topics",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/subject-topics/{item_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/subject-topics/{item_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/subjects",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/subjects/assignments",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects/available",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/subjects/{subject_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/subjects/{subject_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects/{subject_id}/classrooms",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects/{subject_id}/classrooms/{classroom_id}/performance",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teacher/activity-corrections/pending",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/teacher/activity-corrections/{submission_id}/questions/{question_index}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teacher/activity_corrections/pending",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/teacher/activity_corrections/{submission_id}/questions/{question_index}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "POST",
+  "path": "/api/teachers",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/count",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/email/{email}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/subject/{subject}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/teachers/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "PUT",
+  "path": "/api/teachers/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true
+ },
+ {
+  "method": "GET",
+  "path": "/health",
+  "roles": null,
+  "auth": false
+ }
+]

@@ -1,0 +1,32 @@
+[
+ {
+  "arquivo": "b01_dashboard.png",
+  "legenda": "Fluxo 1 — Dashboard do professor com indicadores reais",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "26/10/2026 16:21:37"
+ },
+ {
+  "arquivo": "b02_turmas.png",
+  "legenda": "Fluxo 2 — Lista de turmas",
+  "url": "http://127.0.0.1:5183/turmas",
+  "hora": "26/10/2026 16:21:41"
+ },
+ {
+  "arquivo": "b03_turma_detalhe.png",
+  "legenda": "Fluxo 2 — Detalhe da turma (alunos, matérias e atividades)",
+  "url": "http://127.0.0.1:5183/turmas",
+  "hora": "26/10/2026 16:21:45"
+ },
+ {
+  "arquivo": "b04_nova_atividade_preenchida.png",
+  "legenda": "Fluxo 3 — Professora cria atividade manual (formulário preenchido)",
+  "url": "http://127.0.0.1:5183/nova-atividade",
+  "hora": "26/10/2026 16:21:50"
+ },
+ {
+  "arquivo": "b05_atividade_criada.png",
+  "legenda": "Fluxo 3 — Atividade salva (aviso de sucesso e item na lista)",
+  "url": "http://127.0.0.1:5183/atividades",
+  "hora": "26/10/2026 16:21:53"
+ }
+]

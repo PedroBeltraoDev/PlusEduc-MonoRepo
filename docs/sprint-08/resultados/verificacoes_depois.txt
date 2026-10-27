@@ -1,0 +1,31 @@
+OK    [A. Isolamento entre alunos] Aluno consulta o próprio desempenho -> esperado 200 obtido 200 
+OK    [A. Isolamento entre alunos] Aluno consulta a própria frequência -> esperado 200 obtido 200 
+OK    [A. Isolamento entre alunos] Aluno consulta desempenho de OUTRO aluno -> esperado 403 obtido 403 
+OK    [A. Isolamento entre alunos] Aluno consulta frequência de OUTRO aluno -> esperado 403 obtido 403 
+OK    [A. Isolamento entre alunos] Aluno consulta recomendação pedagógica de OUTRO aluno -> esperado 403 obtido 403 
+OK    [A. Isolamento entre alunos] Aluno lê dados cadastrais de OUTRO aluno (GET /api/students/{id}) -> esperado 403 obtido 403 
+OK    [A. Isolamento entre alunos] Aluno lê as notas de OUTRO aluno (GET /api/grades/student/{id}) -> esperado 403 obtido 403 
+OK    [A. Isolamento entre alunos] Aluno abre atividade de OUTRA turma pelo portal -> esperado 404 obtido 404 
+OK    [A. Isolamento entre alunos] Aluno envia respostas completas a atividade de OUTRA turma (não pode gravar) -> esperado 404 obtido 404 submissões gravadas no banco: 0
+OK    [A. Isolamento entre alunos] Lista do portal não contém atividade de outra turma -> esperado 200 obtido 200 2 atividades listadas
+OK    [B. Validade do token] Sem token -> esperado 401 obtido 401 
+OK    [B. Validade do token] Token aleatório ("abc") -> esperado 401 obtido 401 
+OK    [B. Validade do token] Token assinado com outro segredo (forjado) -> esperado 401 obtido 401 
+OK    [B. Validade do token] Token com algoritmo "none" -> esperado 401 obtido 401 
+OK    [B. Validade do token] Token vencido -> esperado 401 obtido 401 
+OK    [B. Validade do token] Token do aluno com claim role=ADMIN adulterada (o papel vem do banco, não do token) -> esperado 403 obtido 403 
+OK    [B. Validade do token] Refresh token usado como token de acesso -> esperado 401 obtido 401 o refresh de 7 dias não deve abrir a API
+OK    [B. Validade do token] Token de usuário desativado depois do login -> esperado 401 obtido 401 
+OK    [B. Validade do token] Login de usuário desativado -> esperado 401 obtido 401 
+OK    [C. Login] Senha errada -> esperado 401 obtido 401 
+OK    [C. Login] E-mail inexistente (não revela se a conta existe) -> esperado 401 obtido 401 mensagens iguais
+OK    [D. Cadastro público] Cadastro de aluno com campo extra role=ADMIN é recusado (o papel não pode ser escolhido pelo cliente) -> esperado 422 obtido 422 
+OK    [D. Cadastro público] Cadastro público de aluno gera o papel STUDENT -> esperado 200 obtido 200 papel: STUDENT
+INFO [D] cadastro=200; GET /api/students=200
+INFO [E] professor sem turma lendo notas de uma turma -> 200
+[F] 56 respostas varridas; vazamentos: []
+[F] gabarito vazado ao aluno? False 201 200
+[H] admin=1224 professor=357 aluno=403
+OK    [I. Recuperação de senha] Solicitação de recuperação não devolve o código na resposta -> esperado 200 obtido 200 demoCode na resposta: None
+[I] código na resposta: None | tomada de conta: False
+RESUMO: 31 ok / 33

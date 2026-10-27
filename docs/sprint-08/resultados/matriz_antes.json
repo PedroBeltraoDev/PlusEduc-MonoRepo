@@ -1,0 +1,1462 @@
+[
+ {
+  "method": "GET",
+  "path": "/api/activities",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/activities",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/classroom/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/classroom/6ac2ebfb54fb67ac5e764134",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/activities/generate",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/generate",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/student/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/student/6ac2ebfa54fb67ac5e764132",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/teacher/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/teacher/6ac2ebfa54fb67ac5e764131",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/activities/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/6ac2ed6054fb67ac5e764135",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/activities/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/{activity_id}/export-pdf",
+  "roles": null,
+  "auth": true,
+  "url": "/api/activities/6ac2ed6054fb67ac5e764135/export-pdf",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/activities/{activity_id}/submissions",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/activities/6ac2ed6054fb67ac5e764135/submissions",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/audit-logs",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/audit-logs",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/forgot-password",
+  "roles": null,
+  "auth": false,
+  "url": "/api/auth/forgot-password",
+  "results": {
+   "ANÔNIMO": null,
+   "ALUNO": null,
+   "PROFESSOR": null,
+   "ADMIN": null
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/login",
+  "roles": null,
+  "auth": false,
+  "url": "/api/auth/login",
+  "results": {
+   "ANÔNIMO": null,
+   "ALUNO": null,
+   "PROFESSOR": null,
+   "ADMIN": null
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/auth/profile",
+  "roles": null,
+  "auth": true,
+  "url": "/api/auth/profile",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 422,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/register/student",
+  "roles": null,
+  "auth": false,
+  "url": "/api/auth/register/student",
+  "results": {
+   "ANÔNIMO": 422,
+   "ALUNO": 422,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/register/teacher",
+  "roles": null,
+  "auth": false,
+  "url": "/api/auth/register/teacher",
+  "results": {
+   "ANÔNIMO": 422,
+   "ALUNO": 422,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/auth/reset-password",
+  "roles": null,
+  "auth": false,
+  "url": "/api/auth/reset-password",
+  "results": {
+   "ANÔNIMO": null,
+   "ALUNO": null,
+   "PROFESSOR": null,
+   "ADMIN": null
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/classrooms",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/paginated",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/paginated",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/student/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/student/6ac2ebfa54fb67ac5e764132",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/teacher/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/teacher/6ac2ebfa54fb67ac5e764131",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/year/{year}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/year/2026",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/classrooms/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/6ac2ebfb54fb67ac5e764134",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/classrooms/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/classrooms/{classroom_id}/enroll/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/000000000000000000000000/enroll/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/classrooms/{classroom_id}/performance",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/6ac2ebfb54fb67ac5e764134/performance",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/classrooms/{classroom_id}/unenroll/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/classrooms/000000000000000000000000/unenroll/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/dashboard/overview",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/dashboard/overview",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/grades",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/classroom/{classroom_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/classroom/6ac2ebfb54fb67ac5e764134",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/classroom/{classroom_id}/summary",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/classroom/6ac2ebfb54fb67ac5e764134/summary",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/grades/from-activity/{activity_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/from-activity/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/student/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/student/6ac2ebfa54fb67ac5e764132",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/student/{student_id}/average",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/student/6ac2ebfa54fb67ac5e764132/average",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/grades/{grade_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/grades/{grade_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/6ac3bd1bfb745116729afca1",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/grades/{grade_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/grades/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/reports",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/reports",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/reports/{report_type}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/reports/boletim",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/reports/{report_type}/export",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/reports/boletim/export",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/search",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/search",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/activities",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities/{activity_id}",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/activities/6ac2ed6054fb67ac5e764135",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities/{activity_id}/export-pdf",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/activities/6ac2ed6054fb67ac5e764135/export-pdf",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/activities/{activity_id}/submissions",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/activities/6ac2ed6054fb67ac5e764135/submissions",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/student-portal/activities/{activity_id}/submissions",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/activities/000000000000000000000000/submissions",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 422,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/classmates",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/classmates",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/classroom",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/classroom",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/grades",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/grades",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/me",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/me",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/performance",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/performance",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/student-portal/teachers",
+  "roles": [
+   "STUDENT"
+  ],
+  "auth": true,
+  "url": "/api/student-portal/teachers",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 403,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/students",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/class/{class_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/class/6ac2ebfb54fb67ac5e764134",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/learning-gap/{subject}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/learning-gap/Matematica",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/paginated",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/paginated",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/unassigned",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/unassigned",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/students/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/6ac2ebfa54fb67ac5e764132",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/students/{student_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}/attendance",
+  "roles": null,
+  "auth": true,
+  "url": "/api/students/6ac2ebfa54fb67ac5e764132/attendance",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/students/{student_id}/enable-access",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/students/000000000000000000000000/enable-access",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 403
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}/pedagogical-recommendation",
+  "roles": null,
+  "auth": true,
+  "url": "/api/students/6ac2ebfa54fb67ac5e764132/pedagogical-recommendation",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/students/{student_id}/performance",
+  "roles": null,
+  "auth": true,
+  "url": "/api/students/6ac2ebfa54fb67ac5e764132/performance",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 200,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/subject-topics",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subject-topics",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/subject-topics",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subject-topics",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/subject-topics/{item_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subject-topics/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/subject-topics/{item_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subject-topics/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/subjects",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/subjects/assignments",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects/assignments",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects/available",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects/available",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/subjects/{subject_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "PATCH",
+  "path": "/api/subjects/{subject_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects/{subject_id}/classrooms",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects/6a851eaf1f5374475434f157/classrooms",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/subjects/{subject_id}/classrooms/{classroom_id}/performance",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/subjects/6a851eaf1f5374475434f157/classrooms/6ac2ebfb54fb67ac5e764134/performance",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teacher/activity-corrections/pending",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teacher/activity-corrections/pending",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/teacher/activity-corrections/{submission_id}/questions/{question_index}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teacher/activity-corrections/000000000000000000000000/questions/0",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teacher/activity_corrections/pending",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teacher/activity_corrections/pending",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/teacher/activity_corrections/{submission_id}/questions/{question_index}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teacher/activity_corrections/000000000000000000000000/questions/0",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "POST",
+  "path": "/api/teachers",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 422,
+   "ADMIN": 422
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/count",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers/count",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/email/{email}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers/email/marina.ferreira@pluseduc.local",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/subject/{subject}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers/subject/Matematica",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "DELETE",
+  "path": "/api/teachers/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/api/teachers/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers/6ac2ebfa54fb67ac5e764131",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ },
+ {
+  "method": "PUT",
+  "path": "/api/teachers/{teacher_id}",
+  "roles": [
+   "TEACHER",
+   "ADMIN"
+  ],
+  "auth": true,
+  "url": "/api/teachers/000000000000000000000000",
+  "results": {
+   "ANÔNIMO": 401,
+   "ALUNO": 403,
+   "PROFESSOR": 404,
+   "ADMIN": 404
+  }
+ },
+ {
+  "method": "GET",
+  "path": "/health",
+  "roles": null,
+  "auth": false,
+  "url": "/health",
+  "results": {
+   "ANÔNIMO": 200,
+   "ALUNO": 200,
+   "PROFESSOR": 200,
+   "ADMIN": 200
+  }
+ }
+]
