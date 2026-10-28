@@ -336,8 +336,8 @@ Termo de Compromisso de Estágio) não fazem parte deste cronograma.
 | **Sprint 4** | 26/09/2026 | Primeiro módulo completo | Módulo de Autenticação + Turmas/Alunos completo, com persistência, validações, mensagens de erro e navegação demonstráveis. |
 | **Sprint 5** | 03/10/2026 | Segundo módulo funcionando | Próximo módulo do sistema (ex.: Atividades/Submissões ou Notas/Frequência) funcionando de ponta a ponta. |
 | **Sprint 6** | 17/10/2026 | Aprimoramento do sistema | Terceiro módulo (Notas e Frequência — B08, RF10/RF11) e integração com Atividades, Turmas, Dashboard e portal do aluno; correções da Pré-Banca; melhorias de interface e de navegação. |
-| **Sprint 7** | 24/10/2026 | Sistema quase completo | Integração entre os módulos já implementados; avanço do núcleo de Tópicos Avançados (predição/recomendação). |
-| **Sprint 8** | 31/10/2026 | Sistema praticamente concluído | Fechamento das funcionalidades restantes do backlog (B17–B23). |
+| **Sprint 7** | 24/10/2026 | Sistema quase completo | Dashboard com indicadores e gráficos, relatórios, pesquisa, filtros, exportação (CSV/XLSX/PDF) e histórico de operações (RF17 parcial e RF26), integrados aos módulos anteriores. Predição e recomendação (RF19/RF20) seguem para a Sprint 8. |
+| **Sprint 8** | 31/10/2026 | Sistema praticamente concluído | Escopo real: integração da Sprint 07 à `main`, revisão e correção do controle de permissões por perfil (verificado com a API em execução), revisão das regras de negócio, melhorias de usabilidade e testes (138). Predição de risco (RF19), clustering (B17) e otimização de grupos (B18) não foram implementados e seguem em aberto (ver `docs/sprint-08/README.md`). |
 | **Sprint 9** | 07/11/2026 | Testes completos | Cobertura de testes automatizados (backend e frontend); correção de regressões. |
 | **Sprint 10** | 14/11/2026 | Versão release candidate | Sistema estabilizado, sem funcionalidades pendentes críticas; preparação para homologação. |
 | **Sprint 11** | 21/11/2026 | Preparação para entrega | Documentação final, roteiro de demonstração, ensaio da apresentação. |

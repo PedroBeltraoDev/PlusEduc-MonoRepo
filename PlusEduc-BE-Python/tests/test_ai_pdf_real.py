@@ -5,6 +5,7 @@ from fastapi.testclient import TestClient
 from pymongo import MongoClient
 from pypdf import PdfReader
 
+from tests.database import TEST_DATABASE
 from app.core.auth import UserPrincipal
 from app.core.config import Settings
 from app.dependencies import get_current_user
@@ -19,7 +20,7 @@ def ai_pdf_real_context():
     settings = Settings(
         app_env="test-real-ai-pdf",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,

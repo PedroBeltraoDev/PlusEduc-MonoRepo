@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 
 from app.core.auth import UserPrincipal
+from app.core.audit_middleware import set_audit
 from app.dependencies import get_current_user, require_roles
 from app.schemas.activity import ActivityCreateRequest, ActivityGenerationRequest, ActivityResponse, ActivityUpdateRequest
 from app.schemas.activity_submission import ActivitySubmissionDetailResponse
@@ -57,12 +58,16 @@ def require_pdf_access(request: Request, activity: dict, current_user: UserPrinc
 
 @router.post("", response_model=ActivityResponse, status_code=status.HTTP_201_CREATED)
 def create_activity(payload: ActivityCreateRequest, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    return service(request).create(payload, current_user)
+    created = service(request).create(payload, current_user)
+    set_audit(request, entityId=created.id, summary=f"Atividade “{created.title}” criada", details={"title": created.title, "subject": created.subject, "classroomId": created.classroomId})
+    return created
 
 
 @router.post("/generate", response_model=ActivityResponse, status_code=status.HTTP_201_CREATED)
 def generate_activity(payload: ActivityGenerationRequest, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    return service(request).generate(payload, current_user)
+    generated = service(request).generate(payload, current_user)
+    set_audit(request, entityId=generated.id, summary=f"Atividade “{generated.title}” gerada", details={"title": generated.title, "subject": generated.subject})
+    return generated
 
 
 @router.get("", response_model=list[ActivityResponse])
@@ -126,5 +131,7 @@ def update_activity(activity_id: str, payload: ActivityUpdateRequest, request: R
 
 @router.delete("/{activity_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+    before = service(request).get(activity_id)
     service(request).delete(activity_id)
+    set_audit(request, summary=f"Atividade “{before.title}” excluída", details={"title": before.title})
     return Response(status_code=status.HTTP_204_NO_CONTENT)

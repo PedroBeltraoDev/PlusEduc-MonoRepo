@@ -1,0 +1,11 @@
+P1 nota com aluno de outra turma: HTTP 400  {"timestamp":"2026-10-27T18:10:38.514749+00:00","status":400,"error":"HTTP Error","message":"O aluno não está matriculado na turma informada"}
+P5 nota com data em 2030: HTTP 422  {"timestamp":"2026-10-27T18:10:38.519749+00:00","status":422,"error":"HTTP Error","message":"A data do lançamento não pode estar no futuro"}
+P2 matrícula em 2ª turma sem desmatricular da 1ª: HTTP 204  
+   aluno continua na turma antiga? False | está na nova? True | class_id do aluno = True
+P3a criar aluno temporário na turma do Lucas: HTTP 201  {"id":"6ae0e91e57affbd096738537","name":"Aluno Temporario Sprint8","email":"aluno.temp.1793124638@aluno.local","matricula":"MAT-2026-0080","birthDate":"2012-03-
+   turma lista o aluno temporário? False
+P3b excluir aluno: HTTP 204  
+   após excluir, a turma ainda lista o aluno? False
+   GET turma -> students: ['Lucas Mendes Carvalho']
+P4 aluno com nascimento em 2031: HTTP 422  {"timestamp":"2026-10-27T18:10:38.554020+00:00","status":422,"error":"Validation Error","message":"Erro de validação da requisição","details":[{"loc":["body","b
+P6 turma com ano 1900: HTTP 400  {"timestamp":"2026-10-27T18:10:38.558021+00:00","status":400,"error":"HTTP Error","message":"Ano da turma fora do intervalo permitido"}

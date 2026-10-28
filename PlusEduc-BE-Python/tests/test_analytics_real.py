@@ -5,6 +5,7 @@ from bson import ObjectId
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from tests.database import TEST_DATABASE
 from app.core.auth import UserPrincipal
 from app.core.config import Settings
 from app.dependencies import get_current_user
@@ -16,7 +17,7 @@ def analytics_real_context():
     settings = Settings(
         app_env="test-real-analytics",
         mongodb_uri="mongodb://localhost:27017",
-        mongodb_database="escola_db",
+        mongodb_database=TEST_DATABASE,
         mongodb_required=True,
         mongodb_server_selection_timeout_ms=3000,
         mongodb_connect_timeout_ms=3000,
@@ -114,7 +115,7 @@ def test_performance_student_without_real_grades(analytics_real_context):
 def _real_grades(student_id):
     mongo = MongoClient("mongodb://localhost:27017", serverSelectionTimeoutMS=3000, connectTimeoutMS=3000)
     try:
-        return list(mongo["escola_db"].grades.find({"studentId": student_id}))
+        return list(mongo[TEST_DATABASE].grades.find({"studentId": student_id}))
     finally:
         mongo.close()
 

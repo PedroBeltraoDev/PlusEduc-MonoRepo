@@ -1,0 +1,8 @@
+Dispositivo OpenCL: Ellesmere  (ok)
+
+ registros  grupos  Python (ms)  OpenCL (ms)    razão
+       100      10         0.08         1.76    0.04x
+     1,000      30         0.63         2.80    0.23x
+    10,000     100         6.35        11.40    0.56x
+   100,000     500       104.46       101.61    1.03x
+ 1,000,000   2,000      1345.87      1111.07    1.21x

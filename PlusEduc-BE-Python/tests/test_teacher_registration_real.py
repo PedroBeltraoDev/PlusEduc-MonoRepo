@@ -5,6 +5,7 @@ from uuid import uuid4
 from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
+from tests.database import TEST_DATABASE
 from app.core.passwords import verify_password
 from app.main import app
 
@@ -14,7 +15,7 @@ def test_public_teacher_registration_creates_profile_and_authenticates():
     password = "Teacher@123"
     name = "Professor Público Demonstração"
     mongo = MongoClient("mongodb://localhost:27017")
-    db = mongo["escola_db"]
+    db = mongo[TEST_DATABASE]
 
     try:
         with TestClient(app) as client:

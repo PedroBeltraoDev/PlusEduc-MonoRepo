@@ -1,0 +1,8 @@
+Banco temporário: pluseduc_bench_6b984cd5  (8 turmas x 30 alunos, 40 atividades, latência simulada 20 ms, paralelo)
+ClassroomService.list_active               consultas=    4   tempo mediano=    66.4 ms
+ActivityService.list_all                   consultas=    2   tempo mediano=    42.9 ms
+ActivityService.list_all(participation)    consultas=    6   tempo mediano=   114.1 ms
+ActivityService.by_teacher                 consultas=    4   tempo mediano=    85.4 ms
+TeacherCorrectionService.list_pending      consultas=    6   tempo mediano=   142.5 ms
+GradeService.classroom_summary             consultas=    3   tempo mediano=    43.6 ms
+Banco temporário pluseduc_bench_6b984cd5 removido.

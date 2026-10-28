@@ -5,6 +5,7 @@ import { Sidebar } from "./Sidebar";
 import { useAuth } from "@/contexts/AuthContext";
 import { Sheet, SheetContent, SheetTitle } from "./ui/sheet";
 import { NotificationBell } from "./NotificationBell";
+import { SearchBox } from "./SearchBox";
 
 export function DashboardLayout() {
   const { isAuthenticated, loadingState, isStudent } = useAuth();
@@ -54,10 +55,14 @@ export function DashboardLayout() {
             <NotificationBell />
           </div>
         </div>
+        <div className="mt-3">
+          <SearchBox />
+        </div>
       </div>
 
-      <div className="hidden border-b border-gray-200 bg-[#F5F7FA]/95 px-8 py-3 dark:border-gray-700 dark:bg-gray-900/95 lg:block">
-        <div className="flex items-center justify-end">
+      <div className="hidden border-b border-gray-200 bg-[#F5F7FA]/95 px-8 py-3 dark:border-gray-700 dark:bg-gray-900/95 lg:ml-64 lg:block">
+        <div className="flex items-center justify-between gap-4">
+          <SearchBox />
           <NotificationBell />
         </div>
       </div>

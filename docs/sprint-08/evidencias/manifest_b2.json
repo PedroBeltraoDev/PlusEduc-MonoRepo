@@ -1,0 +1,44 @@
+[
+ {
+  "arquivo": "b06_aluno_atividades.png",
+  "legenda": "Fluxo 4 — Aluno (Lucas) vê a atividade nova em \"Pendentes\"",
+  "url": "http://127.0.0.1:5183/aluno/atividades",
+  "hora": "26/10/2026 16:23:24"
+ },
+ {
+  "arquivo": "b07_aluno_atividade_aberta.png",
+  "legenda": "Fluxo 4 — Atividade aberta pelo aluno: questões sem gabarito",
+  "url": "http://127.0.0.1:5183/aluno/atividades/6adfa84e82fe918f71a61037",
+  "hora": "26/10/2026 16:23:28"
+ },
+ {
+  "arquivo": "b08_aluno_respondendo.png",
+  "legenda": "Fluxo 4 — Aluno marca a alternativa B",
+  "url": "http://127.0.0.1:5183/aluno/atividades/6adfa84e82fe918f71a61037",
+  "hora": "26/10/2026 16:23:29"
+ },
+ {
+  "arquivo": "b09_aluno_resultado.png",
+  "legenda": "Fluxo 4 — Envio e correção automática (acerto e resposta correta)",
+  "url": "http://127.0.0.1:5183/aluno/atividades/6adfa84e82fe918f71a61037",
+  "hora": "26/10/2026 16:23:33"
+ },
+ {
+  "arquivo": "b10_prof_atividade_participacao.png",
+  "legenda": "Fluxo 5 — Professora acompanha a participação e as respostas da turma",
+  "url": "http://127.0.0.1:5183/atividades/6adfa84e82fe918f71a61037",
+  "hora": "26/10/2026 16:23:42"
+ },
+ {
+  "arquivo": "b11_prof_lancar_boletim.png",
+  "legenda": "Fluxo 5 — \"Lançar notas no boletim\": nota criada a partir da atividade",
+  "url": "http://127.0.0.1:5183/atividades/6adfa84e82fe918f71a61037",
+  "hora": "26/10/2026 16:23:46"
+ },
+ {
+  "arquivo": "b12_notas_pagina.png",
+  "legenda": "Fluxo 5 — Notas e Frequência: escolha da turma",
+  "url": "http://127.0.0.1:5183/notas",
+  "hora": "26/10/2026 16:23:49"
+ }
+]

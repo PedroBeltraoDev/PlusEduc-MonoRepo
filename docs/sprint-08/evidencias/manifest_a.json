@@ -1,0 +1,86 @@
+[
+ {
+  "arquivo": "a01_login.png",
+  "legenda": "Tela de login (acesso público)",
+  "url": "http://127.0.0.1:5183/login",
+  "hora": "26/10/2026 16:19:33"
+ },
+ {
+  "arquivo": "a02_login_senha_errada.png",
+  "legenda": "Senha incorreta: mensagem em português, sem revelar se a conta existe",
+  "url": "http://127.0.0.1:5183/login",
+  "hora": "26/10/2026 16:19:35"
+ },
+ {
+  "arquivo": "a03_anonimo_dashboard.png",
+  "legenda": "Sem login: /dashboard redireciona para /login",
+  "url": "http://127.0.0.1:5183/login",
+  "hora": "26/10/2026 16:19:38"
+ },
+ {
+  "arquivo": "a03b_anonimo_aluno.png",
+  "legenda": "Sem login: /aluno redireciona para /login",
+  "url": "http://127.0.0.1:5183/login",
+  "hora": "26/10/2026 16:19:41"
+ },
+ {
+  "arquivo": "a04_aluno_home.png",
+  "legenda": "ALUNO (Lucas) autenticado: área do aluno",
+  "url": "http://127.0.0.1:5183/aluno",
+  "hora": "26/10/2026 16:19:45"
+ },
+ {
+  "arquivo": "a05_aluno_tenta_dashboard.png",
+  "legenda": "ALUNO acessa /dashboard (área do professor): é devolvido para /aluno",
+  "url": "http://127.0.0.1:5183/aluno",
+  "hora": "26/10/2026 16:19:47"
+ },
+ {
+  "arquivo": "a06_aluno_tenta_relatorios.png",
+  "legenda": "ALUNO acessa /relatorios: é devolvido para /aluno",
+  "url": "http://127.0.0.1:5183/aluno",
+  "hora": "26/10/2026 16:19:50"
+ },
+ {
+  "arquivo": "a06b_aluno_tenta_historico.png",
+  "legenda": "ALUNO acessa /historico: é devolvido para /aluno",
+  "url": "http://127.0.0.1:5183/aluno",
+  "hora": "26/10/2026 16:19:53"
+ },
+ {
+  "arquivo": "a07_professor_dashboard.png",
+  "legenda": "PROFESSORA (Marina) autenticada: painel do educador",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "26/10/2026 16:19:57"
+ },
+ {
+  "arquivo": "a08_professor_tenta_aluno.png",
+  "legenda": "PROFESSORA acessa /aluno (portal do aluno): é devolvida para /dashboard",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "26/10/2026 16:19:59"
+ },
+ {
+  "arquivo": "a09_sessao_expirada.png",
+  "legenda": "Token inválido/vencido: a sessão é encerrada e o usuário volta ao login com aviso",
+  "url": "http://127.0.0.1:5183/login",
+  "hora": "26/10/2026 16:20:03"
+ },
+ {
+  "arquivo": "a10_admin_dashboard.png",
+  "legenda": "ADMIN (conta de avaliação) autenticado: mesmo painel do educador",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "26/10/2026 16:20:07"
+ },
+ {
+  "arquivo": "a11_admin_historico.png",
+  "legenda": "ADMIN no Histórico: vê as operações de todos os usuários (texto no topo)",
+  "url": "http://127.0.0.1:5183/historico",
+  "hora": "26/10/2026 16:20:11"
+ },
+ {
+  "arquivo": "a12_professor_historico.png",
+  "legenda": "PROFESSORA no Histórico: vê apenas as próprias operações",
+  "url": "http://127.0.0.1:5183/historico",
+  "hora": "26/10/2026 16:20:17"
+ }
+]

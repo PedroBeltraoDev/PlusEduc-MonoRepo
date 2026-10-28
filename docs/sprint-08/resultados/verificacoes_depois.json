@@ -1,0 +1,266 @@
+[
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno consulta o próprio desempenho",
+  "esperado": 200,
+  "obtido": 200,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno consulta a própria frequência",
+  "esperado": 200,
+  "obtido": 200,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno consulta desempenho de OUTRO aluno",
+  "esperado": 403,
+  "obtido": 403,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno consulta frequência de OUTRO aluno",
+  "esperado": 403,
+  "obtido": 403,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno consulta recomendação pedagógica de OUTRO aluno",
+  "esperado": 403,
+  "obtido": 403,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno lê dados cadastrais de OUTRO aluno (GET /api/students/{id})",
+  "esperado": 403,
+  "obtido": 403,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno lê as notas de OUTRO aluno (GET /api/grades/student/{id})",
+  "esperado": 403,
+  "obtido": 403,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno abre atividade de OUTRA turma pelo portal",
+  "esperado": 404,
+  "obtido": 404,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Aluno envia respostas completas a atividade de OUTRA turma (não pode gravar)",
+  "esperado": 404,
+  "obtido": 404,
+  "ok": true,
+  "nota": "submissões gravadas no banco: 0"
+ },
+ {
+  "grupo": "A. Isolamento entre alunos",
+  "verificacao": "Lista do portal não contém atividade de outra turma",
+  "esperado": 200,
+  "obtido": 200,
+  "ok": true,
+  "nota": "2 atividades listadas"
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Sem token",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Token aleatório (\"abc\")",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Token assinado com outro segredo (forjado)",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Token com algoritmo \"none\"",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Token vencido",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Token do aluno com claim role=ADMIN adulterada (o papel vem do banco, não do token)",
+  "esperado": 403,
+  "obtido": 403,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Refresh token usado como token de acesso",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": "o refresh de 7 dias não deve abrir a API"
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Token de usuário desativado depois do login",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "B. Validade do token",
+  "verificacao": "Login de usuário desativado",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "C. Login",
+  "verificacao": "Senha errada",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "C. Login",
+  "verificacao": "E-mail inexistente (não revela se a conta existe)",
+  "esperado": 401,
+  "obtido": 401,
+  "ok": true,
+  "nota": "mensagens iguais"
+ },
+ {
+  "grupo": "D. Cadastro público",
+  "verificacao": "Cadastro de aluno com campo extra role=ADMIN é recusado (o papel não pode ser escolhido pelo cliente)",
+  "esperado": 422,
+  "obtido": 422,
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "D. Cadastro público",
+  "verificacao": "Cadastro público de aluno gera o papel STUDENT",
+  "esperado": 200,
+  "obtido": 200,
+  "ok": true,
+  "nota": "papel: STUDENT"
+ },
+ {
+  "grupo": "D. Cadastro público",
+  "verificacao": "Cadastro público de professor dá acesso imediato aos dados de todos os alunos (sem aprovação)",
+  "esperado": "RF04: ativação por aprovação",
+  "obtido": "cadastro=200; GET /api/students=200",
+  "ok": false,
+  "nota": "LACUNA registrada"
+ },
+ {
+  "grupo": "E. Escopo do professor",
+  "verificacao": "Professor recém-cadastrado, sem turmas, lê as notas da turma de outra professora",
+  "esperado": "restrito à própria turma",
+  "obtido": 200,
+  "ok": false,
+  "nota": "LIMITAÇÃO registrada (sem restrição por turma)"
+ },
+ {
+  "grupo": "F. Segredos nas respostas",
+  "verificacao": "56 respostas GET com 200 varridas à procura de hash de senha / código de recuperação",
+  "esperado": 0,
+  "obtido": 0,
+  "ok": true,
+  "nota": "[]"
+ },
+ {
+  "grupo": "F. Segredos nas respostas",
+  "verificacao": "Portal do aluno não devolve o gabarito (correctAnswer) de atividade ainda não enviada",
+  "esperado": "ausente",
+  "obtido": "ausente",
+  "ok": true,
+  "nota": "criação=201; portal=200"
+ },
+ {
+  "grupo": "G. CORS",
+  "verificacao": "Origem não autorizada não recebe Access-Control-Allow-Origin",
+  "esperado": "ausente",
+  "obtido": "ausente",
+  "ok": true,
+  "nota": "status 400"
+ },
+ {
+  "grupo": "G. CORS",
+  "verificacao": "Origem do frontend (http://localhost:5173) autorizada",
+  "esperado": "http://localhost:5173",
+  "obtido": "http://localhost:5173",
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "H. Histórico de operações",
+  "verificacao": "Administrador vê operações de todos; professor só as próprias; aluno 403",
+  "esperado": "admin >= professor; aluno 403",
+  "obtido": "admin=1224 professor=357 aluno=403",
+  "ok": true,
+  "nota": ""
+ },
+ {
+  "grupo": "I. Recuperação de senha",
+  "verificacao": "Solicitação de recuperação não devolve o código na resposta",
+  "esperado": 200,
+  "obtido": 200,
+  "ok": true,
+  "nota": "demoCode na resposta: None"
+ },
+ {
+  "grupo": "I. Recuperação de senha",
+  "verificacao": "Resposta não revela se o e-mail existe (conta real x inexistente)",
+  "esperado": "respostas iguais",
+  "obtido": "iguais",
+  "ok": true,
+  "nota": "com demoCode apenas para contas existentes"
+ },
+ {
+  "grupo": "I. Recuperação de senha",
+  "verificacao": "Quem só conhece o e-mail NÃO consegue trocar a senha de outra conta",
+  "esperado": "impossível",
+  "obtido": "impossível",
+  "ok": true,
+  "nota": ""
+ }
+]

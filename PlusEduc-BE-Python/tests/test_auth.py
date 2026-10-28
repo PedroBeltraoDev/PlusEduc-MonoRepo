@@ -85,7 +85,8 @@ def test_valid_jwt_and_role_dependency_return_authenticated_user(settings, fake_
     request = SimpleNamespace(
         app=SimpleNamespace(
             state=SimpleNamespace(settings=settings, user_repository=fake_repository)
-        )
+        ),
+        state=SimpleNamespace(),
     )
     credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=token)
 
@@ -93,6 +94,7 @@ def test_valid_jwt_and_role_dependency_return_authenticated_user(settings, fake_
 
     assert principal.email == "teacher@example.com"
     assert principal.role == "TEACHER"
+    assert request.state.principal == principal  # o histórico de operações usa o autor guardado aqui
     assert require_roles("TEACHER")(principal) is principal
 
 

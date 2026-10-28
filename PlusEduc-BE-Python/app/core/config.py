@@ -33,6 +33,8 @@ class Settings(BaseSettings):
     jwt_expiration_ms: int = Field(default=28_800_000, ge=1_000)
     jwt_refresh_expiration_ms: int = Field(default=604_800_000, ge=1_000)
 
+    audit_enabled: bool | None = None  # None: ligado, exceto quando APP_ENV começa com "test"
+
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.5-flash-lite"
     gemini_api_version: str = "v1"
@@ -58,6 +60,10 @@ class Settings(BaseSettings):
     # as contas de professor/aluno não são caixas de e-mail reais).
     password_reset_override_email: str = ""
     password_reset_code_ttl_minutes: int = Field(default=15, ge=1)
+    # Modo de demonstração da recuperação de senha: código fixo devolvido na resposta da API.
+    # Qualquer pessoa que conheça o e-mail de uma conta consegue trocar a senha dela, por isso
+    # fica DESLIGADO por padrão e só deve ser ligado em máquina local, para apresentações.
+    password_reset_demo_mode: bool = False
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

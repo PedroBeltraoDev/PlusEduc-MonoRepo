@@ -1,6 +1,27 @@
 // Cliente HTTP para consumir a API PlusEduc
 
+import { AUTH_KEYS, SESSION_EXPIRED_FLAG } from './authKeys';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
+
+// Mensagens padrão do backend (em inglês) traduzidas para o usuário.
+const FRIENDLY_MESSAGES: Record<string, string> = {
+  'Invalid email or password': 'E-mail ou senha inválidos.',
+  'Access denied': 'Você não tem permissão para realizar esta ação.',
+};
+
+// Sessão inválida (token vencido, usuário desativado...): limpa o login e volta para a tela de entrada.
+function endSession(): void {
+  Object.values(AUTH_KEYS).forEach((key) => localStorage.removeItem(key));
+  try {
+    sessionStorage.setItem(SESSION_EXPIRED_FLAG, '1');
+  } catch {
+    // sem sessionStorage: a tela de login só não mostra o aviso
+  }
+  if (window.location.pathname !== '/login') {
+    window.location.assign('/login');
+  }
+}
 
 // Interface para resposta de erro da API
 interface ApiError {
@@ -51,7 +72,12 @@ class ApiClient {
         error: response.statusText,
         message: 'Erro na comunicação com o servidor'
       }));
-      throw new Error(error.message || 'Erro na API');
+      // 401 numa chamada autenticada = sessão encerrada; o login em si (401 por senha errada) segue normal.
+      if (response.status === 401 && !endpoint.startsWith('/auth/') && localStorage.getItem(AUTH_KEYS.accessToken)) {
+        endSession();
+        throw new Error('Sua sessão expirou. Entre novamente.');
+      }
+      throw new Error(FRIENDLY_MESSAGES[error.message] ?? (error.message || 'Erro na API'));
     }
 
     // Para respostas vazias (204 No Content)
