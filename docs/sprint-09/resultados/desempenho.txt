@@ -1,0 +1,9 @@
+Desempenho da turma (a maior, 7 alunos)                 mediana     5.7 ms  p95    15.9 ms  máx    27.5 ms
+Resumo de notas da turma (7 alunos)                     mediana     7.0 ms  p95    29.9 ms  máx    30.8 ms
+Dashboard (todas as turmas)                             mediana    15.9 ms  p95    34.1 ms  máx    40.5 ms
+Relatório Boletim (todos os alunos)                     mediana     7.7 ms  p95    30.3 ms  máx    31.3 ms
+Pesquisa global                                         mediana    16.0 ms  p95    31.4 ms  máx    31.6 ms
+Lista de turmas                                         mediana    15.8 ms  p95    30.8 ms  máx    31.3 ms
+Lista de atividades                                     mediana     9.4 ms  p95    32.7 ms  máx    60.7 ms
+Portal do aluno: desempenho                             mediana     5.9 ms  p95    30.7 ms  máx    32.9 ms
+Portal do aluno: atividades                             mediana     5.5 ms  p95    17.2 ms  máx    20.3 ms

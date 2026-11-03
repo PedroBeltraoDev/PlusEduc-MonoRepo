@@ -5,7 +5,7 @@ import sys, datetime
 sys.path.insert(0, str(__import__('pathlib').Path(__file__).resolve().parents[3] / 'PlusEduc-BE-Python'))
 from pymongo import MongoClient
 from app.core.passwords import hash_password
-db=MongoClient('mongodb://localhost:27017')['pluseduc_sprint8_eval']
+db=MongoClient('mongodb://localhost:27017')[os.environ.get('PLUSEDUC_EVAL_DB', 'pluseduc_sprint8_eval')]
 h=hash_password(PW)
 def setpw(email):
     db.users.update_one({'email':email},{'$set':{'password':h,'active':True}})

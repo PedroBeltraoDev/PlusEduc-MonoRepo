@@ -3,6 +3,8 @@ from typing import Any
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.validators import validate_email_format
+
 
 class LearningGapInput(BaseModel):
     model_config = ConfigDict(extra="ignore", populate_by_name=True)
@@ -74,6 +76,7 @@ class StudentCreateRequest(BaseModel):
     active: bool | None = True
 
     _check_birth_date = field_validator("birthDate")(validate_birth_date)
+    _check_email = field_validator("email")(validate_email_format)
 
 
 class StudentUpdateRequest(BaseModel):
@@ -87,6 +90,7 @@ class StudentUpdateRequest(BaseModel):
     active: bool | None = None
 
     _check_birth_date = field_validator("birthDate")(validate_birth_date)
+    _check_email = field_validator("email")(validate_email_format)
 
 
 class EnableStudentAccessRequest(BaseModel):
