@@ -1,0 +1,27 @@
+[
+ {
+  "tela": "login",
+  "largura": 390,
+  "rolagem_horizontal": false
+ },
+ {
+  "tela": "dashboard do professor",
+  "largura": 390,
+  "rolagem_horizontal": false
+ },
+ {
+  "tela": "notas e frequência",
+  "largura": 390,
+  "rolagem_horizontal": false
+ },
+ {
+  "tela": "relatórios",
+  "largura": 390,
+  "rolagem_horizontal": false
+ },
+ {
+  "tela": "notas do aluno",
+  "largura": 390,
+  "rolagem_horizontal": false
+ }
+]

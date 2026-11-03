@@ -1,0 +1,44 @@
+[
+ {
+  "arquivo": "r01_celular_login.png",
+  "legenda": "Celular (390 px) — tela de login",
+  "url": "http://127.0.0.1:5183/login",
+  "hora": "03/11/2026 11:00:46"
+ },
+ {
+  "arquivo": "r02_celular_dashboard.png",
+  "legenda": "Celular (390 px) — dashboard do professor, menu recolhido",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "03/11/2026 11:00:53"
+ },
+ {
+  "arquivo": "r03_celular_menu.png",
+  "legenda": "Celular (390 px) — menu lateral aberto pelo botão",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "03/11/2026 11:00:55"
+ },
+ {
+  "arquivo": "r04_celular_notas.png",
+  "legenda": "Celular (390 px) — notas e frequência",
+  "url": "http://127.0.0.1:5183/notas",
+  "hora": "03/11/2026 11:00:59"
+ },
+ {
+  "arquivo": "r05_celular_relatorios.png",
+  "legenda": "Celular (390 px) — relatórios",
+  "url": "http://127.0.0.1:5183/relatorios",
+  "hora": "03/11/2026 11:01:03"
+ },
+ {
+  "arquivo": "r06_celular_aluno_notas.png",
+  "legenda": "Celular (390 px) — Minhas Notas (aluno)",
+  "url": "http://127.0.0.1:5183/aluno/notas",
+  "hora": "03/11/2026 11:01:09"
+ },
+ {
+  "arquivo": "r07_modo_escuro.png",
+  "legenda": "Modo escuro — dashboard do professor (classe dark do Tailwind ativada)",
+  "url": "http://127.0.0.1:5183/dashboard",
+  "hora": "03/11/2026 11:01:16"
+ }
+]

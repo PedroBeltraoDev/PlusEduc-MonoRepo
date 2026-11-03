@@ -1,0 +1,74 @@
+[
+ {
+  "consulta": "Desempenho da turma (a maior, 7 alunos)",
+  "mediana_ms": 5.7,
+  "p95_ms": 15.9,
+  "maximo_ms": 27.5,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Resumo de notas da turma (7 alunos)",
+  "mediana_ms": 7.0,
+  "p95_ms": 29.9,
+  "maximo_ms": 30.8,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Dashboard (todas as turmas)",
+  "mediana_ms": 15.9,
+  "p95_ms": 34.1,
+  "maximo_ms": 40.5,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Relatório Boletim (todos os alunos)",
+  "mediana_ms": 7.7,
+  "p95_ms": 30.3,
+  "maximo_ms": 31.3,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Pesquisa global",
+  "mediana_ms": 16.0,
+  "p95_ms": 31.4,
+  "maximo_ms": 31.6,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Lista de turmas",
+  "mediana_ms": 15.8,
+  "p95_ms": 30.8,
+  "maximo_ms": 31.3,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Lista de atividades",
+  "mediana_ms": 9.4,
+  "p95_ms": 32.7,
+  "maximo_ms": 60.7,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Portal do aluno: desempenho",
+  "mediana_ms": 5.9,
+  "p95_ms": 30.7,
+  "maximo_ms": 32.9,
+  "amostras": 15,
+  "dentro_de_2s": true
+ },
+ {
+  "consulta": "Portal do aluno: atividades",
+  "mediana_ms": 5.5,
+  "p95_ms": 17.2,
+  "maximo_ms": 20.3,
+  "amostras": 15,
+  "dentro_de_2s": true
+ }
+]
