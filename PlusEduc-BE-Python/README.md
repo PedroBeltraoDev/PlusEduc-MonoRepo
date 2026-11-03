@@ -1,6 +1,8 @@
 # PlusEduc Backend — FastAPI
 
-Backend Python/FastAPI do PlusEduc. A aplicação substitui incrementalmente o backend Java/Spring Boot, mantendo compatibilidade com o frontend React e utilizando MongoDB como persistência principal.
+Backend Python/FastAPI do PlusEduc: autenticação por perfil (professor, aluno e administrador), turmas, alunos, atividades e submissões, notas e frequência, dashboard, relatórios com exportação, pesquisa e histórico de operações, com MongoDB como persistência.
+
+A documentação técnica do projeto está em `docs/` (na raiz do repositório): `ARQUITETURA.md`, `MODELO_DE_DADOS.md`, `REQUISITOS_STATUS.md` e `sprint-08/resultados/matriz_de_permissoes.md` (quem pode chamar cada rota). Com o backend em execução, a lista completa de rotas está em `/docs` (Swagger) e `/redoc`.
 
 ## Pré-requisitos
 
@@ -16,7 +18,10 @@ O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta
 | `app/api/` | Routers HTTP separados por domínio. |
 | `app/services/` | Regras de negócio e orquestração dos casos de uso. |
 | `app/repositories/` | Acesso às collections do MongoDB. |
-| `app/schemas/` | Schemas Pydantic de entrada e saída. |
+| `app/schemas/` | Schemas Pydantic de entrada e saída, com as validações de campos e formatos. |
+| `app/core/` | Configuração, JWT, senhas (bcrypt), conexão, erros padronizados, histórico de operações e paralelismo. |
+| `app/compute/` | Estatísticas de notas em OpenCL, com alternativa em Python. |
+| `scripts/` | Seed de demonstração, servidor multiprocesso, build do backend e benchmarks. |
 | `tests/` | Testes automatizados da API e dos serviços. |
 | `.env` | Configuração local; não deve ser versionado nem publicado. |
 | `requirements.txt` | Dependências Python do backend. |
@@ -26,7 +31,7 @@ O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta
 Entre no diretório do backend:
 
 ```powershell
-Set-Location 'D:\PlusEducPython\PlusEduc\PlusEduc-BE-Python'
+Set-Location '<pasta do repositório>\PlusEduc-BE-Python'
 ```
 
 Se o ambiente virtual ainda não existir, crie-o com Python 3.11 ou superior:
@@ -61,13 +66,17 @@ Depois, edite somente o `.env` local e preencha os segredos necessários. Nunca 
 | `GEMINI_API_KEY` | Chave local do Gemini; quando vazia, a aplicação usa o fallback educacional |
 | `GEMINI_MODEL` | `gemini-3.5-flash-lite` |
 | `GEMINI_API_VERSION` | `v1` |
+| `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_EMAIL` | Envio do código de recuperação de senha por e-mail; sem SMTP o código não é entregue |
+| `PASSWORD_RESET_DEMO_MODE` | `false` (padrão). Em `true` o código fixo `123456` volta na resposta da API, o que permite trocar a senha de qualquer conta só com o e-mail: use **somente** em máquina local, para apresentações |
+| `PASSWORD_RESET_OVERRIDE_EMAIL` | Quando preenchido, todo código é enviado para este e-mail (contas de demonstração não têm caixa de correio) |
+| `PASSWORD_RESET_CODE_TTL_MINUTES` | `15` |
 
 ## Executando o backend
 
 Use o comando abaixo para iniciar o servidor na porta utilizada pelo frontend:
 
 ```powershell
-Set-Location 'D:\PlusEducPython\PlusEduc\PlusEduc-BE-Python'
+Set-Location '<pasta do repositório>\PlusEduc-BE-Python'
 .\.venv\Scripts\python.exe -m uvicorn app.main:app --host 0.0.0.0 --port 8080 --reload
 ```
 
@@ -212,7 +221,7 @@ continua funcionando pelo caminho em Python, que é também o oracle dos testes.
 Execute a suíte completa com o ambiente virtual do projeto:
 
 ```powershell
-Set-Location 'D:\PlusEducPython\PlusEduc\PlusEduc-BE-Python'
+Set-Location '<pasta do repositório>\PlusEduc-BE-Python'
 .\.venv\Scripts\python.exe -m pytest --tb=no -q
 ```
 
@@ -228,14 +237,22 @@ Para executar os testes de turmas, incluindo performance agregada:
 .\.venv\Scripts\python.exe -m pytest tests\test_classrooms.py -q
 ```
 
-Os testes utilizam fixtures controladas para validar contratos e regras, enquanto a execução normal da aplicação utiliza os repositórios conectados ao MongoDB local. Não crie usuários ou notas de teste diretamente no banco de homologação sem necessidade.
+Parte dos testes usa repositórios em memória (não precisa de MongoDB) e parte usa o MongoDB real (`*_real.py`). Para **não tocar nos dados de demonstração**, rode a suíte contra uma cópia descartável do banco:
+
+```powershell
+$env:MONGODB_REQUIRED = "false"
+$env:MONGODB_DATABASE = "pluseduc_testes"   # copie o escola_db para ele antes (ver docs/sprint-08/scripts/clonar_banco.py)
+.\.venv\Scripts\python.exe -m pytest -q
+```
+
+Sem `MONGODB_DATABASE` os testes usam o `escola_db` e removem o que criam. O catálogo de testes funcionais, de validação e de navegação (executados contra a API e a interface em execução) está em `docs/sprint-09/`.
 
 ## Integração com o frontend
 
 O frontend deve ser executado em outro terminal:
 
 ```powershell
-Set-Location 'D:\PlusEducPython\PlusEduc\PlusEduc-UI'
+Set-Location '<pasta do repositório>\PlusEduc-UI'
 npm install
 npm run dev -- --host 0.0.0.0 --port 5173
 ```
@@ -250,7 +267,7 @@ Verifique se o Uvicorn está em execução na porta `8080`, se o Vite está em e
 
 ### Erro `401 Unauthorized`
 
-Faça logout e login novamente para obter um token atualizado. O frontend armazena o token e o prazo retornado em `expiresIn`; tokens antigos não são renovados automaticamente por este projeto.
+O token de acesso vale 8 horas e não é renovado automaticamente (o refresh token é emitido, mas ainda não há rota de renovação). Quando o token vence, o frontend encerra a sessão e volta ao login com o aviso "Sua sessão expirou". Só tokens do tipo `access` abrem a API.
 
 ### Geração por IA retorna modo de demonstração
 
