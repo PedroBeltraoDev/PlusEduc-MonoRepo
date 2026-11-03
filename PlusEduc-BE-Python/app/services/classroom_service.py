@@ -48,6 +48,8 @@ class ClassroomService:
             if teacher is None:
                 raise HTTPException(status_code=400, detail="Perfil de professor não encontrado para criar a turma")
             teacher_id = str(teacher.get("_id"))
+        elif not self.teacher_repository.find_by_id(teacher_id):
+            raise HTTPException(status_code=400, detail="Professor responsável não encontrado")
         if self.repository.exists_by_name_and_year(request.name, request.year):
             raise HTTPException(status_code=409, detail="Já existe uma turma com este nome e ano")
         if self.repository.count_active_by_teacher(teacher_id) >= 5:

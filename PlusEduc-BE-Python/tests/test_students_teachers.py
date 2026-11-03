@@ -146,6 +146,20 @@ class FakeUserRepository:
             return user
         return None
 
+    def insert_teacher_user(self, email, password_hash):
+        self.users[email] = {"_id": f"teacher-user-{email}", "email": email, "password": password_hash, "role": "TEACHER", "active": True}
+        return self.users[email]["_id"]
+
+    def update_password(self, email, password_hash):
+        if email in self.users:
+            self.users[email]["password"] = password_hash
+        return email in self.users
+
+    def deactivate_by_email(self, email):
+        if email in self.users:
+            self.users[email]["active"] = False
+        return int(email in self.users)
+
     def insert_student_user(self, email, password_hash, student_id):
         user_id = "student-user-created"
         self.created.append((email, password_hash, student_id))

@@ -1,5 +1,7 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
+from app.schemas.validators import validate_email_format
+
 
 class AuthenticationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
@@ -15,6 +17,8 @@ class StudentRegistrationRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=6, max_length=100)
 
+    _check_email = field_validator("email")(validate_email_format)
+
 
 class TeacherRegistrationRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
@@ -23,6 +27,8 @@ class TeacherRegistrationRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=6, max_length=100)
     subjects: list[str] = Field(default_factory=list, max_length=50)
+
+    _check_email = field_validator("email")(validate_email_format)
 
 
 class ProfileUpdateRequest(BaseModel):

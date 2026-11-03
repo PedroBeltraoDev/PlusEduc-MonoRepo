@@ -102,7 +102,7 @@ class StudentPortalService:
         students = self.student_repository.find_active_by_class_flexible(str(class_id))
         return sorted(
             [
-                Classmate(id=self._id(item), name=item.get("name", ""), email=item.get("email", ""))
+                Classmate(id=self._id(item), name=item.get("name", ""))
                 for item in students
                 if self._id(item) != self._id(student)
             ],

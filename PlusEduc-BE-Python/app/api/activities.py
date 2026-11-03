@@ -133,5 +133,6 @@ def update_activity(activity_id: str, payload: ActivityUpdateRequest, request: R
 def delete_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
     before = service(request).get(activity_id)
     service(request).delete(activity_id)
-    set_audit(request, summary=f"Atividade “{before.title}” excluída", details={"title": before.title})
+    removed = request.app.state.activity_submission_repository.delete_by_activity(activity_id)  # sem respostas órfãs
+    set_audit(request, summary=f"Atividade “{before.title}” excluída", details={"title": before.title, "submissionsRemoved": removed})
     return Response(status_code=status.HTTP_204_NO_CONTENT)
