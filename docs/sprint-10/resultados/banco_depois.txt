@@ -1,0 +1,26 @@
+REPARO: 3 atividade(s) órfã(s) e 3 resposta(s) órfã(s) removidas
+Banco: pluseduc_sprint10_eval | coleções: activities=35, activity_submissions=96, audit_logs=200, classrooms=22, grades=234, students=79, subject_topics=1, subjects=17, teachers=20, users=101
+REF-01  students.class_id aponta para uma turma existente                                    ok    
+REF-02  classrooms.students[] só tem alunos existentes                                       ok    
+REF-03  matrícula coerente nos dois lados (students.class_id = turma que lista o aluno)      ok    
+REF-04  aluno excluído (inativo) não fica na lista de uma turma ativa                        ok    
+REF-05  classrooms.teacher_id aponta para um professor existente                             ok    
+REF-06  professor responsável de turma ativa está ativo                                      ok    
+REF-07  grades.studentId e grades.classroomId existem                                        ok    
+REF-08  grades.activityId (quando preenchido) aponta para uma atividade existente            ok    
+REF-09  activities.classroom_id e student_id (quando preenchidos) existem                    ok    
+REF-10  activity_submissions aponta para atividade e aluno existentes (sem respostas órfãs)  ok    
+REF-11  users de aluno (role STUDENT) apontam para um aluno existente                        ok    
+REF-12  users de professor (role TEACHER) têm cadastro ativo em teachers com o mesmo e-mail  ok    
+REF-13  professor ativo tem login (documento em users com o mesmo e-mail)                    ok    
+DUP-01  e-mail único entre os usuários ativos                                                ok    
+DUP-02  matrícula única entre os alunos                                                      ok    
+DUP-03  uma resposta por aluno em cada atividade                                             ok    
+DUP-04  nome e ano únicos entre as turmas ativas                                             ok    
+DOM-01  papel do usuário é ADMIN, TEACHER ou STUDENT                                         ok    
+DOM-02  notas entre 0 e 10                                                                   ok    
+DOM-03  senhas gravadas com bcrypt (nunca em texto puro) em users e teachers                 ok    
+DOM-04  no máximo 5 turmas ativas por professor                                              AVISO 1
+        - professor 6a8897c8ecc5aa69504f5599: 12 turmas
+IDX-01  índices esperados existem (criados pela API ao iniciar)                              ok    
+RESUMO: 22 verificações; 0 com erro; 1 com aviso

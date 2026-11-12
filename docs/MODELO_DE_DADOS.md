@@ -1,23 +1,23 @@
-# Modelo de dados (MongoDB)
+# Modelo de dados (MongoDB) — versão final da release candidate
 
-Gerado em 03/11/2026 a partir das coleções reais do banco de avaliação (`pluseduc_sprint9_eval`, cópia do `escola_db`) por `docs/sprint-09/scripts/gerar_modelo_dados.py`.
+Gerado em 11/11/2026 a partir das coleções reais do banco de avaliação (`pluseduc_sprint10_eval`, cópia do `escola_db`) por `docs/sprint-10/scripts/gerar_modelo_dados_final.py`.
 Mostra os nomes e os tipos dos campos encontrados, nunca os valores. "Presença" é a parcela dos documentos que traz o campo.
-O banco não tem esquema fixo (MongoDB): as regras de integridade estão nos serviços da API, não no banco.
+O banco não tem esquema fixo (MongoDB): as regras de integridade estão nos serviços da API e são conferidas por `PlusEduc-BE-Python/scripts/check_database.py` (seção "Integridade").
 
 ## Visão geral das coleções
 
 | Coleção | Documentos | Para que serve |
 |---|---:|---|
-| `activities` | 38 | Atividades (objetivas e discursivas); o conteúdo das questões, com o gabarito, fica em content. |
-| `activity_submissions` | 99 | Respostas dos alunos e o resultado da correção (content). Índice único (activity_id, student_id) impede reenvio. |
-| `audit_logs` | 703 | Histórico de operações que alteram dados: autor, ação, entidade, resultado e antes/depois das notas. |
+| `activities` | 35 | Atividades (objetivas e discursivas); o conteúdo das questões, com o gabarito, fica em content. |
+| `activity_submissions` | 96 | Respostas dos alunos e o resultado da correção (content). Índice único (activity_id, student_id) impede reenvio. |
+| `audit_logs` | 200 | Histórico de operações que alteram dados: autor, ação, entidade, resultado e antes/depois das notas. |
 | `classrooms` | 22 | Turmas: série, ano letivo, alunos matriculados e o professor responsável por cada matéria (subjectTeachers). |
 | `grades` | 234 | Notas e presença (um documento por lançamento). Pode apontar para a atividade que a originou (activityId). |
 | `students` | 79 | Cadastro pedagógico do aluno (matrícula, turma, lacunas de aprendizagem). Exclusão lógica (active=false). |
 | `subject_topics` | 1 | Tópicos sugeridos por matéria, usados na criação de atividades. |
-| `subjects` | 21 | Catálogo de matérias (componentes curriculares) ativas e inativas. |
+| `subjects` | 17 | Catálogo de matérias (componentes curriculares) ativas e inativas. |
 | `teachers` | 20 | Cadastro do professor (disciplinas, turmas). A senha fica em bcrypt; o login usado é o documento de users. |
-| `users` | 100 | Contas de acesso (login). Um documento por pessoa que entra no sistema; o papel (role) decide as permissões. |
+| `users` | 101 | Contas de acesso (login). Um documento por pessoa que entra no sistema; o papel (role) decide as permissões. |
 
 ## Relações entre as coleções
 
@@ -33,10 +33,78 @@ O banco não tem esquema fixo (MongoDB): as regras de integridade estão nos ser
 | `audit_logs.actorId / entityId` | `users._id / qualquer coleção` | quem fez e sobre qual registro |
 | `teachers.email = users.email` | `—` | o login do professor é o documento de users com o mesmo e-mail |
 
+## Diagrama de relacionamento
+
+```mermaid
+erDiagram
+    USERS ||--o| STUDENTS : "studentId / user_id (login do aluno)"
+    USERS ||--o| TEACHERS : "mesmo e-mail (login do professor)"
+    TEACHERS ||--o{ CLASSROOMS : "teacher_id (responsável)"
+    CLASSROOMS ||--o{ STUDENTS : "class_id e students[] (matrícula)"
+    CLASSROOMS }o--o{ SUBJECTS : "subjects[] e subjectTeachers[]"
+    TEACHERS ||--o{ CLASSROOMS : "subjectTeachers[].teacherId (um por matéria)"
+    SUBJECTS ||--o{ SUBJECT_TOPICS : "tópicos da matéria"
+    CLASSROOMS ||--o{ ACTIVITIES : "classroom_id"
+    STUDENTS ||--o{ ACTIVITIES : "student_id (atividade individual, opcional)"
+    ACTIVITIES ||--o{ ACTIVITY_SUBMISSIONS : "activity_id"
+    STUDENTS ||--o{ ACTIVITY_SUBMISSIONS : "student_id"
+    STUDENTS ||--o{ GRADES : "studentId"
+    CLASSROOMS ||--o{ GRADES : "classroomId"
+    ACTIVITIES ||--o{ GRADES : "activityId (opcional)"
+    USERS ||--o{ AUDIT_LOGS : "actorId"
+```
+
+## Chaves e índices
+
+Toda coleção tem a chave primária `_id` (`ObjectId`). As chaves de negócio e os índices abaixo são criados pela API
+ao iniciar (`app/core/database.py` e os repositórios), então um banco novo já nasce com eles.
+
+| Coleção | Chave de negócio (única) | Demais índices |
+|---|---|---|
+| `users` | `email` | `active` |
+| `students` | `matricula` (única, esparsa) | `email`, `class_id`, `classId` |
+| `teachers` | `email` (conferida pela API) | `email` |
+| `classrooms` | `name` + `year` entre as ativas (conferida pela API) | `teacher_id`, `students` |
+| `subjects` | `name_normalized` (única) | — |
+| `activity_submissions` | `activity_id` + `student_id` (única: uma resposta por aluno) | `activityId`, `studentId` |
+| `grades` | — (vários lançamentos por aluno) | `studentId`, `classroomId`, `activityId` |
+| `activities` | — | `classroom_id`, `classroomId`, `student_id`, `studentId`, `created_by` |
+| `audit_logs` | — | `timestamp`, `actorId` + `timestamp`, `entity` + `action` |
+
+## Integridade (regras aplicadas pela API)
+
+| Regra | Onde é aplicada |
+|---|---|
+| E-mail único por conta; matrícula gerada e única | cadastro de aluno e de professor; índice único |
+| Senha sempre em bcrypt | `core/passwords.py`; conferida por `check_database.py` (DOM-03) |
+| Exclusão lógica (`active=false`) de aluno, professor, turma e matéria; o login do excluído deixa de valer | serviços de aluno e professor |
+| Aluno pertence a no máximo uma turma; a matrícula é gravada nos dois lados | criar aluno, matricular, desmatricular, excluir |
+| Turma só com professor responsável existente e ativo; no máximo 5 turmas ativas por professor | criar e editar turma (Sprint 10) |
+| Um professor por matéria em cada turma; matérias compatíveis com a série (BNCC) | atribuição de matéria |
+| Nota de 0 a 10, com data até hoje, só para aluno matriculado na turma | lançar e editar nota |
+| Atividade individual só para aluno da própria turma; excluir atividade remove as respostas | criar e excluir atividade |
+| Uma resposta por aluno em cada atividade | índice único de `activity_submissions` |
+| Cadastro público de professor nasce pendente (`users.pendingApproval`, `teachers.approval_status = PENDING`) e só o ADMIN ativa | cadastro e aprovação (Sprint 10) |
+
+Campos acrescentados na Sprint 10: `users.pendingApproval` (só enquanto o cadastro está pendente) e
+`teachers.approval_status`, `approved_by`, `approved_at`. Não houve mudança em coleções ou índices existentes,
+então nenhum banco precisa de migração para esta versão.
+
+### Como verificar
+
+```powershell
+cd PlusEduc-BE-Python
+.\.venv\Scripts\python.exe scripts\check_database.py            # somente leitura; código 1 se houver erro
+.\.venv\Scripts\python.exe scripts\check_database.py --repair   # remove respostas e atividades órfãs
+```
+
+São 22 verificações (referências entre coleções, duplicidades, faixas de valores, senhas e índices). Resultado da
+Sprint 10 em `docs/sprint-10/resultados/banco_antes.txt` e `banco_depois.txt` (gerado em 11/11/2026).
+
 ## Pontos de atenção do modelo (débitos conhecidos)
 
 * **Nomes misturados:** os dados mais antigos usam `snake_case` (`class_id`, `created_at`) e os mais novos `camelCase` (`studentId`, `createdAt`), às vezes na mesma coleção. A API aceita as duas formas; a padronização exige migração.
-* **Matrícula em dois lugares:** `students.class_id` e `classrooms.students[]`. A API mantém os dois ao matricular, desmatricular e excluir aluno, mas criar aluno já com `classId` preenche só o primeiro.
+* **Matrícula em dois lugares:** `students.class_id` e `classrooms.students[]`. A API mantém os dois ao criar aluno com turma (corrigido na Sprint 10), matricular, desmatricular e excluir aluno.
 * **Ids como texto:** referências entre coleções são gravadas como texto (24 caracteres), enquanto `_id` é `ObjectId`; as consultas testam as duas formas.
 * **Gabarito dentro da atividade:** `activities.content` guarda as questões com a resposta correta; a proteção é feita na API (o portal do aluno remove o gabarito).
 * **Datas de notas** antigas estão como texto ISO e as novas como data/hora; os serviços normalizam as duas formas.
@@ -49,21 +117,20 @@ Atividades (objetivas e discursivas); o conteúdo das questões, com o gabarito,
 
 | Campo | Tipo(s) | Presença |
 |---|---|---:|
-| `_class` | str | 8% |
 | `_id` | ObjectId | 100% |
-| `ai_provider` | str | 92% |
+| `ai_provider` | str | 91% |
 | `classroom_id` | str | 100% |
 | `content` | str | 100% |
 | `created_at` | datetime | 100% |
-| `created_by` | str | 92% |
-| `demo_population_key` | str | 79% |
+| `created_by` | str | 100% |
+| `demo_population_key` | str | 86% |
 | `difficulty_level` | str | 100% |
 | `disability_adaptations` | list | 100% |
 | `format` | str | 100% |
 | `generated_by_ai` | bool | 100% |
 | `pdf_url` | NoneType | 3% |
 | `questions_count` | int | 100% |
-| `student_id` | str | 11% |
+| `student_id` | str | 3% |
 | `subject` | str | 100% |
 | `title` | str | 100% |
 | `topic` | str | 100% |
@@ -76,7 +143,6 @@ Respostas dos alunos e o resultado da correção (content). Índice único (acti
 
 | Campo | Tipo(s) | Presença |
 |---|---|---:|
-| `_class` | str | 2% |
 | `_id` | ObjectId | 100% |
 | `activity_id` | str | 100% |
 | `content` | str, dict | 100% |
@@ -86,7 +152,7 @@ Respostas dos alunos e o resultado da correção (content). Índice único (acti
 | `content.results` | list | 5% |
 | `content.scorePercent` | int | 5% |
 | `content.totalQuestions` | int | 5% |
-| `demo_population_key` | str | 93% |
+| `demo_population_key` | str | 96% |
 | `student_id` | str | 100% |
 | `submitted_at` | datetime | 100% |
 
@@ -111,16 +177,16 @@ Histórico de operações que alteram dados: autor, ação, entidade, resultado 
 | `details.alreadyLaunched` | int | 1% |
 | `details.awaitingCorrection` | int | 1% |
 | `details.before` | dict | 2% |
-| `details.classroomId` | str | 10% |
+| `details.classroomId` | str | 8% |
 | `details.fields` | list | 1% |
 | `details.launched` | int | 1% |
-| `details.name` | str | 12% |
+| `details.name` | str | 10% |
 | `details.notSubmitted` | int | 1% |
-| `details.studentId` | str | 7% |
-| `details.subject` | str | 3% |
+| `details.studentId` | str | 6% |
+| `details.subject` | str | 2% |
 | `details.submissionsRemoved` | int | 1% |
 | `details.title` | str | 4% |
-| `details.year` | int | 7% |
+| `details.year` | int | 6% |
 | `entity` | str | 100% |
 | `entityId` | NoneType, str | 100% |
 | `ip` | str | 100% |
@@ -224,11 +290,11 @@ Catálogo de matérias (componentes curriculares) ativas e inativas.
 |---|---|---:|
 | `_id` | ObjectId | 100% |
 | `active` | bool | 100% |
-| `area` | str | 71% |
+| `area` | str | 88% |
 | `created_at` | datetime | 100% |
-| `created_by` | str | 29% |
-| `curriculum_key` | str | 71% |
-| `grade_levels` | list | 71% |
+| `created_by` | str | 12% |
+| `curriculum_key` | str | 88% |
+| `grade_levels` | list | 88% |
 | `name` | str | 100% |
 | `name_normalized` | str | 100% |
 | `updated_at` | datetime | 100% |
@@ -263,19 +329,19 @@ Contas de acesso (login). Um documento por pessoa que entra no sistema; o papel 
 |---|---|---:|
 | `_id` | ObjectId | 100% |
 | `active` | bool | 100% |
-| `createdAt` | datetime | 8% |
-| `created_at` | datetime | 92% |
-| `created_by` | str | 69% |
+| `createdAt` | datetime | 9% |
+| `created_at` | datetime | 91% |
+| `created_by` | str | 68% |
 | `email` | str | 100% |
-| `name` | str | 19% |
+| `name` | str | 20% |
 | `password` | str | 100% |
 | `passwordResetAttempts` | int | 1% |
 | `passwordResetCodeHash` | str | 1% |
 | `passwordResetExpiresAt` | datetime | 1% |
 | `role` | str | 100% |
-| `studentId` | str | 79% |
+| `studentId` | str | 78% |
 | `teacherId` | str | 15% |
-| `updatedAt` | datetime | 4% |
-| `updated_at` | datetime | 93% |
+| `updatedAt` | datetime | 5% |
+| `updated_at` | datetime | 92% |
 
 Índices: `_id_` [('_id', 1)]; `email_1` (único) [('email', 1)]; `active_1` [('active', 1)]

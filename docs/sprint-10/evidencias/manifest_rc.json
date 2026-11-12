@@ -1,0 +1,266 @@
+[
+ {
+  "arquivo": "c01_login.png",
+  "legenda": "Acesso — tela de login (versão final)",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "11/11/2026 16:10:22"
+ },
+ {
+  "arquivo": "c02_cadastro_professor.png",
+  "legenda": "RF04 — cadastro público de professor: o texto avisa que o acesso depende de aprovação",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "11/11/2026 16:10:24"
+ },
+ {
+  "arquivo": "c03_cadastro_pendente.png",
+  "legenda": "RF04 — cadastro enviado: nenhum acesso é liberado; a tela volta ao login com o aviso",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "11/11/2026 16:10:28"
+ },
+ {
+  "arquivo": "c04_login_pendente.png",
+  "legenda": "RF04 — professor ainda não aprovado tenta entrar: o servidor recusa (403) e a tela explica",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "11/11/2026 16:10:31"
+ },
+ {
+  "arquivo": "c05_esqueci_senha.png",
+  "legenda": "Acesso — recuperação de senha por código",
+  "url": "http://127.0.0.1:5193/esqueci-senha",
+  "hora": "11/11/2026 16:10:33"
+ },
+ {
+  "arquivo": "c06_admin_pendentes.png",
+  "legenda": "RF04 — ADMIN em Configurações: cadastros de professores pendentes",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:10:42"
+ },
+ {
+  "arquivo": "c07_admin_aprovou.png",
+  "legenda": "RF04 — ADMIN aprovou: o cadastro sai da lista e o acesso é liberado",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:10:44"
+ },
+ {
+  "arquivo": "c08_admin_nova_turma.png",
+  "legenda": "Correção — ADMIN cria turma escolhendo o professor responsável (antes a criação falhava)",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "11/11/2026 16:10:50"
+ },
+ {
+  "arquivo": "c09_admin_historico.png",
+  "legenda": "Histórico — o ADMIN vê as operações de todos, inclusive a aprovação do cadastro",
+  "url": "http://127.0.0.1:5193/historico",
+  "hora": "11/11/2026 16:10:54"
+ },
+ {
+  "arquivo": "c10_professor_aprovado.png",
+  "legenda": "RF04 — depois da aprovação, o professor entra normalmente",
+  "url": "http://127.0.0.1:5193/dashboard",
+  "hora": "11/11/2026 16:10:57"
+ },
+ {
+  "arquivo": "c11_senha_confirmacao.png",
+  "legenda": "RF03 — troca de senha: confirmação diferente é recusada na tela",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:11:02"
+ },
+ {
+  "arquivo": "c12_senha_alterada.png",
+  "legenda": "RF03 — senha alterada pelo próprio usuário (aviso de sucesso)",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:11:06"
+ },
+ {
+  "arquivo": "c13_login_senha_nova.png",
+  "legenda": "RF03 — login com a senha nova funciona",
+  "url": "http://127.0.0.1:5193/dashboard",
+  "hora": "11/11/2026 16:11:10"
+ },
+ {
+  "arquivo": "t01_dashboard.png",
+  "legenda": "Interface final — Dashboard do professor",
+  "url": "http://127.0.0.1:5193/dashboard",
+  "hora": "11/11/2026 16:11:17"
+ },
+ {
+  "arquivo": "t02_turmas.png",
+  "legenda": "Interface final — Turmas",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "11/11/2026 16:11:21"
+ },
+ {
+  "arquivo": "t03_atividades.png",
+  "legenda": "Interface final — Atividades",
+  "url": "http://127.0.0.1:5193/atividades",
+  "hora": "11/11/2026 16:11:25"
+ },
+ {
+  "arquivo": "t04_atividade_detalhe.png",
+  "legenda": "Interface final — Atividade: participação e respostas da turma",
+  "url": "http://127.0.0.1:5193/atividades/6ac2ed6054fb67ac5e764135",
+  "hora": "11/11/2026 16:11:29"
+ },
+ {
+  "arquivo": "t05_nova_atividade.png",
+  "legenda": "Interface final — Nova atividade (manual)",
+  "url": "http://127.0.0.1:5193/nova-atividade",
+  "hora": "11/11/2026 16:11:33"
+ },
+ {
+  "arquivo": "t06_gerar_atividade.png",
+  "legenda": "Interface final — Gerar atividade com apoio de IA",
+  "url": "http://127.0.0.1:5193/gerar-atividade",
+  "hora": "11/11/2026 16:11:37"
+ },
+ {
+  "arquivo": "t07_notas.png",
+  "legenda": "Interface final — Notas e Frequência",
+  "url": "http://127.0.0.1:5193/notas",
+  "hora": "11/11/2026 16:11:41"
+ },
+ {
+  "arquivo": "t08_relatorios.png",
+  "legenda": "Interface final — Relatórios com filtros e exportação",
+  "url": "http://127.0.0.1:5193/relatorios",
+  "hora": "11/11/2026 16:11:46"
+ },
+ {
+  "arquivo": "t09_historico.png",
+  "legenda": "Interface final — Histórico de operações",
+  "url": "http://127.0.0.1:5193/historico",
+  "hora": "11/11/2026 16:11:50"
+ },
+ {
+  "arquivo": "t10_busca.png",
+  "legenda": "Interface final — Pesquisa global",
+  "url": "http://127.0.0.1:5193/busca?q=lucas",
+  "hora": "11/11/2026 16:11:54"
+ },
+ {
+  "arquivo": "t11_materias.png",
+  "legenda": "Interface final — Matérias",
+  "url": "http://127.0.0.1:5193/materias",
+  "hora": "11/11/2026 16:11:58"
+ },
+ {
+  "arquivo": "t12_topicos.png",
+  "legenda": "Interface final — Tópicos das matérias",
+  "url": "http://127.0.0.1:5193/materias-topicos",
+  "hora": "11/11/2026 16:12:02"
+ },
+ {
+  "arquivo": "t13_configuracoes.png",
+  "legenda": "Interface final — Configurações (perfil, tema, troca de senha e sessão)",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:12:07"
+ },
+ {
+  "arquivo": "a01_inicio.png",
+  "legenda": "Interface final — Portal do aluno: início",
+  "url": "http://127.0.0.1:5193/aluno",
+  "hora": "11/11/2026 16:12:13"
+ },
+ {
+  "arquivo": "a02_atividades.png",
+  "legenda": "Interface final — Portal do aluno: atividades",
+  "url": "http://127.0.0.1:5193/aluno/atividades",
+  "hora": "11/11/2026 16:12:17"
+ },
+ {
+  "arquivo": "a03_atividade.png",
+  "legenda": "Interface final — Portal do aluno: atividade (sem gabarito)",
+  "url": "http://127.0.0.1:5193/aluno/atividades/6ac2ed6054fb67ac5e764135",
+  "hora": "11/11/2026 16:12:21"
+ },
+ {
+  "arquivo": "a04_turma.png",
+  "legenda": "Interface final — Portal do aluno: minha turma (sem e-mail dos colegas)",
+  "url": "http://127.0.0.1:5193/aluno/turma",
+  "hora": "11/11/2026 16:12:25"
+ },
+ {
+  "arquivo": "a05_professores.png",
+  "legenda": "Interface final — Portal do aluno: professores",
+  "url": "http://127.0.0.1:5193/aluno/professores",
+  "hora": "11/11/2026 16:12:29"
+ },
+ {
+  "arquivo": "a06_notas.png",
+  "legenda": "Interface final — Portal do aluno: minhas notas",
+  "url": "http://127.0.0.1:5193/aluno/notas",
+  "hora": "11/11/2026 16:12:33"
+ },
+ {
+  "arquivo": "a07_desempenho.png",
+  "legenda": "Interface final — Portal do aluno: desempenho por disciplina",
+  "url": "http://127.0.0.1:5193/aluno/desempenho",
+  "hora": "11/11/2026 16:12:36"
+ },
+ {
+  "arquivo": "a08_configuracoes.png",
+  "legenda": "Interface final — Portal do aluno: configurações com troca de senha",
+  "url": "http://127.0.0.1:5193/aluno/configuracoes",
+  "hora": "11/11/2026 16:12:41"
+ },
+ {
+  "arquivo": "e01_escuro_dashboard.png",
+  "legenda": "Modo escuro — dashboard",
+  "url": "http://127.0.0.1:5193/dashboard",
+  "hora": "11/11/2026 16:12:48"
+ },
+ {
+  "arquivo": "e02_escuro_configuracoes.png",
+  "legenda": "Modo escuro — configurações",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:12:53"
+ },
+ {
+  "arquivo": "m01_celular_dashboard.png",
+  "legenda": "Celular (390 px) — dashboard",
+  "url": "http://127.0.0.1:5193/dashboard",
+  "hora": "11/11/2026 16:13:11"
+ },
+ {
+  "arquivo": "m02_celular_turmas.png",
+  "legenda": "Celular (390 px) — turmas",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "11/11/2026 16:13:15"
+ },
+ {
+  "arquivo": "m03_celular_notas.png",
+  "legenda": "Celular (390 px) — notas e frequência",
+  "url": "http://127.0.0.1:5193/notas",
+  "hora": "11/11/2026 16:13:19"
+ },
+ {
+  "arquivo": "m04_celular_configuracoes.png",
+  "legenda": "Celular (390 px) — configurações",
+  "url": "http://127.0.0.1:5193/configuracoes",
+  "hora": "11/11/2026 16:13:23"
+ },
+ {
+  "arquivo": "m05_celular_aluno.png",
+  "legenda": "Celular (390 px) — início do aluno",
+  "url": "http://127.0.0.1:5193/aluno",
+  "hora": "11/11/2026 16:13:29"
+ },
+ {
+  "arquivo": "m06_celular_aluno_config.png",
+  "legenda": "Celular (390 px) — configurações do aluno",
+  "url": "http://127.0.0.1:5193/aluno/configuracoes",
+  "hora": "11/11/2026 16:13:33"
+ },
+ {
+  "arquivo": "d01_swagger.png",
+  "legenda": "Documentação da API — Swagger UI servido pelo backend em /docs",
+  "url": "http://127.0.0.1:8093/docs",
+  "hora": "11/11/2026 16:13:47"
+ },
+ {
+  "arquivo": "d02_redoc.png",
+  "legenda": "Documentação da API — ReDoc servido pelo backend em /redoc",
+  "url": "http://127.0.0.1:8093/redoc",
+  "hora": "11/11/2026 16:13:53"
+ }
+]
