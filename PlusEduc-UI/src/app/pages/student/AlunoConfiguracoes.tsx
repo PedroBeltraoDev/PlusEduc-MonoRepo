@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { studentPortalService } from "@/services";
+import { ChangePasswordCard } from "../../components/ChangePasswordCard";
 
 export function AlunoConfiguracoes() {
   const { theme, setTheme } = useTheme();
@@ -53,7 +54,7 @@ export function AlunoConfiguracoes() {
       <header>
         <h1 className="text-2xl font-bold text-[#0A2463] dark:text-white">Configurações</h1>
         <p className="mt-1 text-gray-600 dark:text-gray-300">
-          Ajuste a aparência da sua área e controle sua sessão.
+          Ajuste a aparência da sua área, troque sua senha e controle sua sessão.
         </p>
       </header>
 
@@ -137,6 +138,8 @@ export function AlunoConfiguracoes() {
           </button>
         </div>
       </section>
+
+      <ChangePasswordCard />
 
       <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm transition-colors dark:border-rose-900/50 dark:bg-gray-800">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

@@ -40,7 +40,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
     navigate('/login');
   };
 
-  // Por enquanto, usar dados mock até implementarmos perfil do usuário
+  // Nome gravado no login; sem nome (conta antiga), mostra um rótulo genérico.
   const displayName = userName || "Professor";
   const displayInitials = userName
     ? userName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)

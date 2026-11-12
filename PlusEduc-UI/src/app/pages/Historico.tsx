@@ -31,6 +31,9 @@ const ACTIONS: [string, string][] = [
   ["LOGIN_FAILED", "Login recusado"],
   ["REGISTER", "Cadastro de usuário"],
   ["PASSWORD_RESET", "Redefinição de senha"],
+  ["PASSWORD_CHANGE", "Troca de senha"],
+  ["APPROVE", "Aprovação de cadastro"],
+  ["REJECT", "Recusa de cadastro"],
   ["ACCESS_DENIED", "Acesso negado"],
 ];
 const FIELD_LABELS: Record<string, string> = {

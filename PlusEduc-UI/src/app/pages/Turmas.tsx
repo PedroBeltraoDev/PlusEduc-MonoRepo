@@ -3,8 +3,9 @@ import { useNavigate } from "react-router";
 import { createPortal } from "react-dom";
 import { Plus, Search, Users, Calendar, TrendingUp, Loader2, AlertCircle, BookOpen, ArrowLeft, GraduationCap, UserCheck, User, Mail, Hash, ArrowRightLeft, Trash2, ClipboardList, ClipboardCheck, Download } from "lucide-react";
 import { useApiList, useApi } from "@/hooks/useApi";
-import { activitiesService, classroomsService, studentsService, subjectsService, CreateClassroomRequest } from "@/services";
-import type { Activity, Classroom, Student, LearningGap, Subject } from "@/types";
+import { activitiesService, classroomsService, studentsService, subjectsService, teachersService, CreateClassroomRequest } from "@/services";
+import type { Activity, Classroom, Student, LearningGap, Subject, Teacher } from "@/types";
+import { useAuth } from "@/contexts/AuthContext";
 import { formatDate } from "@/utils";
 import { toast } from "sonner";
 import {
@@ -89,10 +90,8 @@ const StudentModal = ({
 }) => {
   useEffect(() => {
     if (isOpen) {
-      console.log('=== MODAL PORTAL ABERTO ===');
       document.body.style.overflow = 'hidden';
     } else {
-      console.log('=== MODAL PORTAL FECHADO ===');
       document.body.style.overflow = 'unset';
     }
 
@@ -639,7 +638,6 @@ export function Turmas() {
   // Função para limpar IDs que vêm no formato ObjectId
   const cleanStudentId = (id: string): string => {
     if (!id || typeof id !== 'string') {
-      console.warn('ID inválido recebido:', id);
       return '';
     }
 
@@ -651,21 +649,18 @@ export function Turmas() {
       if (match && match[1]) {
         cleanId = match[1];
       } else {
-        console.warn('Formato ObjectId inválido:', id);
         return '';
       }
     }
 
     // Validar se o ID tem o tamanho correto (MongoDB ObjectID = 24 caracteres)
     if (cleanId.length !== 24) {
-      console.warn(`ID com tamanho incorreto: "${cleanId}" (${cleanId.length} chars, esperado: 24)`);
       // Não retornar vazio aqui, deixar o backend decidir se é válido
     }
 
     // Verificar se contém apenas caracteres hexadecimais válidos
     const hexPattern = /^[0-9a-fA-F]+$/;
     if (!hexPattern.test(cleanId)) {
-      console.warn(`ID com caracteres inválidos: "${cleanId}"`);
       // Não retornar vazio aqui, deixar o backend decidir se é válido
     }
 
@@ -684,6 +679,17 @@ export function Turmas() {
   const { data: rawAllStudents, loading: studentsLoading, refetch: refetchAllStudents } = useApi(() => studentsService.getAllStudents());
   const { data: unassignedStudents, loading: unassignedLoading, refetch: refetchUnassigned } = useApi(() => studentsService.getUnassignedStudents());
   const { data: subjectCatalog } = useApi<Subject[]>(() => subjectsService.getAll());
+  // O ADMIN não tem perfil de professor: ao criar turma, escolhe o professor responsável.
+  const { role } = useAuth();
+  const isAdmin = role === 'ADMIN';
+  const [teacherOptions, setTeacherOptions] = useState<Teacher[]>([]);
+  const [newClassroomTeacherId, setNewClassroomTeacherId] = useState('');
+  useEffect(() => {
+    if (!isAdmin) return;
+    teachersService.listActive()
+      .then((teachers) => setTeacherOptions([...teachers].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))))
+      .catch(() => setTeacherOptions([]));
+  }, [isAdmin]);
 
   useEffect(() => {
     if (!selectedClassroom) {
@@ -726,79 +732,6 @@ export function Turmas() {
     if (!rawAllStudents) return undefined;
 
     const cleanedStudents = rawAllStudents.map(cleanStudentData);
-
-    // Debug controlado - apenas uma vez quando dados mudarem
-    if (cleanedStudents.length > 0) {
-      console.log('=== DEBUG TODOS OS ALUNOS (CONTROLADO) ===');
-      console.log('Total de alunos:', cleanedStudents.length);
-
-      cleanedStudents.forEach((student, index) => {
-        console.log(`Aluno ${index + 1} - ${student.name}:`, {
-          id: student.id,
-          idLength: student.id?.length,
-          name: student.name,
-          email: student.email,
-          birthDate: student.birthDate,
-          classId: student.classId,
-          className: student._class,
-          active: student.active
-        });
-
-        const missingData = [];
-        if (!student.name || student.name.trim() === '') missingData.push('name');
-        if (!student.email || student.email.trim() === '') missingData.push('email');
-        if (!student.birthDate) missingData.push('birthDate');
-
-        // Verificar se ID tem tamanho correto (MongoDB ObjectID tem 24 caracteres)
-        if (!student.id || student.id.length !== 24) {
-          console.error(`🔴 ID inválido para ${student.name}:`, {
-            id: student.id,
-            length: student.id?.length,
-            expected: 24,
-            possibleFix: student.id?.length === 22 ? 'ID truncado - pode ter perdido últimos 2 caracteres' : 'ID corrompido'
-          });
-
-          // Se for João Silva com ID truncado, tentar algumas correções comuns
-          if (student.name === 'João Silva' && student.id?.length === 22) {
-            console.log('🔧 Tentativas de correção para João Silva:');
-            console.log('- ID atual:', student.id);
-            console.log('- Possíveis IDs completos para testar:');
-            // IDs terminam frequentemente em 00, 01, 02, etc
-            ['00', '01', '02', '03', '10', '11', '12', '20', '21'].forEach(suffix => {
-              console.log(`  - ${student.id}${suffix}`);
-            });
-          }
-        }
-
-        if (missingData.length > 0) {
-          console.warn(`⚠️ Aluno ${student.name || student.id} com dados faltando:`, missingData);
-
-          // Para Henrrique sem birthDate, sugerir uma data padrão
-          if (student.name === 'Henrrique Lopes' && missingData.includes('birthDate')) {
-            console.log('💡 Sugestão: Adicionar birthDate para Henrrique Lopes');
-            console.log('   Data sugerida: 2018-01-01 (pode ajustar depois)');
-          }
-        }
-      });
-
-      // Resumo dos problemas encontrados
-      const corruptedIds = cleanedStudents.filter(s => !s.id || s.id.length !== 24);
-      const missingBirthDates = cleanedStudents.filter(s => !s.birthDate);
-
-      if (corruptedIds.length > 0 || missingBirthDates.length > 0) {
-        console.log('📋 RESUMO DE PROBLEMAS:');
-        if (corruptedIds.length > 0) {
-          console.log(`- ${corruptedIds.length} aluno(s) com ID corrompido:`, corruptedIds.map(s => s.name));
-        }
-        if (missingBirthDates.length > 0) {
-          console.log(`- ${missingBirthDates.length} aluno(s) sem data de nascimento:`, missingBirthDates.map(s => s.name));
-        }
-        console.log('💡 AÇÕES SUGERIDAS:');
-        console.log('1. Verificar dados no MongoDB/Backend');
-        console.log('2. Corrigir IDs corrompidos');
-        console.log('3. Adicionar datas de nascimento faltantes');
-      }
-    }
 
     return cleanedStudents;
   }, [rawAllStudents]);
@@ -849,12 +782,18 @@ export function Turmas() {
         return;
       }
 
+      if (isAdmin && !newClassroomTeacherId) {
+        toast.error('Selecione o professor responsável pela turma.');
+        return;
+      }
+
       const generatedName = `${formData.gradeLevel} ${formData.section}`;
       const createData: CreateClassroomRequest = {
         name: generatedName,
         year: formData.year,
         gradeLevel: formData.gradeLevel,
-        teacherId: "current-teacher-id", // TODO: Obter do contexto de autenticação
+        // "current-teacher-id": o servidor usa o professor que está logado; o ADMIN informa o professor escolhido.
+        teacherId: isAdmin ? newClassroomTeacherId : "current-teacher-id",
         subjects: formData.subjects.length > 0 ? formData.subjects : [formData.gradeLevel]
       };
 
@@ -960,29 +899,22 @@ export function Turmas() {
     // Carregar alunos da turma
     try {
       if (classroom.studentIds && classroom.studentIds.length > 0) {
-        console.log('=== CARREGANDO ALUNOS DA TURMA ===');
-        console.log('Turma:', classroom.name);
-        console.log('Student IDs brutos:', classroom.studentIds);
 
         // Filtrar e validar IDs antes de tentar carregar
         const validStudentIds = classroom.studentIds
           .map(id => {
             const cleanId = cleanStudentId(id);
-            console.log(`ID bruto: "${id}" → ID limpo: "${cleanId}" (${cleanId.length} chars)`);
             return cleanId;
           })
           .filter(id => {
             const isValid = id && typeof id === 'string' && id.length === 24;
             if (!isValid) {
-              console.warn(`🔴 ID inválido ignorado: "${id}" (length: ${id?.length})`);
             }
             return isValid;
           });
 
-        console.log('IDs válidos para carregar:', validStudentIds);
 
         if (validStudentIds.length === 0) {
-          console.warn('Nenhum ID válido encontrado para carregar');
           setClassroomStudents([]);
           return;
         }
@@ -991,10 +923,8 @@ export function Turmas() {
         const students = [];
         for (const studentId of validStudentIds) {
           try {
-            console.log(`Carregando aluno com ID: ${studentId}`);
             const student = await studentsService.getStudentById(studentId);
             students.push(student);
-            console.log(`✅ Aluno carregado: ${student.name}`);
           } catch (error) {
             console.error(`❌ Erro ao carregar aluno ${studentId}:`, error);
             // Continuar carregando os outros alunos mesmo se um falhar
@@ -1003,11 +933,9 @@ export function Turmas() {
 
         // Limpar dados dos estudantes carregados
         const cleanedStudents = students.map(cleanStudentData);
-        console.log(`Carregados ${cleanedStudents.length} de ${validStudentIds.length} alunos da turma`);
 
         setClassroomStudents(cleanedStudents);
       } else {
-        console.log('Turma sem alunos:', classroom.name);
         setClassroomStudents([]);
       }
     } catch (error) {
@@ -1017,9 +945,7 @@ export function Turmas() {
   };
 
   const handleViewStudentDetails = async (student: Student) => {
-    console.log('Visualizando detalhes do aluno:', student);
     const cleanedStudent = cleanStudentData(student);
-    console.log('Aluno com dados limpos:', cleanedStudent);
 
     setSelectedStudent(cleanedStudent);
     setViewMode('student-details');
@@ -1053,8 +979,6 @@ export function Turmas() {
 
   // Handler para abrir modal de criar aluno
   const handleCreateStudent = () => {
-    console.log('=== DEBUG CREATE STUDENT ===');
-    console.log('Abrindo modal para criar novo aluno');
 
     setEditingStudent(null);
     setStudentFormData({
@@ -1067,15 +991,10 @@ export function Turmas() {
     });
 
     setShowStudentModal(true);
-    console.log('Modal de criação aberto via Portal');
   };
 
   // Handler para abrir modal de editar aluno
   const handleEditStudent = (student: Student) => {
-    console.log('=== DEBUG EDIT STUDENT ===');
-    console.log('Aluno completo:', student);
-    console.log('ID bruto:', student.id);
-    console.log('Tipo do ID:', typeof student.id);
 
     // Limpar ID se estiver no formato ObjectId('...')
     let cleanId = student.id;
@@ -1083,7 +1002,6 @@ export function Turmas() {
       const match = student.id.match(/ObjectId\('([^']+)'\)/);
       if (match) {
         cleanId = match[1];
-        console.log('ID limpo:', cleanId);
       }
     }
 
@@ -1111,16 +1029,12 @@ export function Turmas() {
     });
 
     setShowStudentModal(true);
-    console.log('Modal de edição aberto via Portal para:', student.name);
   };
 
   // Handler para submeter formulário de aluno
   const handleSubmitStudent = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('=== DEBUG SUBMIT STUDENT ===');
-    console.log('editingStudent:', editingStudent);
-    console.log('studentFormData:', studentFormData);
 
     if (!studentFormData.name || !studentFormData.email) {
       toast.error('Por favor, preencha nome e email.');
@@ -1141,7 +1055,6 @@ export function Turmas() {
       const classExists = classrooms?.find(c => c.id === studentFormData.classId);
       if (!classExists) {
         console.error('Turma não encontrada:', studentFormData.classId);
-        console.log('Turmas disponíveis:', classrooms?.map(c => ({ id: c.id, name: c.name })));
         toast.error('A turma selecionada não existe. Selecione uma turma válida ou deixe em branco.');
         return;
       }
@@ -1151,7 +1064,6 @@ export function Turmas() {
 
     try {
       if (editingStudent) {
-        console.log('Atualizando aluno com ID:', editingStudent.id);
 
         const updateData = {
           name: studentFormData.name,
@@ -1164,13 +1076,11 @@ export function Turmas() {
           learningGaps: normalizedLearningGaps
         };
 
-        console.log('Dados de atualização:', updateData);
 
         // Atualizar aluno existente
         await studentsService.updateStudent(editingStudent.id, updateData);
         toast.success('Aluno atualizado com sucesso!');
       } else {
-        console.log('Criando novo aluno');
 
         const createData = {
           name: studentFormData.name,
@@ -1183,7 +1093,6 @@ export function Turmas() {
           learningGaps: normalizedLearningGaps
         };
 
-        console.log('Dados de criação:', createData);
 
         // Criar novo aluno
         await studentsService.createStudent(createData);
@@ -1237,38 +1146,27 @@ export function Turmas() {
     const currentClassroom = selectedStudent._class || selectedStudent.classId;
     const currentClassroomId = selectedStudent.classId;
 
-    console.log('=== TRANSFERINDO ALUNO ===');
-    console.log('Aluno:', selectedStudent.name);
-    console.log('Turma atual (_class):', selectedStudent._class);
-    console.log('Turma atual (classId):', selectedStudent.classId);
-    console.log('Nova turma ID:', classroomId);
 
     try {
       // Se o aluno tem uma turma atual (por ID), remover da turma atual
       if (currentClassroomId) {
-        console.log('Removendo da turma atual usando classId...');
         await classroomsService.unenrollStudent(currentClassroomId, selectedStudent.id);
       } else if (currentClassroom) {
-        console.log('Aluno tem turma (_class) mas não classId - pode precisar encontrar ID da turma');
         // Encontrar o ID da turma pelo nome
         const currentClassroomObj = classrooms?.find(c => c.name === currentClassroom);
         if (currentClassroomObj) {
-          console.log('Encontrou turma atual, removendo...');
           await classroomsService.unenrollStudent(currentClassroomObj.id, selectedStudent.id);
         }
       } else {
-        console.log('Aluno não tem turma atual - pulando desenrolamento');
       }
 
       // Adicionar aluno à nova turma
-      console.log('Adicionando à nova turma...');
       await classroomsService.enrollStudent(classroomId, selectedStudent.id);
 
       // Atualizar dados locais
       setSelectedStudent(prev => prev ? { ...prev, classId: classroomId, _class: classrooms?.find(c => c.id === classroomId)?.name } : null);
 
       // Recarregar dados
-      console.log('Recarregando dados...');
       await refetch();
 
       // Limpar campos
@@ -1331,7 +1229,6 @@ export function Turmas() {
     <StudentModal
       isOpen={showStudentModal}
       onClose={() => {
-        console.log('Fechando modal via portal');
         setShowStudentModal(false);
       }}
       editingStudent={editingStudent}
@@ -1575,9 +1472,6 @@ export function Turmas() {
                 <button
                   type="button"
                   onClick={(e) => {
-                    console.log('=== CLIQUE NO BOTÃO EDITAR ALUNO ===');
-                    console.log('selectedStudent:', selectedStudent);
-                    console.log('Evento:', e);
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -2076,8 +1970,6 @@ export function Turmas() {
                         <button
                           type="button"
                           onClick={(e) => {
-                            console.log('=== CLIQUE NO BOTÃO EDITAR (CARD) ===');
-                            console.log('student:', student);
                             e.preventDefault();
                             e.stopPropagation();
 
@@ -2128,7 +2020,6 @@ export function Turmas() {
           <button
             type="button"
             onClick={(e) => {
-              console.log('=== CLIQUE NO BOTÃO ADICIONAR ALUNO ===');
               e.preventDefault();
               e.stopPropagation();
 
@@ -2249,8 +2140,6 @@ export function Turmas() {
                   <button
                     type="button"
                     onClick={(e) => {
-                      console.log('=== CLIQUE NO BOTÃO EDITAR (BUSCA) ===');
-                      console.log('student:', student);
                       e.preventDefault();
                       e.stopPropagation();
 
@@ -2423,6 +2312,24 @@ export function Turmas() {
                   ))}
                 </select>
               </div>
+              {isAdmin && (
+                <div>
+                  <label htmlFor="class-teacher" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Professor responsável</label>
+                  <select
+                    id="class-teacher"
+                    value={newClassroomTeacherId}
+                    onChange={(e) => setNewClassroomTeacherId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-[#1E5AA8] focus:border-transparent outline-none transition"
+                    required
+                    disabled={isCreating}
+                  >
+                    <option value="">Selecione um professor</option>
+                    {teacherOptions.map((teacher) => (
+                      <option key={teacher.id} value={teacher.id}>{teacher.name}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Ano</label>
                 <input

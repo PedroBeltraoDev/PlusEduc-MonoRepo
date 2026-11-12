@@ -147,6 +147,21 @@ export interface AuthResponse {
   name?: string | null;
 }
 
+export interface TeacherRegistrationPending {
+  status: 'PENDING_APPROVAL';
+  message: string;
+  userEmail: string;
+  name: string;
+}
+
+export interface PendingTeacher {
+  id: string;
+  name: string;
+  email: string;
+  subjects: string[];
+  createdAt?: string | null;
+}
+
 export interface ProfileUpdateRequest {
   name: string;
   email: string;
