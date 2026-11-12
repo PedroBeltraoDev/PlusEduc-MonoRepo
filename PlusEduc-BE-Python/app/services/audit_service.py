@@ -18,6 +18,10 @@ ACTION_LABELS = {
     "PASSWORD_RESET_REQUEST": "Pedido de redefinição de senha",
     "PASSWORD_RESET": "Redefinição de senha",
     "PROFILE_UPDATE": "Atualização de perfil",
+    "PASSWORD_CHANGE": "Troca de senha",
+    "SESSION_REFRESH": "Renovação de sessão",
+    "APPROVE": "Aprovação de cadastro",
+    "REJECT": "Recusa de cadastro",
     "CREATE": "Criação",
     "UPDATE": "Alteração",
     "DELETE": "Exclusão",
@@ -50,6 +54,10 @@ _RULES: list[tuple[re.Pattern[str], str, dict[str, str] | None, int | None]] = [
     (re.compile(r"^/api/auth/forgot-password$"), "auth", {"POST": "PASSWORD_RESET_REQUEST"}, None),
     (re.compile(r"^/api/auth/reset-password$"), "auth", {"POST": "PASSWORD_RESET"}, None),
     (re.compile(r"^/api/auth/profile$"), "auth", {"PUT": "PROFILE_UPDATE"}, None),
+    (re.compile(r"^/api/auth/change-password$"), "auth", {"POST": "PASSWORD_CHANGE"}, None),
+    (re.compile(r"^/api/auth/refresh$"), "auth", {"POST": "SESSION_REFRESH"}, None),
+    (re.compile(r"^/api/teachers/([^/]+)/approve$"), "teacher", {"POST": "APPROVE"}, 1),
+    (re.compile(r"^/api/teachers/([^/]+)/reject$"), "teacher", {"POST": "REJECT"}, 1),
     (re.compile(r"^/api/grades/from-activity/([^/]+)$"), "grade", {"POST": "LAUNCH_FROM_ACTIVITY"}, 1),
     (re.compile(r"^/api/grades(?:/([^/]+))?$"), "grade", None, 1),
     (re.compile(r"^/api/classrooms/([^/]+)/enroll/[^/]+$"), "classroom", {"POST": "ENROLL"}, 1),
@@ -84,7 +92,10 @@ def classify(method: str, path: str) -> tuple[str, str, str | None]:
 def default_summary(action: str, entity: str, entity_id: str | None, status: int, email: str | None) -> str:
     label = ACTION_LABELS.get(action, action.title())
     target = ENTITY_LABELS.get(entity, entity)
-    if action in {"LOGIN", "LOGIN_FAILED", "REGISTER", "PASSWORD_RESET_REQUEST", "PASSWORD_RESET", "PROFILE_UPDATE"}:
+    if action in {
+        "LOGIN", "LOGIN_FAILED", "REGISTER", "PASSWORD_RESET_REQUEST", "PASSWORD_RESET", "PROFILE_UPDATE",
+        "PASSWORD_CHANGE", "SESSION_REFRESH",
+    }:
         text = label + (f" ({email})" if email else "")
     else:
         text = f"{label} de {target}" if action in {"CREATE", "UPDATE", "DELETE"} else f"{label} ({target})"

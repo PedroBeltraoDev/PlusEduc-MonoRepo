@@ -287,3 +287,13 @@ git diff --cached --name-only
 ```
 
 Não coloque chaves Gemini, segredos JWT, credenciais MongoDB ou senhas em commits, issues, screenshots ou documentação pública.
+
+## Release candidate (Sprint 10)
+
+| Item | Como usar |
+|---|---|
+| Criar o administrador | `.\.venv\Scripts\python.exe scripts\create_admin.py --email admin@escola.local --name "Coordenação"` (senha pedida no terminal ou em `PLUSEDUC_ADMIN_PASSWORD`) |
+| Aprovação de professor | `TEACHER_REGISTRATION_REQUIRES_APPROVAL=true` (padrão): o cadastro público fica pendente até o ADMIN aprovar em Configurações |
+| Renovar sessão / trocar senha | `POST /api/auth/refresh` e `POST /api/auth/change-password` |
+| Verificar o banco | `.\.venv\Scripts\python.exe scripts\check_database.py` (somente leitura; `--repair` remove registros órfãos) |
+| Documentação da API | `.\.venv\Scripts\python.exe scripts\export_api_docs.py` gera `docs/API.md` e `docs/api/openapi.json` |

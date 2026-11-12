@@ -42,3 +42,13 @@ class TeacherResponse(BaseModel):
     active: bool | None = None
     createdAt: datetime | None = None
     updatedAt: datetime | None = None
+
+
+class PendingTeacherResponse(BaseModel):
+    """Cadastro público de professor aguardando aprovação do ADMIN."""
+
+    id: str
+    name: str
+    email: str
+    subjects: list[str] = []
+    createdAt: datetime | None = None
