@@ -45,17 +45,48 @@ class UserRepository:
         )
         return str(result.inserted_id)
 
-    def insert_teacher_user(self, email: str, password_hash: str) -> str:
+    def insert_teacher_user(self, email: str, password_hash: str, pending_approval: bool = False) -> str:
+        document: dict[str, Any] = {
+            "email": email,
+            "password": password_hash,
+            "role": "TEACHER",
+            "active": not pending_approval,
+            "createdAt": datetime.now(timezone.utc),
+        }
+        if pending_approval:
+            # Conta criada pelo cadastro público: só passa a entrar depois da aprovação do ADMIN.
+            document["pendingApproval"] = True
+        result = self._mongo.database["users"].insert_one(document)
+        return str(result.inserted_id)
+
+    def insert_admin_user(self, email: str, password_hash: str, name: str) -> str:
         result = self._mongo.database["users"].insert_one(
             {
                 "email": email,
                 "password": password_hash,
-                "role": "TEACHER",
+                "role": "ADMIN",
+                "name": name,
                 "active": True,
                 "createdAt": datetime.now(timezone.utc),
             }
         )
         return str(result.inserted_id)
+
+    def find_pending_by_email(self, email: str) -> dict[str, Any] | None:
+        return self._mongo.database["users"].find_one({"email": email, "pendingApproval": True})
+
+    def approve_pending(self, email: str) -> bool:
+        result = self._mongo.database["users"].update_one(
+            {"email": email, "pendingApproval": True},
+            {
+                "$set": {"active": True, "updatedAt": datetime.now(timezone.utc)},
+                "$unset": {"pendingApproval": ""},
+            },
+        )
+        return result.modified_count == 1
+
+    def delete_pending(self, email: str) -> int:
+        return self._mongo.database["users"].delete_many({"email": email, "pendingApproval": True}).deleted_count
 
     def set_password_reset_code(self, email: str, code_hash: str, expires_at: datetime) -> bool:
         result = self._mongo.database["users"].update_one(

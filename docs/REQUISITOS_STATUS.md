@@ -1,4 +1,4 @@
-# Situação dos requisitos (Sprint 09)
+# Situação dos requisitos (Sprint 10 — release candidate 1.0.0-rc.1)
 
 Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.md`) e o sistema como está hoje.
 "Evidência" aponta o caso de teste que exercita o requisito (catálogo em `docs/sprint-09/resultados/`) ou o documento da sprint em que foi demonstrado.
@@ -7,10 +7,10 @@ Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.
 
 | RF | Requisito | Situação | Evidência / observação |
 |---|---|---|---|
-| RF01 | Login com JWT e refresh token | **Parcial** | Login e JWT: AUT-01 a AUT-05, AUT-18. O refresh token é emitido, mas não existe rota para renová-lo e o frontend não o usa. |
-| RF02 | Perfis ADMIN, PROFESSOR, ALUNO com autorização por rota e por tela | Concluído | Matriz de 94 rotas (Sprint 08) e testes de navegação NAV-A/P/S. Não há conta ADMIN no seed. |
-| RF03 | Edição de perfil e troca de senha pelo próprio usuário | **Parcial** | Perfil: AUT-13, AUT-14. A senha só muda pela recuperação por código (AUT-15 a AUT-17); não há "trocar senha" logado. |
-| RF04 | Cadastro público de professores com aprovação/ativação | **Parcial** | Cadastro funciona (AUT-10 a AUT-12), mas a conta é ativada na hora, sem aprovação. |
+| RF01 | Login com JWT e refresh token | Concluído (Sprint 10) | Login e JWT: AUT-01 a AUT-05, AUT-18. Renovação em `POST /api/auth/refresh`, usada pelo frontend automaticamente (SES-01 a SES-03, NAV-SS01, NAV-SS02). |
+| RF02 | Perfis ADMIN, PROFESSOR, ALUNO com autorização por rota e por tela | Concluído | Matriz de rotas (Sprint 08, 99 rotas na Sprint 10) e testes de navegação NAV-A/P/S. O ADMIN é criado com `scripts/create_admin.py`. |
+| RF03 | Edição de perfil e troca de senha pelo próprio usuário | Concluído (Sprint 10) | Perfil: AUT-13, AUT-14. Troca de senha logado em `POST /api/auth/change-password` e nas Configurações (SEN-01 a SEN-03). |
+| RF04 | Cadastro público de professores com aprovação/ativação | Concluído (Sprint 10) | A conta nasce pendente e o ADMIN aprova ou recusa nas Configurações (AUT-10, APR-01 a APR-04). |
 | RF05 | CRUD de alunos, professores e turmas | Concluído | TUR-01 a TUR-14, ALU-01 a ALU-14, PRO-01 a PRO-05 |
 | RF06 | Matrícula e remanejamento | Concluído | TUR-10, TUR-11, TUR-13, ALU-14 |
 | RF07 | Catálogo de componentes por série (BNCC); turma exibe só os compatíveis | Concluído | MAT-01 a MAT-04; regras em `services/curriculum.py` e testes `test_curriculum_rules.py` |
@@ -51,14 +51,14 @@ Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.
 | RNF11 | Recomendação sempre com justificativa | Parcial | a recomendação existente traz as evidências; não há tela |
 | RNF12 | Mensagens de erro claras; modo alternativo da IA sinalizado | Concluído | VAL-UI-01 a VAL-UI-15; mensagens de validação traduzidas na Sprint 09 |
 | RNF13 | Arquitetura em camadas | Concluído | `docs/ARQUITETURA.md` |
-| RNF14 | Testes de backend e verificação de tipos e build do frontend a cada sprint | Concluído | 158 testes de backend; `type-check` e `build` sem erros |
-| RNF15 | Health check e OpenAPI publicados automaticamente | **Parcial** | `/health`, `/docs` e `/redoc` existem; não há publicação automática (sem CI) |
+| RNF14 | Testes de backend e verificação de tipos e build do frontend a cada sprint | Concluído | 171 testes de backend (Sprint 10); `type-check` e `build` sem erros |
+| RNF15 | Health check e OpenAPI publicados automaticamente | **Parcial** | `/health`, `/docs` e `/redoc` documentados em português; `docs/API.md` e `docs/api/openapi.json` gerados do código. Sem CI. |
 | RNF16 | Configuração por ambiente | Concluído | `.env.example` |
 | RNF17 | Windows e Linux, Python 3.11+, MongoDB local, Node 18+ | Parcial | validado só no Windows 11 (Python 3.12, Node 22) |
 | RNF18 | Instruções de execução do banco e do sistema | Concluído | READMEs atualizados na Sprint 09 |
 
 ## Backlog de entrega (resumo)
 
-B01 a B14 concluídos, **exceto B07** (repositório e ambiente existem, mas o CI de testes não foi implementado: os testes rodam manualmente);
-B15 (predição) pendente; B16 parcial; B17 e B18 pendentes; B19 parcial; B20 a B24 concluídos (B24 com 158 testes);
-B25: documentação atualizada nesta sprint, vídeos pendentes (entrega final).
+B01 a B14 concluídos, **exceto B07** (repositório e ambiente existem, mas o CI de testes não foi implementado: a suíte depende de dados
+existentes no banco e os testes rodam manualmente); B15 (predição) pendente; B16 parcial; B17 e B18 pendentes; B19 parcial; B20 a B24
+concluídos (B24 com 171 testes); B25: documentação final (README, API, modelo de dados) atualizada na Sprint 10, vídeos pendentes (entrega final).

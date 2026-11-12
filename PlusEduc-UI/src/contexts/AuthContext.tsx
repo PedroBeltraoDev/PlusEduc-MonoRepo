@@ -7,6 +7,7 @@ import type {
   ProfileUpdateRequest,
   RegisterTeacherRequest,
   StudentRegistrationRequest,
+  TeacherRegistrationPending,
   User,
 } from '@/types';
 
@@ -22,7 +23,8 @@ interface AuthContextType {
   loadingState: LoadingState;
   login: (credentials: LoginRequest) => Promise<string>;
   registerStudent: (data: StudentRegistrationRequest) => Promise<string>;
-  registerTeacher: (data: RegisterTeacherRequest) => Promise<string>;
+  // Devolve o caminho da tela inicial ou, se o cadastro ficou aguardando aprovação, os dados do pedido.
+  registerTeacher: (data: RegisterTeacherRequest) => Promise<string | TeacherRegistrationPending>;
   updateProfile: (data: ProfileUpdateRequest) => Promise<AuthResponse>;
   logout: () => void;
   getToken: () => string | null;
@@ -96,6 +98,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
       const response = await authService.registerTeacher(data);
       syncFromStorage();
       setLoadingState('success');
+      if (!('accessToken' in response)) {
+        return response;
+      }
       return response.role === 'STUDENT' ? '/aluno' : '/dashboard';
     } catch (error) {
       setIsAuthenticated(false);

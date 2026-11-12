@@ -66,6 +66,7 @@ export function Login() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSuccessMessage("");
 
     if (mode !== "login" && password !== confirmPassword) {
       setError("As senhas não coincidem");
@@ -73,11 +74,22 @@ export function Login() {
     }
 
     try {
+      if (mode === "registerTeacher") {
+        const result = await registerTeacher({ name, email, password, subjects: [] });
+        if (typeof result !== "string") {
+          // Cadastro de professor aguardando aprovação do administrador: volta para o login com o aviso.
+          const registeredEmail = result.userEmail;
+          changeMode("login");
+          setEmail(registeredEmail);
+          setSuccessMessage(result.message);
+          return;
+        }
+        navigate(result);
+        return;
+      }
       const redirectPath = mode === "registerStudent"
         ? await registerStudent({ name, email, password })
-        : mode === "registerTeacher"
-          ? await registerTeacher({ name, email, password, subjects: [] })
-          : await login({ email, password });
+        : await login({ email, password });
       navigate(redirectPath);
     } catch (err) {
       setError(
@@ -107,7 +119,7 @@ export function Login() {
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
             {isTeacherRegistering
-              ? "Crie seu acesso de professor para entrar no painel do PlusEduc."
+              ? "Solicite seu acesso de professor. Um administrador da escola aprova o cadastro antes do primeiro login."
               : isRegistering
                 ? "Informe seus dados; sua matrícula será gerada automaticamente pela escola."
                 : "Entre para continuar no PlusEduc."}
@@ -223,7 +235,9 @@ export function Login() {
             className="w-full bg-[#1E5AA8] hover:bg-[#0A2463] disabled:bg-gray-400 disabled:cursor-not-allowed text-white py-3 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2"
           >
             {isLoading && <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white" />}
-            {isLoading ? (isRegistering ? "Cadastrando..." : "Entrando...") : (isRegistering ? "Criar acesso" : "Entrar")}
+            {isLoading
+              ? (isRegistering ? "Cadastrando..." : "Entrando...")
+              : isTeacherRegistering ? "Solicitar acesso" : isRegistering ? "Criar acesso" : "Entrar"}
           </button>
 
           {!isRegistering && (

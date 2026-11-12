@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pluseduc-be-python"
-version = "0.1.0"
+version = "1.0.0rc1"
 description = "Fundação FastAPI do backend PlusEduc"
 requires-python = ">=3.11"
 

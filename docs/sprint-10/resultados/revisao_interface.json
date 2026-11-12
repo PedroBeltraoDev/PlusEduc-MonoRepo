@@ -1,0 +1,249 @@
+[
+ {
+  "perfil": "público",
+  "tela": "/login",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "público",
+  "tela": "/login (cadastro de professor enviado)",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "público",
+  "tela": "/esqueci-senha",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": [
+   "http://127.0.0.1:5193/api/auth/login - Failed to load resource: the server responded with a status of 403 (Forbidden)"
+  ]
+ },
+ {
+  "perfil": "admin",
+  "tela": "/configuracoes",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "admin",
+  "tela": "/turmas (modal Nova Turma)",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "admin",
+  "tela": "/historico",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/dashboard (professor recém-aprovado)",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/configuracoes (troca de senha)",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/dashboard",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/turmas",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/atividades",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/atividades/{id}",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/nova-atividade",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/gerar-atividade",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/notas",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/relatorios",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/historico",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/busca?q=lucas",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/materias",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/materias-topicos",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/configuracoes",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/atividades",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/atividades/{id}",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/turma",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/professores",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/notas",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/desempenho",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/configuracoes",
+  "largura": 1366,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/dashboard",
+  "largura": 390,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/turmas",
+  "largura": 390,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/notas",
+  "largura": 390,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "professor",
+  "tela": "/configuracoes",
+  "largura": 390,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno",
+  "largura": 390,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ },
+ {
+  "perfil": "aluno",
+  "tela": "/aluno/configuracoes",
+  "largura": 390,
+  "rolagem_horizontal": false,
+  "erros_console": []
+ }
+]

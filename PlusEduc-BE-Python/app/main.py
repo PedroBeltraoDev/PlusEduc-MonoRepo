@@ -14,6 +14,7 @@ from app.api.auth import router as auth_router
 from app.api.classrooms import router as classrooms_router
 from app.api.grades import router as grades_router
 from app.api.health import router as health_router
+from app.api.openapi_docs import API_DESCRIPTION, install as install_openapi_docs
 from app.api.student_analytics import router as student_analytics_router
 from app.api.activity_submissions import router as activity_submissions_router
 from app.api.teacher_corrections import (
@@ -100,7 +101,7 @@ def create_app(
     application = FastAPI(
         title=resolved_settings.app_name,
         version=resolved_settings.app_version,
-        description="Backend FastAPI do PlusEduc em migração incremental.",
+        description=API_DESCRIPTION,
         docs_url="/docs",
         redoc_url="/redoc",
         openapi_url="/openapi.json",
@@ -136,6 +137,7 @@ def create_app(
     application.include_router(reports_router)
     application.include_router(dashboard_router)
     application.include_router(search_router)
+    install_openapi_docs(application)
     return application
 
 

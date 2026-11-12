@@ -36,6 +36,14 @@ class TeacherRepository:
             )
         )
 
+    def find_pending_approval(self) -> list[dict[str, Any]]:
+        return list(
+            self.collection.find({"approval_status": "PENDING"}, {"password": 0}).sort("created_at", 1)
+        )
+
+    def delete_by_id(self, teacher_id: str) -> bool:
+        return self.collection.delete_one({"_id": {"$in": id_candidates([teacher_id])}}).deleted_count == 1
+
     def count_all(self) -> int:
         return self.collection.count_documents({})
 

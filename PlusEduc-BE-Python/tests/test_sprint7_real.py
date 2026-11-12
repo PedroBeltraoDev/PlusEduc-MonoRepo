@@ -179,7 +179,7 @@ def test_audit_log_records_grade_changes_with_before_and_after_and_scopes_visibi
     try:
         student = db.students.find_one({"active": {"$ne": False}, "$or": [{"class_id": {"$nin": [None, ""]}}, {"classId": {"$nin": [None, ""]}}]})
         student_id, classroom_id = str(student["_id"]), str(student.get("class_id") or student.get("classId"))
-        with TestClient(create_app(make_settings(audit_enabled=True))) as client:
+        with TestClient(create_app(make_settings(audit_enabled=True, teacher_registration_requires_approval=False))) as client:
             tokens = {}
             for email, kind in zip(emails, ("teacher", "teacher", "student")):
                 response = client.post(f"/api/auth/register/{kind}", json={"name": f"Audit {kind} {token}", "email": email, "password": password})
@@ -245,7 +245,7 @@ def test_audit_log_is_off_in_test_environment_by_default():
     marker = f"audit.off.{uuid4().hex[:8]}@professor.local"
     try:
         with TestClient(create_app(make_settings())) as client:
-            assert client.post("/api/auth/register/teacher", json={"name": "Audit desligado", "email": marker, "password": "Audit@12345"}).status_code == 200
+            assert client.post("/api/auth/register/teacher", json={"name": "Audit desligado", "email": marker, "password": "Audit@12345"}).status_code in (200, 202)
         assert db.audit_logs.count_documents({"actorEmail": marker}) == 0
     finally:
         db.users.delete_many({"email": marker})
