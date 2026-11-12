@@ -14,7 +14,8 @@ from app.core.config import Settings
 from app.dependencies import get_current_user
 from app.main import create_app
 
-TEACHER = UserPrincipal(user_id="sprint7-teacher", email="teacher-sprint7@local", role="TEACHER")
+# Os indicadores são comparados com o banco inteiro: só o ADMIN enxerga todas as turmas.
+TEACHER = UserPrincipal(user_id="sprint7-teacher", email="teacher-sprint7@local", role="ADMIN")
 STUDENT_ROLE = UserPrincipal(user_id="sprint7-student", email="student-sprint7@local", role="STUDENT", student_id="x")
 
 
@@ -176,17 +177,28 @@ def test_audit_log_records_grade_changes_with_before_and_after_and_scopes_visibi
     emails = [f"audit.a.{token}@professor.local", f"audit.b.{token}@professor.local", f"audit.s.{token}@aluno.local"]
     password = "Audit@12345"
     grade_ids = []
+    created_classroom = created_student = None
     try:
-        student = db.students.find_one({"active": {"$ne": False}, "$or": [{"class_id": {"$nin": [None, ""]}}, {"classId": {"$nin": [None, ""]}}]})
-        student_id, classroom_id = str(student["_id"]), str(student.get("class_id") or student.get("classId"))
         with TestClient(create_app(make_settings(audit_enabled=True))) as client:
             tokens = {}
             for email, kind in zip(emails, ("teacher", "teacher", "student")):
                 response = client.post(f"/api/auth/register/{kind}", json={"name": f"Audit {kind} {token}", "email": email, "password": password})
-                assert response.status_code == 200, response.text
+                assert response.status_code == (202 if kind == "teacher" else 200), response.text
+            # Cadastro público de professor fica pendente: a aprovação do administrador é simulada aqui.
+            for email in emails[:2]:
+                db.users.update_one({"email": email}, {"$set": {"active": True, "approvalStatus": "APPROVED"}})
+                db.teachers.update_one({"email": email}, {"$set": {"active": True, "approvalStatus": "APPROVED"}})
             for email in emails:
                 tokens[email] = client.post("/api/auth/login", json={"email": email, "password": password}).json()["accessToken"]
             a, b, s = ({"Authorization": f"Bearer {tokens[e]}"} for e in emails)
+            # O professor A só lança nota na própria turma: cria turma e aluno descartáveis.
+            from datetime import datetime as _dt
+            classroom = client.post("/api/classrooms", headers=a, json={"name": f"Auditoria {token}", "year": _dt.now().year, "gradeLevel": "6º Ano do Ensino Fundamental", "teacherId": "ignorado"})
+            assert classroom.status_code == 201, classroom.text
+            classroom_id = created_classroom = classroom.json()["id"]
+            student = client.post("/api/students", headers=a, json={"name": f"Aluno Auditoria {token}", "email": f"audit.st.{token}@aluno.local", "birthDate": "2012-03-04", "classId": classroom_id})
+            assert student.status_code == 201, student.text
+            student_id = created_student = student.json()["id"]
 
             created = client.post("/api/grades", headers=a, json={"studentId": student_id, "classroomId": classroom_id, "grade": 8.5, "attendance": True, "subject": "Auditoria", "activityType": "EXAM", "date": "2026-06-01T12:00:00Z"})
             assert created.status_code == 201
@@ -231,6 +243,10 @@ def test_audit_log_records_grade_changes_with_before_and_after_and_scopes_visibi
     finally:
         db.grades.delete_many({"_id": {"$in": []}})
         from bson import ObjectId
+        if created_classroom:
+            db.classrooms.delete_one({"_id": ObjectId(created_classroom)})
+        if created_student:
+            db.students.delete_one({"_id": ObjectId(created_student)})
         db.grades.delete_many({"_id": {"$in": [ObjectId(g) for g in grade_ids]}})
         db.audit_logs.delete_many({"actorEmail": {"$in": emails}})
         db.users.delete_many({"email": {"$in": emails}})
@@ -245,7 +261,7 @@ def test_audit_log_is_off_in_test_environment_by_default():
     marker = f"audit.off.{uuid4().hex[:8]}@professor.local"
     try:
         with TestClient(create_app(make_settings())) as client:
-            assert client.post("/api/auth/register/teacher", json={"name": "Audit desligado", "email": marker, "password": "Audit@12345"}).status_code == 200
+            assert client.post("/api/auth/register/teacher", json={"name": "Audit desligado", "email": marker, "password": "Audit@12345"}).status_code == 202
         assert db.audit_logs.count_documents({"actorEmail": marker}) == 0
     finally:
         db.users.delete_many({"email": marker})

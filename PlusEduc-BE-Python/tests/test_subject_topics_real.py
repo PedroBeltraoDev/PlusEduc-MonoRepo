@@ -35,7 +35,7 @@ def test_subject_topics_crud_on_real_mongodb():
     user = {
         "_id": "catalog-test-user",
         "email": owner_email,
-        "role": "TEACHER",
+        "role": "ADMIN",
         "active": True,
     }
     token = create_access_token(owner_email, settings)
@@ -115,7 +115,7 @@ def test_subject_topic_creation_syncs_subject_catalog():
         jwt_secret="test-subject-topic-sync-secret",
     )
     mongo = MongoClient(settings.mongodb_uri, serverSelectionTimeoutMS=3000, connectTimeoutMS=3000)
-    user = {"_id": "catalog-sync-user", "email": owner_email, "role": "TEACHER", "active": True}
+    user = {"_id": "catalog-sync-user", "email": owner_email, "role": "ADMIN", "active": True}
     token = create_access_token(owner_email, settings)
     headers = {"Authorization": f"Bearer {token}"}
     owner_key = user["_id"].lower()
@@ -171,7 +171,7 @@ def test_subject_topics_list_does_not_create_subject_catalog_entry():
             "owner_key": owner_key,
             "created_by": owner_email,
         })
-        user = {"_id": owner_key, "email": owner_email, "role": "TEACHER", "active": True}
+        user = {"_id": owner_key, "email": owner_email, "role": "ADMIN", "active": True}
         token = create_access_token(owner_email, settings)
         app = create_app(settings, user_repository=FakeUserRepository([user]))
 

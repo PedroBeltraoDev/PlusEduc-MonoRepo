@@ -169,7 +169,7 @@ class FakeGradeRepository:
 
 class FakeUserRepository:
     def find_active_by_email(self, email):
-        return {"_id": "user-1", "email": email, "role": "TEACHER", "active": True}
+        return {"_id": "user-1", "email": email, "role": "ADMIN", "active": True}
 
 
 class FakeClassroomContext:

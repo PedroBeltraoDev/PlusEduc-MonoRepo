@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 
 from app.core.auth import UserPrincipal
 from app.core.audit_middleware import set_audit
-from app.dependencies import get_current_user, require_roles
+from app.core.access import AccessScope, build_scope, staff_scope
+from app.dependencies import get_current_user
 from app.schemas.activity import ActivityCreateRequest, ActivityGenerationRequest, ActivityResponse, ActivityUpdateRequest
 from app.schemas.activity_submission import ActivitySubmissionDetailResponse
 from app.services.activity_pdf_service import ActivityPdfService
@@ -30,74 +31,62 @@ def pdf_service(request: Request) -> ActivityPdfService:
     )
 
 
-def require_pdf_access(request: Request, activity: dict, current_user: UserPrincipal) -> None:
-    if current_user.role.upper() == "ADMIN":
-        return
-    classroom_id = activity.get("classroom_id", activity.get("classroomId"))
-    if not classroom_id:
-        raise HTTPException(status_code=400, detail="Atividade sem turma associada para validação de acesso")
-    classroom = request.app.state.classroom_repository.find_by_id(str(classroom_id))
-    if not classroom:
-        raise HTTPException(status_code=404, detail=f"Turma não encontrada: {classroom_id}")
-    teacher_id = classroom.get("teacher_id", classroom.get("teacherId"))
-    created_by = activity.get("created_by", activity.get("createdBy"))
-    if teacher_id and (str(teacher_id) == current_user.user_id or str(teacher_id).lower() == current_user.email.lower()):
-        return
-    if created_by and (str(created_by) == current_user.user_id or str(created_by).lower() == current_user.email.lower()):
-        return
-    teacher = request.app.state.mongo.database.teachers.find_one({
-        "$or": [{"email": current_user.email}, {"_id": current_user.user_id}]
-    })
-    classroom_ids = (teacher or {}).get("classroomIds", (teacher or {}).get("classroom_ids", [])) or []
-    if str(classroom_id) in {str(value) for value in classroom_ids}:
-        return
-    if current_user.role.upper() == "TEACHER" and teacher is None:
-        return
-    raise HTTPException(status_code=403, detail="A atividade não pertence a uma turma do usuário autenticado")
+def _activity_or_404(request: Request, activity_id: str) -> dict:
+    activity = request.app.state.activity_repository.find_by_id(activity_id)
+    if not activity:
+        raise HTTPException(status_code=404, detail=f"Atividade não encontrada: {activity_id}")
+    return activity
 
 
 @router.post("", response_model=ActivityResponse, status_code=status.HTTP_201_CREATED)
-def create_activity(payload: ActivityCreateRequest, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    created = service(request).create(payload, current_user)
+def create_activity(payload: ActivityCreateRequest, request: Request, scope: AccessScope = Depends(staff_scope)):
+    scope.require_classroom(payload.classroomId)
+    created = service(request).create(payload, scope.principal)
     set_audit(request, entityId=created.id, summary=f"Atividade “{created.title}” criada", details={"title": created.title, "subject": created.subject, "classroomId": created.classroomId})
     return created
 
 
 @router.post("/generate", response_model=ActivityResponse, status_code=status.HTTP_201_CREATED)
-def generate_activity(payload: ActivityGenerationRequest, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    generated = service(request).generate(payload, current_user)
+def generate_activity(payload: ActivityGenerationRequest, request: Request, scope: AccessScope = Depends(staff_scope)):
+    scope.require_classroom(payload.classroomId)
+    generated = service(request).generate(payload, scope.principal)
     set_audit(request, entityId=generated.id, summary=f"Atividade “{generated.title}” gerada", details={"title": generated.title, "subject": generated.subject})
     return generated
 
 
 @router.get("", response_model=list[ActivityResponse])
-def list_activities(request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    return service(request).list_all(include_participation=True)
+def list_activities(request: Request, scope: AccessScope = Depends(staff_scope)):
+    return service(request).list_scoped(scope, include_participation=True)
 
 
 @router.get("/classroom/{classroom_id}", response_model=list[ActivityResponse])
-def activities_by_classroom(classroom_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+def activities_by_classroom(classroom_id: str, request: Request, scope: AccessScope = Depends(staff_scope)):
+    scope.require_classroom(classroom_id)
     return service(request).by_classroom(classroom_id)
 
 
 @router.get("/student/{student_id}", response_model=list[ActivityResponse])
-def activities_by_student(student_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    return service(request).by_student(student_id)
+def activities_by_student(student_id: str, request: Request, scope: AccessScope = Depends(staff_scope)):
+    student = request.app.state.student_repository.find_by_id(student_id)
+    scope.require_student(student)
+    return [item for item in service(request).by_student(student_id) if scope.can_access_classroom(item.classroomId) or scope.is_admin]
 
 
 @router.get("/teacher/{teacher_id}", response_model=list[ActivityResponse])
-def activities_by_teacher(teacher_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+def activities_by_teacher(teacher_id: str, request: Request, scope: AccessScope = Depends(staff_scope)):
+    if not scope.is_admin and teacher_id not in scope.actor_keys:
+        raise HTTPException(status_code=403, detail="Você só pode consultar as próprias atividades")
     return service(request).by_teacher(teacher_id)
 
 
 @router.get("/{activity_id}/submissions", response_model=list[ActivitySubmissionDetailResponse])
-def activity_submissions(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+def activity_submissions(activity_id: str, request: Request, scope: AccessScope = Depends(staff_scope)):
     return TeacherCorrectionService(
         request.app.state.activity_repository,
         request.app.state.activity_submission_repository,
         request.app.state.classroom_repository,
         request.app.state.student_repository,
-    ).list_activity_submissions(activity_id, current_user)
+    ).list_activity_submissions(activity_id, scope.principal, scope)
 
 
 @router.get("/{activity_id}/export-pdf")
@@ -107,10 +96,9 @@ def export_activity_pdf(
     includeAnswers: bool = Query(default=False),
     current_user: UserPrincipal = Depends(get_current_user),
 ):
-    activity = request.app.state.activity_repository.find_by_id(activity_id)
-    if not activity:
-        raise HTTPException(status_code=404, detail=f"Atividade não encontrada: {activity_id}")
-    require_pdf_access(request, activity, current_user)
+    activity = _activity_or_404(request, activity_id)
+    # Exportação em PDF: mesma regra das demais rotas (antes, professor sem cadastro passava direto).
+    build_scope(request, current_user).require_activity(activity)
     pdf = pdf_service(request).generate(activity, includeAnswers)
     return Response(
         content=pdf,
@@ -120,17 +108,22 @@ def export_activity_pdf(
 
 
 @router.get("/{activity_id}", response_model=ActivityResponse)
-def get_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+def get_activity(activity_id: str, request: Request, scope: AccessScope = Depends(staff_scope)):
+    scope.require_activity(_activity_or_404(request, activity_id))
     return service(request).get(activity_id, include_participation=True)
 
 
 @router.put("/{activity_id}", response_model=ActivityResponse)
-def update_activity(activity_id: str, payload: ActivityUpdateRequest, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
-    return service(request).update(activity_id, payload, current_user)
+def update_activity(activity_id: str, payload: ActivityUpdateRequest, request: Request, scope: AccessScope = Depends(staff_scope)):
+    scope.require_activity(_activity_or_404(request, activity_id))
+    if payload.classroomId:
+        scope.require_classroom(payload.classroomId)
+    return service(request).update(activity_id, payload, scope.principal)
 
 
 @router.delete("/{activity_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_activity(activity_id: str, request: Request, current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN"))):
+def delete_activity(activity_id: str, request: Request, scope: AccessScope = Depends(staff_scope)):
+    scope.require_activity(_activity_or_404(request, activity_id))
     before = service(request).get(activity_id)
     service(request).delete(activity_id)
     set_audit(request, summary=f"Atividade “{before.title}” excluída", details={"title": before.title})

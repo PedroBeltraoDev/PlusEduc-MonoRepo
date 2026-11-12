@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
 
     jwt_secret: str = ""
-    jwt_expiration_ms: int = Field(default=28_800_000, ge=1_000)
+    # Access token curto (30 min): a renovação é feita com o refresh token rotativo (/api/auth/refresh).
+    jwt_expiration_ms: int = Field(default=1_800_000, ge=1_000)
     jwt_refresh_expiration_ms: int = Field(default=604_800_000, ge=1_000)
 
     audit_enabled: bool | None = None  # None: ligado, exceto quando APP_ENV começa com "test"
@@ -64,6 +65,35 @@ class Settings(BaseSettings):
     # Qualquer pessoa que conheça o e-mail de uma conta consegue trocar a senha dela, por isso
     # fica DESLIGADO por padrão e só deve ser ligado em máquina local, para apresentações.
     password_reset_demo_mode: bool = False
+
+    # Limite de tentativas (login, cadastro e recuperação de senha).
+    rate_limit_enabled: bool = True
+    login_max_failures: int = Field(default=5, ge=1)
+    login_window_seconds: int = Field(default=900, ge=1)
+    password_reset_max_requests: int = Field(default=5, ge=1)
+    password_reset_window_seconds: int = Field(default=900, ge=1)
+    registration_max_requests: int = Field(default=10, ge=1)
+    registration_window_seconds: int = Field(default=3600, ge=1)
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() in {"production", "prod"}
+
+    def insecure_production_settings(self) -> list[str]:
+        """Configurações de demonstração que não podem ficar ativas em produção."""
+        problems: list[str] = []
+        if not self.is_production:
+            return problems
+        weak_secrets = {"", "change-this-to-a-long-random-secret", "secret", "changeme"}
+        if self.jwt_secret in weak_secrets or len(self.jwt_secret) < 32:
+            problems.append("JWT_SECRET ausente, fraco ou com o valor de exemplo")
+        if self.password_reset_demo_mode:
+            problems.append("PASSWORD_RESET_DEMO_MODE=true")
+        if self.password_reset_override_email:
+            problems.append("PASSWORD_RESET_OVERRIDE_EMAIL preenchido")
+        if not self.rate_limit_enabled:
+            problems.append("RATE_LIMIT_ENABLED=false")
+        return problems
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

@@ -39,7 +39,7 @@ def activities_real_context():
         student_id = str(student["_id"])
         teacher_id = str(teacher["_id"])
         classroom_id = str(classroom["_id"])
-        user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="TEACHER", student_id=student_id)
+        user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="ADMIN", student_id=student_id)
         app = create_app(settings)
         app.dependency_overrides[get_current_user] = lambda: user
         with TestClient(app) as client:
@@ -98,7 +98,7 @@ def test_activities_crud_queries_and_submission_on_real_mongodb(activities_real_
 
         submission_payload = {"answers": [{"questionIndex": 0, "selectedAnswer": "4"}, {"questionIndex": 1, "selectedAnswer": "5"}]}
         student_user = UserPrincipal(user_id=student_id, email="student-activities@local", role="STUDENT", student_id=student_id)
-        teacher_user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="TEACHER", student_id=student_id)
+        teacher_user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="ADMIN", student_id=student_id)
         client.app.dependency_overrides[get_current_user] = lambda: student_user
         submission = client.post(f"/api/student-portal/activities/{activity_id}/submissions", json=submission_payload)
         assert submission.status_code == 200
@@ -128,7 +128,7 @@ def test_student_cannot_read_activities_outside_the_portal(activities_real_conte
     activity_id = created.json()["id"]
 
     student_user = UserPrincipal(user_id=student_id, email="student-activities@local", role="STUDENT", student_id=student_id)
-    teacher_user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="TEACHER", student_id=student_id)
+    teacher_user = UserPrincipal(user_id=teacher_id, email="teacher-activities@local", role="ADMIN", student_id=student_id)
     try:
         client.app.dependency_overrides[get_current_user] = lambda: student_user
         for path in (

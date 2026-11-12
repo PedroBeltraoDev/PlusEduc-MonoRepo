@@ -78,13 +78,34 @@ class ClassroomService:
     def list_active(self) -> list[ClassroomResponse]:
         return self.to_responses(self.repository.find_active())
 
-    def page(self, page: int, size: int) -> ClassroomPageResponse:
+    def list_scoped(self, scope) -> list[ClassroomResponse]:
+        """Lista só as turmas visíveis ao usuário (ADMIN: todas; professor: as dele)."""
+        if scope is None or scope.is_admin:
+            return self.list_active()
+        if not scope.classroom_ids:
+            return []
+        documents = self.repository.find_by_ids(scope.classroom_ids).values()
+        return self.to_responses([item for item in documents if item.get("active") is not False])
+
+    def page(self, page: int, size: int, scope=None) -> ClassroomPageResponse:
         page = max(page, 0)
         size = min(max(size, 1), 100)
-        items = self.repository.find_active()
         start = page * size
-        content = items[start : start + size]
-        total = len(items)
+        pager = getattr(self.repository, "find_active_page", None)
+        if pager is not None:
+            # Paginação no próprio MongoDB (skip/limit + count), sem carregar a coleção inteira.
+            query: dict[str, Any] = {}
+            if scope is not None and not scope.is_admin:
+                from app.repositories.base import id_candidates
+
+                query = {"_id": {"$in": id_candidates(scope.classroom_ids)}}
+            content, total = pager(query, start, size)
+        else:
+            items = self.repository.find_active()
+            if scope is not None:
+                items = scope.filter_classrooms(items)
+            content = items[start : start + size]
+            total = len(items)
         total_pages = (total + size - 1) // size if total else 0
         return ClassroomPageResponse(
             content=self.to_responses(content),
@@ -151,6 +172,7 @@ class ClassroomService:
         self.validate_year(target_year)
         if self.repository.exists_by_name_and_year(target_name, target_year, classroom_id):
             raise HTTPException(status_code=409, detail="Já existe uma turma com este nome e ano")
+        previous_members = {str(item) for item in self._student_ids(current)}
         if "studentIds" in values:
             self.validate_students_exist(values["studentIds"] or [])
         if "gradeLevel" in values and (
@@ -176,7 +198,22 @@ class ClassroomService:
         updates = {target: values[source] for source, target in mapping.items() if source in values}
         updates["updated_at"] = datetime.now(timezone.utc)
         updated = self.repository.update(classroom_id, updates)
+        if "studentIds" in values:
+            self._sync_members(classroom_id, previous_members, {str(item) for item in values["studentIds"] or []})
         return self.to_response(updated)
+
+    def _sync_members(self, classroom_id: str, before: set[str], after: set[str]) -> None:
+        """Mantém ``students.class_id`` coerente com a lista ``classrooms.students``."""
+        now = datetime.now(timezone.utc)
+        for student_id in after - before:
+            student = self.student_repository.find_by_id(student_id)
+            if student:
+                self._leave_previous_classroom(student, student_id, classroom_id)
+                self.student_repository.update(student_id, {"class_id": classroom_id, "updated_at": now})
+        for student_id in before - after:
+            student = self.student_repository.find_by_id(student_id)
+            if student and str(student.get("class_id", student.get("classId")) or "") == str(classroom_id):
+                self.student_repository.update(student_id, {"class_id": None, "updated_at": now})
 
     def delete(self, classroom_id: str) -> None:
         current = self.repository.find_by_id(classroom_id)
@@ -195,8 +232,12 @@ class ClassroomService:
         if not student:
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
         self._leave_previous_classroom(student, student_id, classroom_id)
+        remover = getattr(self.repository, "remove_student_everywhere", None)
+        if remover is not None:
+            # Dados legados podem ter o aluno em várias listas: ele fica só na turma nova.
+            remover(student_id, keep_classroom_id=classroom_id)
         student_ids = list(classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or [])
-        if student_id not in student_ids:
+        if str(student_id) not in {str(item) for item in student_ids}:
             student_ids.append(student_id)
         updated = self.repository.update(classroom_id, {"students": student_ids, "updated_at": datetime.now(timezone.utc)})
         self.student_repository.update(student_id, {"class_id": classroom_id, "updated_at": datetime.now(timezone.utc)})
@@ -221,9 +262,12 @@ class ClassroomService:
         student = self.student_repository.find_by_id(student_id)
         if not student:
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
-        student_ids = [item for item in (classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or []) if item != student_id]
+        members = classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or []
+        student_ids = [item for item in members if str(item) != str(student_id)]
         self.repository.update(classroom_id, {"students": student_ids, "updated_at": datetime.now(timezone.utc)})
-        self.student_repository.update(student_id, {"class_id": None, "updated_at": datetime.now(timezone.utc)})
+        # Só limpa o vínculo do aluno se ele apontava para esta turma (antes apagava o de qualquer turma).
+        if str(student.get("class_id", student.get("classId")) or "") in {"", str(classroom_id)}:
+            self.student_repository.update(student_id, {"class_id": None, "updated_at": datetime.now(timezone.utc)})
 
     def validate_students_exist(self, student_ids: list[str]) -> None:
         found = self.student_repository.find_by_ids(student_ids)

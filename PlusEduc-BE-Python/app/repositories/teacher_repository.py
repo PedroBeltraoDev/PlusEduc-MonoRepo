@@ -23,7 +23,7 @@ class TeacherRepository:
         return self.collection.find_one({"email": email})
 
     def find_active(self) -> list[dict[str, Any]]:
-        return list(self.collection.find({"active": True}))
+        return list(self.collection.find({"active": True}, {"password": 0}))
 
     def find_active_by_email(self, email: str) -> dict[str, Any] | None:
         return self.collection.find_one({"email": email, "active": True})
@@ -37,7 +37,7 @@ class TeacherRepository:
         )
 
     def count_all(self) -> int:
-        return self.collection.count_documents({})
+        return self.collection.count_documents({"active": True})
 
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)
@@ -51,6 +51,15 @@ class TeacherRepository:
         self.collection.update_one({"_id": current.get("_id")}, {"$set": updates})
         current.update(updates)
         return current
+
+    def delete_by_id(self, teacher_id: str) -> bool:
+        current = self.find_by_id(teacher_id)
+        if current is None:
+            return False
+        return self.collection.delete_one({"_id": current.get("_id")}).deleted_count == 1
+
+    def set_status_by_email(self, email: str, values: dict[str, Any]) -> None:
+        self.collection.update_one({"email": email}, {"$set": values})
 
     def soft_delete(self, teacher_id: str, updated_at) -> bool:
         current = self.find_by_id(teacher_id)

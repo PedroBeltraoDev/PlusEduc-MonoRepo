@@ -28,6 +28,34 @@ class ClassroomRepository:
     def find_active_by_teacher(self, teacher_id: str) -> list[dict[str, Any]]:
         return list(self.collection.find({"teacher_id": teacher_id, "active": True}))
 
+    def find_active_by_teacher_access(self, teacher_id: str, teacher_email: str = "") -> list[dict[str, Any]]:
+        """Turmas ativas em que o professor é titular ou leciona alguma disciplina."""
+        keys = [value for value in {teacher_id, teacher_email, teacher_email.lower()} if value]
+        return list(self.collection.find({
+            "active": True,
+            "$or": [
+                {"teacher_id": {"$in": keys}},
+                {"teacherId": {"$in": keys}},
+                {"subjectTeachers.teacherId": {"$in": keys}},
+            ],
+        }))
+
+    def find_active_page(self, query: dict[str, Any], skip: int, limit: int) -> tuple[list[dict[str, Any]], int]:
+        """Paginação feita no MongoDB (skip/limit), sem carregar a coleção inteira."""
+        criteria = {"active": True, **query}
+        total = self.collection.count_documents(criteria)
+        items = list(self.collection.find(criteria).sort([("name", 1), ("_id", 1)]).skip(skip).limit(limit))
+        return items, total
+
+    def remove_student_everywhere(self, student_id: str, keep_classroom_id: str | None = None) -> None:
+        """Garante que o aluno fique em no máximo uma turma (a ``keep_classroom_id``)."""
+        query: dict[str, Any] = {"students": {"$in": id_candidates([student_id])}}
+        if keep_classroom_id:
+            keep = self.find_by_id(keep_classroom_id)
+            if keep is not None:
+                query["_id"] = {"$ne": keep.get("_id")}
+        self.collection.update_many(query, {"$pull": {"students": {"$in": id_candidates([student_id])}}})
+
     def find_active_by_student(self, student_id: str) -> list[dict[str, Any]]:
         return list(self.collection.find({"students": student_id, "active": True}))
 

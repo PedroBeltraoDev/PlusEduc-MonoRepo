@@ -35,7 +35,7 @@ def submissions_context():
             pytest.fail("Nenhum aluno ativo matriculado em escola_db")
         student_id = str(student["_id"])
         classroom_id = str(student.get("class_id") or student.get("classId"))
-        teacher = UserPrincipal(user_id="sprint6-teacher", email="teacher-sprint6@local", role="TEACHER")
+        teacher = UserPrincipal(user_id="sprint6-teacher", email="teacher-sprint6@local", role="ADMIN")
         app = create_app(settings)
         app.dependency_overrides[get_current_user] = lambda: teacher
         with TestClient(app) as client:

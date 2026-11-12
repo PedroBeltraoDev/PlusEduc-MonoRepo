@@ -56,7 +56,12 @@ class TeacherCorrectionService:
         activity: dict[str, Any],
         current_user: UserPrincipal,
         classrooms: dict[str, dict[str, Any]] | None = None,
+        scope=None,
     ) -> bool:
+        # Com escopo (rotas HTTP): turma do professor, incluindo as atribuídas por disciplina.
+        # A comparação antiga confundia o id da conta (users) com o id do professor (teachers).
+        if scope is not None:
+            return scope.can_access_activity(activity)
         creator = self._value(activity, "created_by", "createdBy")
         if creator is not None and self._matches_user(creator, current_user):
             return True
@@ -84,7 +89,7 @@ class TeacherCorrectionService:
             if self._is_discursive(result.questionType) and result.reviewStatus != "REVIEWED"
         ]
 
-    def list_pending(self, current_user: UserPrincipal) -> list[PendingCorrectionResponse]:
+    def list_pending(self, current_user: UserPrincipal, scope=None) -> list[PendingCorrectionResponse]:
         submissions = self.submission_repository.find_all()
         activities = self.activity_repository.find_by_ids(
             self._value(submission, "activity_id", "activityId") for submission in submissions
@@ -96,7 +101,7 @@ class TeacherCorrectionService:
         candidates: list[tuple[dict[str, Any], dict[str, Any], list[Any]]] = []
         for submission in submissions:
             activity = activities.get(str(self._value(submission, "activity_id", "activityId") or ""))
-            if not activity or not self._teacher_can_access(activity, current_user, classrooms):
+            if not activity or not self._teacher_can_access(activity, current_user, classrooms, scope):
                 continue
             stored = ActivitySubmissionService.parse_stored_result(submission.get("content", "{}"))
             pending_results = self._pending_results(stored)
@@ -132,11 +137,11 @@ class TeacherCorrectionService:
             ))
         return pending
 
-    def list_activity_submissions(self, activity_id: str, current_user: UserPrincipal) -> list[ActivitySubmissionDetailResponse]:
+    def list_activity_submissions(self, activity_id: str, current_user: UserPrincipal, scope=None) -> list[ActivitySubmissionDetailResponse]:
         activity = self.activity_repository.find_by_id(activity_id)
         if not activity:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"Atividade não encontrada: {activity_id}")
-        if str(current_user.role or "").upper() != "ADMIN" and not self._teacher_can_access(activity, current_user):
+        if str(current_user.role or "").upper() != "ADMIN" and not self._teacher_can_access(activity, current_user, scope=scope):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="A atividade não pertence a uma turma do usuário autenticado")
 
         rows: list[ActivitySubmissionDetailResponse] = []
@@ -168,6 +173,7 @@ class TeacherCorrectionService:
         question_index: int,
         request: ReviewQuestionRequest,
         current_user: UserPrincipal,
+        scope=None,
     ) -> StudentSubmissionResult:
         submission = self.submission_repository.find_by_id(submission_id)
         if not submission:
@@ -175,7 +181,7 @@ class TeacherCorrectionService:
 
         activity_id = str(self._value(submission, "activity_id", "activityId") or "")
         activity = self.activity_repository.find_by_id(activity_id)
-        if not activity or not self._teacher_can_access(activity, current_user):
+        if not activity or not self._teacher_can_access(activity, current_user, scope=scope):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submissão não encontrada")
 
         stored = ActivitySubmissionService.parse_stored_result(submission.get("content", "{}"))

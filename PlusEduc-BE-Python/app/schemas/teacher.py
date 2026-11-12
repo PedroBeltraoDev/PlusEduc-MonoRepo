@@ -34,5 +34,18 @@ class TeacherResponse(BaseModel):
     subjects: list[str] | None = None
     classroomIds: list[str] | None = None
     active: bool | None = None
+    approvalStatus: str | None = None
     createdAt: datetime | None = None
     updatedAt: datetime | None = None
+
+
+class TeacherRequestResponse(BaseModel):
+    """Pedido de cadastro público de professor aguardando decisão do administrador."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    userId: str
+    name: str | None = None
+    email: str
+    status: str
+    createdAt: datetime | None = None

@@ -79,3 +79,29 @@ class AuthenticationResponse(BaseModel):
     role: str
     studentId: str | None = None
     name: str | None = None
+
+
+class TeacherRegistrationResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
+    status: str
+
+
+class RefreshTokenRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    refreshToken: str = Field(min_length=10, max_length=4096)
+
+
+class LogoutRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    refreshToken: str | None = Field(default=None, max_length=4096)
+
+
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    currentPassword: str = Field(min_length=1, max_length=100)
+    newPassword: str = Field(min_length=6, max_length=100)

@@ -45,6 +45,9 @@ from app.repositories.subject_topic_repository import SubjectTopicRepository
 from app.repositories.subject_repository import SubjectRepository
 from app.repositories.teacher_repository import TeacherRepository
 from app.repositories.user_repository import UserRepository
+from app.repositories.refresh_token_repository import RefreshTokenRepository
+from app.api.admin import router as admin_router
+from app.core.rate_limit import RateLimiter
 
 
 def create_app(
@@ -59,8 +62,13 @@ def create_app(
     subject_topic_repository=None,
     subject_repository=None,
     audit_repository=None,
+    refresh_token_repository=None,
 ) -> FastAPI:
     resolved_settings = settings or get_settings()
+    problems = resolved_settings.insecure_production_settings()
+    if problems:
+        # Falha cedo: a API não sobe em produção com chave fraca ou modo de demonstração ligado.
+        raise RuntimeError("Configuração insegura para produção: " + "; ".join(problems))
     configure_logging(resolved_settings.log_level)
     configure_compute(resolved_settings)
 
@@ -80,6 +88,10 @@ def create_app(
         application.state.subject_topic_repository = subject_topic_repository or SubjectTopicRepository(mongo)
         application.state.subject_repository = subject_repository or SubjectRepository(mongo)
         application.state.audit_repository = audit_repository or AuditRepository(mongo)
+        application.state.refresh_token_repository = refresh_token_repository or RefreshTokenRepository(mongo)
+        application.state.rate_limiter = RateLimiter()
+        if refresh_token_repository is None and mongo.health() == "ok":
+            application.state.refresh_token_repository.ensure_indexes()
         if subject_repository is None and mongo.health() == "ok":
             application.state.subject_repository.ensure_indexes()
         if audit_repository is None and mongo.health() == "ok":
@@ -123,6 +135,7 @@ def create_app(
     application.include_router(students_router)
     application.include_router(student_analytics_router)
     application.include_router(teachers_router)
+    application.include_router(admin_router)
     application.include_router(classrooms_router)
     application.include_router(grades_router)
     application.include_router(activities_router)

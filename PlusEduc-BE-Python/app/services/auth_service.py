@@ -9,7 +9,7 @@ from pymongo.errors import DuplicateKeyError
 
 from app.core.auth import UserPrincipal, principal_from_document
 from app.core.config import Settings
-from app.core.jwt import create_access_token, create_refresh_token
+from app.core.jwt import REFRESH_TOKEN, TokenError, create_access_token, create_refresh_token, decode_token
 from app.core.passwords import hash_password, verify_password
 from app.repositories.student_repository import StudentRepository
 from app.repositories.teacher_repository import TeacherRepository
@@ -17,6 +17,7 @@ from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (
     AuthenticationRequest,
     AuthenticationResponse,
+    ChangePasswordRequest,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     ProfileUpdateRequest,
@@ -24,12 +25,19 @@ from app.schemas.auth import (
     ResetPasswordResponse,
     StudentRegistrationRequest,
     TeacherRegistrationRequest,
+    TeacherRegistrationResponse,
 )
 from app.services.email_service import EmailDeliveryError, EmailService
 
 logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
+PENDING_APPROVAL_MESSAGE = "Cadastro de professor aguardando aprovação do administrador"
+REJECTED_MESSAGE = "Cadastro de professor não aprovado. Procure a coordenação."
+INVALID_REFRESH_MESSAGE = "Sessão expirada. Entre novamente."
+TEACHER_PENDING_REGISTRATION_MESSAGE = (
+    "Cadastro recebido. Um administrador precisa aprovar o acesso antes do primeiro login."
+)
 GENERIC_RESET_REQUEST_MESSAGE = "Se o e-mail informado existir, um código de verificação foi enviado."
 INVALID_RESET_CODE_MESSAGE = "Código inválido ou expirado"
 MAX_PASSWORD_RESET_ATTEMPTS = 5
@@ -48,7 +56,9 @@ class AuthService:
         teacher_repository: TeacherRepository | None = None,
         student_repository: StudentRepository | None = None,
         email_service: EmailService | None = None,
+        refresh_repository=None,
     ) -> None:
+        self._refresh_repository = refresh_repository
         self._repository = repository
         self._settings = settings
         self._teacher_repository = teacher_repository
@@ -76,7 +86,13 @@ class AuthService:
                 },
             )
             teacher = {**teacher, "name": request.name, "email": normalized_email}
-        return self._authentication_response(self._display_principal(updated, teacher_override=teacher))
+        if current_user.role == "STUDENT" and self._student_repository and current_user.student_id:
+            # E-mail e nome do aluno ficam iguais nas coleções users e students.
+            self._student_repository.update(
+                current_user.student_id,
+                {"name": request.name, "email": normalized_email, "updated_at": datetime.now(timezone.utc)},
+            )
+        return self._authentication_response(self._display_principal(updated, teacher_override=teacher), updated)
 
     def _find_teacher(self, email: str) -> dict | None:
         if not self._teacher_repository:
@@ -119,10 +135,18 @@ class AuthService:
             return replace(principal, name=str(teacher_name))
         return principal
 
-    def _authentication_response(self, principal: UserPrincipal) -> AuthenticationResponse:
+    def _authentication_response(
+        self,
+        principal: UserPrincipal,
+        user: dict | None = None,
+        family: str | None = None,
+    ) -> AuthenticationResponse:
+        version = int((user or {}).get("tokenVersion", 0) or 0)
+        refresh_token = create_refresh_token(principal.email, self._settings, version, family)
+        self._register_refresh(refresh_token)
         return AuthenticationResponse(
-            accessToken=create_access_token(principal.email, self._settings),
-            refreshToken=create_refresh_token(principal.email, self._settings),
+            accessToken=create_access_token(principal.email, self._settings, version),
+            refreshToken=refresh_token,
             tokenType="Bearer",
             expiresIn=self._settings.jwt_expiration_ms // 1000,
             userId=principal.user_id,
@@ -208,9 +232,14 @@ class AuthService:
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Usuário criado, mas não pôde ser recuperado",
             )
-        return self._authentication_response(self._display_principal(user))
+        return self._authentication_response(self._display_principal(user), user)
 
-    def register_teacher(self, request: TeacherRegistrationRequest) -> AuthenticationResponse:
+    def register_teacher(self, request: TeacherRegistrationRequest) -> TeacherRegistrationResponse:
+        """Cadastro público de professor: fica PENDENTE até um ADMIN aprovar (sem tokens).
+
+        Antes, o cadastro público devolvia tokens de TEACHER na hora, ou seja, qualquer pessoa
+        obtinha acesso de equipe a turmas, alunos e notas sem aprovação.
+        """
         if not self._teacher_repository:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -218,7 +247,8 @@ class AuthService:
             )
 
         normalized_email = request.email.lower()
-        if self._repository.find_active_by_email(normalized_email) or self._teacher_repository.find_by_email(normalized_email):
+        find_any = getattr(self._repository, "find_by_email", self._repository.find_active_by_email)
+        if find_any(normalized_email) or self._teacher_repository.find_by_email(normalized_email):
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email já cadastrado",
@@ -226,18 +256,23 @@ class AuthService:
 
         now = datetime.now(timezone.utc)
         password_hash = hash_password(request.password)
-        teacher = None
         user_id = ""
         try:
-            user_id = self._repository.insert_teacher_user(normalized_email, password_hash)
-            teacher = self._teacher_repository.insert(
+            user_id = self._repository.insert_teacher_user(
+                normalized_email,
+                password_hash,
+                active=False,
+                approval_status="PENDING",
+                name=request.name,
+            )
+            self._teacher_repository.insert(
                 {
                     "name": request.name,
                     "email": normalized_email,
-                    "password": password_hash,
                     "subjects": request.subjects,
                     "classrooms": [],
-                    "active": True,
+                    "active": False,
+                    "approvalStatus": "PENDING",
                     "created_at": now,
                     "updated_at": now,
                     "created_by": "public-registration",
@@ -252,21 +287,20 @@ class AuthService:
             if user_id:
                 self._repository.delete_by_id(user_id)
             raise
-
-        user = self._repository.find_active_by_email(normalized_email)
-        if not user or not teacher:
-            if user_id:
-                self._repository.delete_by_id(user_id)
-            if teacher and teacher.get("_id"):
-                self._teacher_repository.soft_delete(str(teacher["_id"]), datetime.now(timezone.utc))
-            raise HTTPException(
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail="Professor criado, mas não pôde ser recuperado",
-            )
-        return self._authentication_response(self._display_principal(user, teacher_override=teacher))
+        return TeacherRegistrationResponse(message=TEACHER_PENDING_REGISTRATION_MESSAGE, status="PENDING")
 
     def login(self, request: AuthenticationRequest) -> AuthenticationResponse:
-        user = self._repository.find_active_by_email(request.email)
+        email = request.email.strip().lower()
+        user = self._repository.find_active_by_email(email) or self._repository.find_active_by_email(request.email)
+        if not user:
+            # Cadastro de professor ainda não aprovado: só revela o status a quem sabe a senha.
+            find_any = getattr(self._repository, "find_by_email", None)
+            pending = find_any(email) if find_any else None
+            if pending and pending.get("approvalStatus") in {"PENDING", "REJECTED"} and verify_password(
+                request.password, pending.get("password", "")
+            ):
+                message = PENDING_APPROVAL_MESSAGE if pending["approvalStatus"] == "PENDING" else REJECTED_MESSAGE
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=message)
         if not user or not verify_password(request.password, user.get("password", "")):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -274,7 +308,83 @@ class AuthService:
                 headers={"WWW-Authenticate": "Bearer"},
             )
 
-        return self._authentication_response(self._display_principal(user))
+        return self._authentication_response(self._display_principal(user), user)
+
+    # ---- sessão: refresh rotativo, logout e troca de senha ---------------------------------
+    def _register_refresh(self, refresh_token: str) -> None:
+        if self._refresh_repository is None:
+            return
+        try:
+            payload = decode_token(refresh_token, self._settings, REFRESH_TOKEN)
+            self._refresh_repository.register(
+                payload["jti"],
+                str(payload["sub"]),
+                str(payload["fam"]),
+                datetime.fromtimestamp(int(payload["exp"]), tz=timezone.utc),
+            )
+        except Exception:  # noqa: BLE001 - sem registro, o refresh só não poderá ser usado
+            logger.warning("Não foi possível registrar o refresh token emitido")
+
+    def refresh(self, refresh_token: str) -> AuthenticationResponse:
+        def invalid() -> HTTPException:
+            return HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=INVALID_REFRESH_MESSAGE,
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+
+        try:
+            payload = decode_token(refresh_token, self._settings, REFRESH_TOKEN)
+        except (TokenError, RuntimeError) as error:
+            raise invalid() from error
+        jti, family, subject = payload.get("jti"), payload.get("fam"), payload.get("sub")
+        if not jti or not family or not subject or self._refresh_repository is None:
+            raise invalid()
+
+        record = self._refresh_repository.consume(str(jti))
+        if record is None:
+            # Token já usado ou revogado: possível roubo. Derruba toda a cadeia desse login.
+            if self._refresh_repository.find(str(jti)) is not None:
+                self._refresh_repository.revoke_family(str(family))
+                logger.warning("Reuso de refresh token detectado; sessão revogada")
+            raise invalid()
+
+        user = self._repository.find_active_by_email(str(subject))
+        if not user or int(payload.get("ver", 0) or 0) != int(user.get("tokenVersion", 0) or 0):
+            self._refresh_repository.revoke_family(str(family))
+            raise invalid()
+        return self._authentication_response(self._display_principal(user), user, family=str(family))
+
+    def logout(self, refresh_token: str | None) -> None:
+        if not refresh_token or self._refresh_repository is None:
+            return
+        try:
+            payload = decode_token(refresh_token, self._settings, REFRESH_TOKEN)
+        except (TokenError, RuntimeError):
+            return
+        if payload.get("fam"):
+            self._refresh_repository.revoke_family(str(payload["fam"]))
+
+    def change_password(self, current_user: UserPrincipal, request: ChangePasswordRequest) -> AuthenticationResponse:
+        user = self._repository.find_active_by_email(current_user.email)
+        if not user or not verify_password(request.currentPassword, user.get("password", "")):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Senha atual incorreta")
+        if request.currentPassword == request.newPassword:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="A nova senha deve ser diferente da atual")
+        self._repository.update_password(current_user.email, hash_password(request.newPassword))
+        self._revoke_refresh_tokens(current_user.email)
+        updated = self._repository.find_active_by_email(current_user.email) or user
+        # As outras sessões caem; esta recebe tokens novos e continua aberta.
+        return self._authentication_response(self._display_principal(updated), updated)
+
+    def _revoke_refresh_tokens(self, email: str) -> None:
+        if self._refresh_repository is None:
+            return
+        try:
+            self._refresh_repository.revoke_all_for(email)
+        except Exception:  # noqa: BLE001
+            logger.warning("Não foi possível revogar os refresh tokens da conta")
+
 
     def request_password_reset(self, request: ForgotPasswordRequest) -> ForgotPasswordResponse:
         normalized_email = request.email.lower()
@@ -318,6 +428,8 @@ class AuthService:
 
         self._repository.update_password(normalized_email, hash_password(request.newPassword))
         self._repository.clear_password_reset_code(normalized_email)
+        # Senha redefinida: todas as sessões abertas (inclusive de quem roubou a conta) são encerradas.
+        self._revoke_refresh_tokens(normalized_email)
         return ResetPasswordResponse(message="Senha redefinida com sucesso")
 
     def _hash_reset_code(self, email: str, code: str) -> str:

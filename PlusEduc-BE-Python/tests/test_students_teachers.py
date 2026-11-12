@@ -134,7 +134,7 @@ class FakeUserRepository:
                 "_id": "user-teacher",
                 "email": "teacher@example.com",
                 "password": password_hash,
-                "role": "TEACHER",
+                "role": "ADMIN",
                 "active": True,
             }
         }

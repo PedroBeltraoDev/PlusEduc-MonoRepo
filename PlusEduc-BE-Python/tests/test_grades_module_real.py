@@ -10,7 +10,7 @@ from app.core.config import Settings
 from app.dependencies import get_current_user
 from app.main import create_app
 
-TEACHER = UserPrincipal(user_id="grades-module-teacher", email="teacher-grades-module@local", role="TEACHER")
+TEACHER = UserPrincipal(user_id="grades-module-teacher", email="teacher-grades-module@local", role="ADMIN")
 
 
 @pytest.fixture

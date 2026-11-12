@@ -33,6 +33,11 @@ class ActivityRepository:
             return []
         return list(self.collection.find({"$or": [{"classroom_id": {"$in": classroom_ids}}, {"classroomId": {"$in": classroom_ids}}]}).sort("created_at", -1))
 
+    def find_by_creators(self, creators: list[str]) -> list[dict[str, Any]]:
+        if not creators:
+            return []
+        return list(self.collection.find({"$or": [{"created_by": {"$in": creators}}, {"createdBy": {"$in": creators}}]}).sort("created_at", -1))
+
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)
         document["_id"] = result.inserted_id

@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, Query, Request, Response, status
 
 from app.core.auth import UserPrincipal
+from app.core.access import AccessScope, staff_scope
 from app.dependencies import require_roles
 from app.schemas.subject_catalog import (
     SortField,
@@ -28,7 +29,13 @@ def service(request: Request) -> SubjectCatalogService:
     )
 
 
-teacher_user = require_roles("TEACHER", "ADMIN")
+def teacher_user(scope: AccessScope = Depends(staff_scope)) -> UserPrincipal:
+    """Equipe com perfil ativo (professor sem cadastro ativo não usa o catálogo)."""
+    return scope.principal
+
+
+# Alterar ou desativar uma matéria do catálogo afeta todas as turmas: tarefa do administrador.
+admin_user = require_roles("ADMIN")
 
 
 @router.get("", response_model=list[SubjectResponse])
@@ -60,7 +67,7 @@ def create_subject(payload: SubjectCreateRequest, request: Request, current_user
 
 
 @router.patch("/{subject_id}", response_model=SubjectResponse)
-def update_subject(subject_id: str, payload: SubjectUpdateRequest, request: Request, current_user: UserPrincipal = Depends(teacher_user)):
+def update_subject(subject_id: str, payload: SubjectUpdateRequest, request: Request, current_user: UserPrincipal = Depends(admin_user)):
     return service(request).update_subject(subject_id, payload)
 
 
@@ -82,6 +89,6 @@ def student_performance(
 
 
 @router.delete("/{subject_id}", status_code=status.HTTP_204_NO_CONTENT)
-def deactivate_subject(subject_id: str, request: Request, current_user: UserPrincipal = Depends(teacher_user)):
+def deactivate_subject(subject_id: str, request: Request, current_user: UserPrincipal = Depends(admin_user)):
     service(request).update_subject(subject_id, SubjectUpdateRequest(active=False))
     return Response(status_code=status.HTTP_204_NO_CONTENT)
