@@ -37,6 +37,14 @@ export function CinematicIntro() {
   // Os recursos de animação chegam num pacote à parte: a abertura só começa quando estão prontos.
   // Se demorarem (rede lenta), ela é pulada para não atrasar o acesso.
   const [ready, setReady] = useState(false);
+  // Remoção garantida: depois de encerrar, a abertura sai da árvore mesmo que a animação de saída
+  // não termine (antes ela podia ficar presa na tela para sempre).
+  const [gone, setGone] = useState(() => !visible);
+  useEffect(() => {
+    if (visible) return;
+    const timer = window.setTimeout(() => setGone(true), 900);
+    return () => window.clearTimeout(timer);
+  }, [visible]);
   useEffect(() => {
     if (!visible) return;
     let alive = true;
@@ -117,11 +125,18 @@ export function CinematicIntro() {
     },
   } satisfies Record<string, Variants>;
 
+  if (gone) return null;
+
+  // Enquanto os recursos de animação carregam: só o fundo, sem nenhum componente animado.
+  if (!ready) {
+    return visible ? <div aria-hidden="true" className="fixed inset-0 z-[100] bg-[#0A2463]" /> : null;
+  }
+
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          key={ready ? 'intro' : 'intro-wait'}
+          key="intro"
           role="dialog"
           aria-modal="true"
           aria-label="Abertura do PlusEduc"
