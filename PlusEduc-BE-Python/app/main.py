@@ -149,7 +149,34 @@ def create_app(
     application.include_router(reports_router)
     application.include_router(dashboard_router)
     application.include_router(search_router)
+    _mount_frontend(application, resolved_settings)
     return application
+
+
+def _mount_frontend(application: FastAPI, settings: Settings) -> None:
+    """No aplicativo de desktop a API também entrega a interface (mesma origem, sem CORS).
+
+    Arquivos existentes em STATIC_DIR são servidos direto; qualquer outra rota que não seja da API
+    devolve o index.html (o React Router resolve a navegação).
+    """
+    from pathlib import Path
+
+    from fastapi.responses import FileResponse
+    from starlette.exceptions import HTTPException as NotFound
+
+    root = Path(settings.static_dir).resolve() if settings.static_dir else None
+    if root is None or not (root / "index.html").is_file():
+        return
+    index = root / "index.html"
+
+    @application.get("/{full_path:path}", include_in_schema=False)
+    def spa(full_path: str):
+        if full_path.startswith(("api/", "docs", "redoc", "openapi.json", "health")):
+            raise NotFound(status_code=404)
+        candidate = (root / full_path).resolve()
+        if full_path and candidate.is_file() and root in candidate.parents:
+            return FileResponse(candidate)
+        return FileResponse(index, headers={"Cache-Control": "no-cache"})
 
 
 app = create_app()

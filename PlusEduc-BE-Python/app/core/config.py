@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     # fica DESLIGADO por padrão e só deve ser ligado em máquina local, para apresentações.
     password_reset_demo_mode: bool = False
 
+    # Aplicativo de desktop: pasta com o build do frontend (PlusEduc-UI/dist) servido pela própria API.
+    static_dir: str = ""
+
     # Limite de tentativas (login, cadastro e recuperação de senha).
     rate_limit_enabled: bool = True
     login_max_failures: int = Field(default=5, ge=1)
