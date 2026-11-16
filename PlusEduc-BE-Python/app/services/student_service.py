@@ -68,9 +68,15 @@ class StudentService:
             if request.classId:
                 document["class_id"] = request.classId
             try:
-                return self.to_response(self.repository.insert(document))
+                created = self.repository.insert(document)
             except DuplicateKeyError:
                 continue
+            # A matrícula fica nos dois lados (students.class_id e classrooms.students[]): sem isto o aluno
+            # criado já com turma não aparecia na lista dela.
+            add_student = getattr(self.classroom_repository, "add_student", None)
+            if request.classId and callable(add_student):
+                add_student(request.classId, str(created["_id"]))
+            return self.to_response(created)
 
         raise HTTPException(status_code=409, detail="Não foi possível gerar uma matrícula disponível")
 

@@ -6,8 +6,17 @@ from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
 from tests.database import TEST_DATABASE
+from app.core.config import get_settings
 from app.core.passwords import verify_password
-from app.main import app
+from app.main import create_app
+
+# Sprint 10: por padrão o cadastro público fica pendente de aprovação (ver test_sprint10_real.py).
+# Este teste cobre o modo sem aprovação, ainda disponível por configuração.
+app = create_app(
+    get_settings().model_copy(
+        update={"mongodb_database": TEST_DATABASE, "teacher_registration_requires_approval": False}
+    )
+)
 
 
 def test_public_teacher_registration_creates_profile_and_authenticates():

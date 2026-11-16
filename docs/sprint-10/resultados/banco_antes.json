@@ -1,0 +1,168 @@
+{
+ "banco": "escola_db",
+ "resultados": [
+  {
+   "id": "REF-01",
+   "nivel": "ERRO",
+   "verificacao": "students.class_id aponta para uma turma existente",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-02",
+   "nivel": "ERRO",
+   "verificacao": "classrooms.students[] só tem alunos existentes",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-03",
+   "nivel": "AVISO",
+   "verificacao": "matrícula coerente nos dois lados (students.class_id = turma que lista o aluno)",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-04",
+   "nivel": "AVISO",
+   "verificacao": "aluno excluído (inativo) não fica na lista de uma turma ativa",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-05",
+   "nivel": "ERRO",
+   "verificacao": "classrooms.teacher_id aponta para um professor existente",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-06",
+   "nivel": "AVISO",
+   "verificacao": "professor responsável de turma ativa está ativo",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-07",
+   "nivel": "ERRO",
+   "verificacao": "grades.studentId e grades.classroomId existem",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-08",
+   "nivel": "AVISO",
+   "verificacao": "grades.activityId (quando preenchido) aponta para uma atividade existente",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-09",
+   "nivel": "ERRO",
+   "verificacao": "activities.classroom_id e student_id (quando preenchidos) existem",
+   "problemas": 3,
+   "exemplos": [
+    "atividade 69c308767a85a03956c7f625",
+    "atividade 69cd4a74ffc9327fe67e8618",
+    "atividade 69dff90abcf8a9002a709508"
+   ]
+  },
+  {
+   "id": "REF-10",
+   "nivel": "ERRO",
+   "verificacao": "activity_submissions aponta para atividade e aluno existentes (sem respostas órfãs)",
+   "problemas": 2,
+   "exemplos": [
+    "resposta 6a0fa93b769ade756aea5308",
+    "resposta 6a8509205847e058f4abbbbe"
+   ]
+  },
+  {
+   "id": "REF-11",
+   "nivel": "ERRO",
+   "verificacao": "users de aluno (role STUDENT) apontam para um aluno existente",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-12",
+   "nivel": "AVISO",
+   "verificacao": "users de professor (role TEACHER) têm cadastro ativo em teachers com o mesmo e-mail",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "REF-13",
+   "nivel": "AVISO",
+   "verificacao": "professor ativo tem login (documento em users com o mesmo e-mail)",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DUP-01",
+   "nivel": "ERRO",
+   "verificacao": "e-mail único entre os usuários ativos",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DUP-02",
+   "nivel": "ERRO",
+   "verificacao": "matrícula única entre os alunos",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DUP-03",
+   "nivel": "ERRO",
+   "verificacao": "uma resposta por aluno em cada atividade",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DUP-04",
+   "nivel": "ERRO",
+   "verificacao": "nome e ano únicos entre as turmas ativas",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DOM-01",
+   "nivel": "ERRO",
+   "verificacao": "papel do usuário é ADMIN, TEACHER ou STUDENT",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DOM-02",
+   "nivel": "ERRO",
+   "verificacao": "notas entre 0 e 10",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DOM-03",
+   "nivel": "ERRO",
+   "verificacao": "senhas gravadas com bcrypt (nunca em texto puro) em users e teachers",
+   "problemas": 0,
+   "exemplos": []
+  },
+  {
+   "id": "DOM-04",
+   "nivel": "AVISO",
+   "verificacao": "no máximo 5 turmas ativas por professor",
+   "problemas": 1,
+   "exemplos": [
+    "professor 6a8897c8ecc5aa69504f5599: 12 turmas"
+   ]
+  },
+  {
+   "id": "IDX-01",
+   "nivel": "ERRO",
+   "verificacao": "índices esperados existem (criados pela API ao iniciar)",
+   "problemas": 0,
+   "exemplos": []
+  }
+ ]
+}

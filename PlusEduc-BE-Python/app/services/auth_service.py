@@ -9,7 +9,7 @@ from pymongo.errors import DuplicateKeyError
 
 from app.core.auth import UserPrincipal, principal_from_document
 from app.core.config import Settings
-from app.core.jwt import create_access_token, create_refresh_token
+from app.core.jwt import REFRESH_TOKEN, TokenError, create_access_token, create_refresh_token, decode_token
 from app.core.passwords import hash_password, verify_password
 from app.repositories.student_repository import StudentRepository
 from app.repositories.teacher_repository import TeacherRepository
@@ -17,12 +17,15 @@ from app.repositories.user_repository import UserRepository
 from app.schemas.auth import (
     AuthenticationRequest,
     AuthenticationResponse,
+    ChangePasswordRequest,
+    ChangePasswordResponse,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
     ProfileUpdateRequest,
     ResetPasswordRequest,
     ResetPasswordResponse,
     StudentRegistrationRequest,
+    TeacherRegistrationPendingResponse,
     TeacherRegistrationRequest,
 )
 from app.services.email_service import EmailDeliveryError, EmailService
@@ -30,6 +33,11 @@ from app.services.email_service import EmailDeliveryError, EmailService
 logger = logging.getLogger(__name__)
 
 INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
+INVALID_SESSION_MESSAGE = "Invalid or expired token"
+PENDING_APPROVAL_MESSAGE = "Seu cadastro de professor aguarda a aprovação de um administrador."
+TEACHER_PENDING_REGISTRATION_MESSAGE = (
+    "Cadastro recebido. Um administrador precisa aprovar seu acesso antes do primeiro login."
+)
 GENERIC_RESET_REQUEST_MESSAGE = "Se o e-mail informado existir, um código de verificação foi enviado."
 INVALID_RESET_CODE_MESSAGE = "Código inválido ou expirado"
 MAX_PASSWORD_RESET_ATTEMPTS = 5
@@ -210,7 +218,9 @@ class AuthService:
             )
         return self._authentication_response(self._display_principal(user))
 
-    def register_teacher(self, request: TeacherRegistrationRequest) -> AuthenticationResponse:
+    def register_teacher(
+        self, request: TeacherRegistrationRequest
+    ) -> AuthenticationResponse | TeacherRegistrationPendingResponse:
         if not self._teacher_repository:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -226,10 +236,13 @@ class AuthService:
 
         now = datetime.now(timezone.utc)
         password_hash = hash_password(request.password)
+        requires_approval = self._settings.teacher_registration_requires_approval
         teacher = None
         user_id = ""
         try:
-            user_id = self._repository.insert_teacher_user(normalized_email, password_hash)
+            user_id = self._repository.insert_teacher_user(
+                normalized_email, password_hash, pending_approval=requires_approval
+            )
             teacher = self._teacher_repository.insert(
                 {
                     "name": request.name,
@@ -237,7 +250,9 @@ class AuthService:
                     "password": password_hash,
                     "subjects": request.subjects,
                     "classrooms": [],
-                    "active": True,
+                    # Pendente: fica fora das listas e não entra até o ADMIN aprovar (RF04).
+                    "active": not requires_approval,
+                    "approval_status": "PENDING" if requires_approval else "APPROVED",
                     "created_at": now,
                     "updated_at": now,
                     "created_by": "public-registration",
@@ -252,6 +267,14 @@ class AuthService:
             if user_id:
                 self._repository.delete_by_id(user_id)
             raise
+
+        if requires_approval and teacher:
+            return TeacherRegistrationPendingResponse(
+                status="PENDING_APPROVAL",
+                message=TEACHER_PENDING_REGISTRATION_MESSAGE,
+                userEmail=normalized_email,
+                name=request.name,
+            )
 
         user = self._repository.find_active_by_email(normalized_email)
         if not user or not teacher:
@@ -268,6 +291,7 @@ class AuthService:
     def login(self, request: AuthenticationRequest) -> AuthenticationResponse:
         user = self._repository.find_active_by_email(request.email)
         if not user or not verify_password(request.password, user.get("password", "")):
+            self._raise_if_pending_approval(request.email, request.password)
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail=INVALID_CREDENTIALS_MESSAGE,
@@ -275,6 +299,64 @@ class AuthService:
             )
 
         return self._authentication_response(self._display_principal(user))
+
+    def _raise_if_pending_approval(self, email: str, password: str) -> None:
+        """Conta de professor ainda não aprovada: avisa, mas só para quem acertou a senha.
+
+        Assim a mensagem não serve para descobrir quais e-mails têm cadastro pendente.
+        """
+        find_pending = getattr(self._repository, "find_pending_by_email", None)
+        if not callable(find_pending):
+            return
+        pending = find_pending(email.lower())
+        if pending and verify_password(password, pending.get("password", "")):
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=PENDING_APPROVAL_MESSAGE)
+
+    def refresh(self, refresh_token: str) -> AuthenticationResponse:
+        """Troca um refresh token válido por um novo par de tokens (RF01).
+
+        O usuário é buscado de novo no banco: conta excluída, desativada ou pendente não renova.
+        """
+        try:
+            payload = decode_token(refresh_token, self._settings, expected_type=REFRESH_TOKEN)
+        except (TokenError, RuntimeError) as exc:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=INVALID_SESSION_MESSAGE,
+                headers={"WWW-Authenticate": "Bearer"},
+            ) from exc
+        subject = payload.get("sub")
+        user = self._repository.find_active_by_email(subject) if isinstance(subject, str) and subject else None
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=INVALID_SESSION_MESSAGE,
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        return self._authentication_response(self._display_principal(user))
+
+    def change_password(self, current_user: UserPrincipal, request: ChangePasswordRequest) -> ChangePasswordResponse:
+        """Troca de senha pelo próprio usuário autenticado (RF03): exige a senha atual."""
+        user = self._repository.find_active_by_email(current_user.email)
+        if not user or not verify_password(request.currentPassword, user.get("password", "")):
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Senha atual incorreta")
+        if verify_password(request.newPassword, user.get("password", "")):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="A nova senha deve ser diferente da senha atual",
+            )
+        new_hash = hash_password(request.newPassword)
+        self._repository.update_password(current_user.email, new_hash)
+        # O cadastro do professor guarda uma cópia do hash (legado): mantém as duas iguais.
+        if current_user.role == "TEACHER" and self._teacher_repository:
+            teacher = self._find_teacher(current_user.email)
+            if teacher:
+                self._teacher_repository.update(
+                    str(teacher.get("_id")),
+                    {"password": new_hash, "updated_at": datetime.now(timezone.utc)},
+                )
+        self._repository.clear_password_reset_code(current_user.email)
+        return ChangePasswordResponse(message="Senha alterada com sucesso")
 
     def request_password_reset(self, request: ForgotPasswordRequest) -> ForgotPasswordResponse:
         normalized_email = request.email.lower()

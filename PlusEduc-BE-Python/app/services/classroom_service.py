@@ -48,8 +48,8 @@ class ClassroomService:
             if teacher is None:
                 raise HTTPException(status_code=400, detail="Perfil de professor não encontrado para criar a turma")
             teacher_id = str(teacher.get("_id"))
-        elif not self.teacher_repository.find_by_id(teacher_id):
-            raise HTTPException(status_code=400, detail="Professor responsável não encontrado")
+        else:
+            self._require_active_teacher(teacher_id)
         if self.repository.exists_by_name_and_year(request.name, request.year):
             raise HTTPException(status_code=409, detail="Já existe uma turma com este nome e ano")
         if self.repository.count_active_by_teacher(teacher_id) >= 5:
@@ -164,6 +164,9 @@ class ClassroomService:
             )
         ):
             values["subjects"] = curriculum_subjects_for_grade(str(values["gradeLevel"]))
+        current_teacher = str(current.get("teacher_id", current.get("teacherId", "")))
+        if "teacherId" in values and str(values["teacherId"]) != current_teacher:
+            self._require_active_teacher(values["teacherId"])
         if "teacherId" in values and self.repository.count_active_by_teacher(values["teacherId"], classroom_id) >= 5:
             raise HTTPException(status_code=400, detail="Limite máximo de 5 turmas ativas por professor")
         mapping = {
@@ -179,6 +182,12 @@ class ClassroomService:
         updates["updated_at"] = datetime.now(timezone.utc)
         updated = self.repository.update(classroom_id, updates)
         return self.to_response(updated)
+
+    def _require_active_teacher(self, teacher_id: str | None) -> None:
+        """O professor responsável precisa existir e estar ativo (excluído ou com cadastro pendente não serve)."""
+        teacher = self.teacher_repository.find_by_id(str(teacher_id or ""))
+        if not teacher or teacher.get("active", True) is False:
+            raise HTTPException(status_code=400, detail="Professor responsável não encontrado ou inativo")
 
     def delete(self, classroom_id: str) -> None:
         current = self.repository.find_by_id(classroom_id)

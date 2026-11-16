@@ -87,10 +87,15 @@ PUBLIC = {
     ("POST", "/api/auth/register/teacher"),
     ("POST", "/api/auth/forgot-password"),
     ("POST", "/api/auth/reset-password"),
+    ("POST", "/api/auth/refresh"),  # Sprint 10: autenticado pelo refresh token do corpo, não pelo cabeçalho
 }
 # Qualquer usuário autenticado; cada rota confere internamente se o registro pertence a quem pede.
 OWN_RECORD = re.compile(r"^/api/students/\{student_id\}/(performance|attendance|pedagogical-recommendation)$")
-ANY_AUTHENTICATED = {("PUT", "/api/auth/profile"), ("GET", "/api/activities/{activity_id}/export-pdf")}
+ANY_AUTHENTICATED = {
+    ("PUT", "/api/auth/profile"),
+    ("POST", "/api/auth/change-password"),
+    ("GET", "/api/activities/{activity_id}/export-pdf"),
+}
 
 
 def policy(method: str, path: str) -> str:

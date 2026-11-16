@@ -1,0 +1,1 @@
+171 passed in 106.71s (suíte completa do backend, banco pluseduc_sprint10_eval, 11/11/2026)

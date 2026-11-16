@@ -3,7 +3,6 @@ import { useTheme } from "next-themes";
 import {
   Briefcase,
   Edit,
-  Key,
   Loader2,
   LogOut,
   Mail,
@@ -15,6 +14,16 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { ChangePasswordCard } from "../components/ChangePasswordCard";
+import { PendingTeachersCard } from "../components/PendingTeachersCard";
+import { AUTH_KEYS } from "@/services/authKeys";
+import { formatDateTime } from "@/utils";
+
+// Início da sessão atual (gravado no login ou na última renovação da sessão).
+function sessionStartedAt(): string {
+  const value = Number(localStorage.getItem(AUTH_KEYS.loginTime));
+  return value ? formatDateTime(new Date(value)) : "-";
+}
 
 export function Configuracoes() {
   const { theme, setTheme } = useTheme();
@@ -23,7 +32,7 @@ export function Configuracoes() {
   const [email, setEmail] = useState(userEmail ?? "");
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const funcao = role === "ADMIN" ? "Administrador" : role === "STUDENT" ? "Aluno" : "Professora";
+  const funcao = role === "ADMIN" ? "Administrador(a)" : role === "STUDENT" ? "Aluno(a)" : "Professor(a)";
   const currentTheme = theme === "dark" ? "dark" : "light";
 
   useEffect(() => {
@@ -76,12 +85,6 @@ export function Configuracoes() {
     setNome(userName ?? "");
     setEmail(userEmail ?? "");
     setIsEditing(false);
-  };
-
-  const handleChangePassword = () => {
-    toast.info("Um link foi enviado para seu e-mail", {
-      duration: 3000,
-    });
   };
 
   return (
@@ -219,18 +222,14 @@ export function Configuracoes() {
                 {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit className="h-4 w-4" />}
                 {isSaving ? "Salvando..." : isEditing ? "Salvar perfil" : "Editar perfil"}
               </button>
-              <button
-                type="button"
-                onClick={handleChangePassword}
-                className="inline-flex items-center gap-2 px-2 py-3 font-medium text-[#1E5AA8] transition hover:text-[#0A2463] dark:text-[#4FC3F7] dark:hover:text-white"
-              >
-                <Key className="h-4 w-4" />
-                Alterar senha
-              </button>
             </div>
           </div>
         </section>
       </div>
+
+      <ChangePasswordCard />
+
+      {role === "ADMIN" && <PendingTeachersCard />}
 
       <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm transition-colors dark:border-rose-900/50 dark:bg-gray-800">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -256,14 +255,10 @@ export function Configuracoes() {
           </button>
         </div>
 
-        <div className="mt-5 grid gap-3 border-t border-gray-200 pt-5 sm:grid-cols-2 dark:border-gray-700">
+        <div className="mt-5 border-t border-gray-200 pt-5 dark:border-gray-700">
           <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Último acesso</p>
-            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">15/04/2026 às 09:32</p>
-          </div>
-          <div className="rounded-xl bg-gray-50 p-4 dark:bg-gray-700">
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Dispositivo</p>
-            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">Chrome - Windows 11</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Sessão atual iniciada em</p>
+            <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">{sessionStartedAt()}</p>
           </div>
         </div>
       </section>

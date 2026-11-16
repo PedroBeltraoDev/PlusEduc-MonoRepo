@@ -2,12 +2,14 @@
 
 import { apiClient } from './api';
 import { AUTH_KEYS } from './authKeys';
+import { clearSession, isAccessTokenExpired, persistSession } from './session';
 import type {
   AuthResponse,
   LoginRequest,
   ProfileUpdateRequest,
   RegisterTeacherRequest,
   StudentRegistrationRequest,
+  TeacherRegistrationPending,
   User,
 } from '@/types';
 
@@ -31,10 +33,17 @@ class AuthService {
     return response;
   }
 
-  async registerTeacher(data: RegisterTeacherRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/register/teacher', data);
-    this.persistSession(response);
+  // Com a aprovação ligada (padrão), o servidor devolve 202 sem tokens: o professor só entra depois do ADMIN aprovar.
+  async registerTeacher(data: RegisterTeacherRequest): Promise<AuthResponse | TeacherRegistrationPending> {
+    const response = await apiClient.post<AuthResponse | TeacherRegistrationPending>('/auth/register/teacher', data);
+    if ('accessToken' in response) {
+      this.persistSession(response);
+    }
     return response;
+  }
+
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
+    return apiClient.post<{ message: string }>('/auth/change-password', data);
   }
 
   async forgotPassword(email: string): Promise<{ message: string; demoCode?: string | null }> {
@@ -46,26 +55,20 @@ class AuthService {
   }
 
   logout(): void {
-    Object.values(AUTH_KEYS).forEach((key) => localStorage.removeItem(key));
+    clearSession();
   }
 
+  // Com o token de acesso vencido a sessão continua enquanto houver refresh token: a próxima chamada
+  // à API renova os tokens (ou leva ao login, se o servidor recusar a renovação).
   isAuthenticated(): boolean {
     const token = localStorage.getItem(AUTH_KEYS.accessToken);
-    const expiresIn = localStorage.getItem(AUTH_KEYS.expiresIn);
-    const loginTime = localStorage.getItem(AUTH_KEYS.loginTime);
-
-    if (!token || !expiresIn || !loginTime) {
+    if (!token) {
       return false;
     }
-
-    const currentTime = Date.now();
-    const tokenExpiration = parseInt(loginTime) + parseInt(expiresIn) * 1000;
-
-    if (currentTime >= tokenExpiration) {
+    if (isAccessTokenExpired() && !localStorage.getItem(AUTH_KEYS.refreshToken)) {
       this.logout();
       return false;
     }
-
     return true;
   }
 
@@ -130,28 +133,7 @@ class AuthService {
   }
 
   private persistSession(response: AuthResponse): void {
-    if (!response.accessToken) return;
-
-    localStorage.setItem(AUTH_KEYS.accessToken, response.accessToken);
-    localStorage.setItem(AUTH_KEYS.refreshToken, response.refreshToken);
-    localStorage.setItem(AUTH_KEYS.tokenType, response.tokenType);
-    localStorage.setItem(AUTH_KEYS.expiresIn, response.expiresIn.toString());
-    localStorage.setItem(AUTH_KEYS.loginTime, Date.now().toString());
-    localStorage.setItem(AUTH_KEYS.userId, response.userId);
-    localStorage.setItem(AUTH_KEYS.userEmail, response.userEmail);
-    localStorage.setItem(AUTH_KEYS.role, response.role);
-
-    if (response.studentId) {
-      localStorage.setItem(AUTH_KEYS.studentId, response.studentId);
-    } else {
-      localStorage.removeItem(AUTH_KEYS.studentId);
-    }
-
-    if (response.name) {
-      localStorage.setItem(AUTH_KEYS.userName, response.name);
-    } else {
-      localStorage.removeItem(AUTH_KEYS.userName);
-    }
+    persistSession(response);
   }
 }
 

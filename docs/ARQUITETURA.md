@@ -1,6 +1,6 @@
 # Arquitetura do PlusEduc
 
-Documento atualizado na Sprint 09 para refletir o que está implementado (e não apenas o que foi planejado nas Sprints 01 e 02).
+Documento atualizado nas Sprints 09 e 10 para refletir o que está implementado (e não apenas o que foi planejado nas Sprints 01 e 02).
 Cada afirmação aqui foi conferida no código ou nos testes; o que ainda não existe aparece em "Fora do escopo atual".
 
 ## Visão geral
@@ -52,7 +52,7 @@ flowchart TB
 4. O `AuditMiddleware` registra no histórico toda escrita (POST, PUT, PATCH, DELETE), com autor, resultado e, nas notas, antes e depois.
 5. Erros viram JSON padronizado (`timestamp`, `status`, `error`, `message`, `details` nas validações); exceções não tratadas devolvem mensagem genérica, sem rastros internos.
 
-Perfis: `TEACHER` e `ADMIN` (mesmas rotas de gestão; o admin vê o histórico de todos), `STUDENT` (apenas `/api/student-portal/**` e os próprios dados).
+Perfis: `TEACHER` e `ADMIN` (mesmas rotas de gestão; o admin vê o histórico de todos e aprova os cadastros públicos de professor), `STUDENT` (apenas `/api/student-portal/**` e os próprios dados).
 A matriz completa de rotas por perfil está em `docs/sprint-08/resultados/matriz_de_permissoes.md`.
 
 ### Configuração
@@ -81,9 +81,21 @@ Essa proteção é de conveniência; a segurança de verdade está no backend.
 * **Build do backend:** `scripts/build_backend.py` gera só bytecode, código nativo (`--nuitka`) ou o servidor inteiro (`--standalone`).
 * **Versão desktop** (janela própria, instalador e atualização automática) fica na branch `feat/desktop-installer`, fora da `main`.
 
+### Sessão (Sprint 10)
+
+O login devolve um token de acesso (8 h) e um refresh token (7 dias). O cliente HTTP (`services/api.ts`) renova a sessão em
+`POST /api/auth/refresh` quando o token de acesso vence ou a API responde 401, uma renovação por vez; se a renovação falhar, a
+sessão é encerrada e a tela de login avisa. O cadastro público de professor nasce pendente (`users.pendingApproval`) e só o ADMIN
+ativa (`/api/teachers/{id}/approve`).
+
+### Documentação da API
+
+`app/api/openapi_docs.py` completa o esquema OpenAPI (descrição, grupos em português, resumo e perfil de acesso de cada rota).
+O mesmo esquema serve o Swagger (`/docs`), o ReDoc (`/redoc`) e o `docs/API.md` (`scripts/export_api_docs.py`);
+`tests/test_openapi_docs.py` confere que nenhuma rota fica sem documentação e que o acesso documentado bate com a matriz de permissões.
+
 ## Fora do escopo atual (pendente)
 
 * Predição de risco, clustering de perfis e otimização de grupos de reforço (RF19, RF21, RF22).
-* Fluxo de aprovação do cadastro público de professor (RF04) e escopo de dados por turma/professor.
-* Renovação de sessão com o refresh token (o token é emitido, mas não há rota de renovação nem uso no frontend).
+* Escopo de dados por turma/professor (qualquer professor lê e lança notas em qualquer turma).
 * Integração contínua (GitHub Actions): os testes são executados manualmente.

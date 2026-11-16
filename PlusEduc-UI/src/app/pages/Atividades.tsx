@@ -159,7 +159,7 @@ export function Atividades() {
       await activitiesService.downloadActivityPDF(activity.id, false);
     } catch (err) {
       console.error('Erro ao baixar PDF:', err);
-      // TODO: Mostrar notificação de erro
+      toast.error(err instanceof Error ? err.message : 'Não foi possível baixar o PDF da atividade.');
     } finally {
       setIsExporting(null);
     }

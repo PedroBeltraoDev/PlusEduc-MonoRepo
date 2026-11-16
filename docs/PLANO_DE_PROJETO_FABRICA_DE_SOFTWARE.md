@@ -2,7 +2,7 @@
 
 **Projeto integrador:** Fábrica de Software + Tópicos Avançados
 **Produto:** PlusEduc — Plataforma de Gestão Pedagógica com Análise de Aprendizagem
-**Equipe:** _(preencher com os 3 a 5 integrantes)_
+**Equipe (Grupo 08):** Pedro Antônio Silva Pedroso Beltrão — 01605602 (Scrum Master); André Marcílio da Silva Ferreira — 01616701; Evandro Albuquerque do Rêgo Lima — 01607434
 **Curso:** Ciência da Computação — UNINASSAU
 **Data-base:** 03/09/2026 · **Entrega final:** 05/12/2026
 
@@ -339,7 +339,7 @@ Termo de Compromisso de Estágio) não fazem parte deste cronograma.
 | **Sprint 7** | 24/10/2026 | Sistema quase completo | Dashboard com indicadores e gráficos, relatórios, pesquisa, filtros, exportação (CSV/XLSX/PDF) e histórico de operações (RF17 parcial e RF26), integrados aos módulos anteriores. Predição e recomendação (RF19/RF20) seguem para a Sprint 8. |
 | **Sprint 8** | 31/10/2026 | Sistema praticamente concluído | Escopo real: integração da Sprint 07 à `main`, revisão e correção do controle de permissões por perfil (verificado com a API em execução), revisão das regras de negócio, melhorias de usabilidade e testes (138). Predição de risco (RF19), clustering (B17) e otimização de grupos (B18) não foram implementados e seguem em aberto (ver `docs/sprint-08/README.md`). |
 | **Sprint 9** | 07/11/2026 | Testes completos | Escopo real: catálogo de 92 testes funcionais e de validação contra a API, 90 de navegação e 15 de validação pela interface, correção de 12 bugs, documentação revisada (`ARQUITETURA.md`, `MODELO_DE_DADOS.md`, `REQUISITOS_STATUS.md`) e suíte automatizada de 158 testes. Testes automatizados de frontend e CI seguem pendentes. |
-| **Sprint 10** | 14/11/2026 | Versão release candidate | Sistema estabilizado, sem funcionalidades pendentes críticas; preparação para homologação. |
+| **Sprint 10** | 14/11/2026 | Versão release candidate | Escopo real: versão 1.0.0-rc.1 — renovação de sessão (RF01), troca de senha logado (RF03), aprovação do cadastro de professor (RF04), correções de turma e matrícula, limpeza da interface, verificação de consistência do banco, API documentada (99 rotas) e README final; 171 testes e regressão de 210 casos contra o sistema em execução (ver `docs/sprint-10/README.md`). |
 | **Sprint 11** | 21/11/2026 | Preparação para entrega | Documentação final, roteiro de demonstração, ensaio da apresentação. |
 | **Sprint 12** | 28/11/2026 | Versão final do sistema | Sistema completo e congelado para gravação dos vídeos. |
 | **Entrega Final** | 05/12/2026 | Entrega final — Fábrica de Software | Vídeo horizontal (16:9, até 10 min, YouTube) e vídeo vertical (9:16, Instagram, marcando `@pryscillabgoncalves` e `@antenorparnaiba`); apresentação para a banca. |

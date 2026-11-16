@@ -6,7 +6,12 @@ from fastapi import HTTPException
 from app.core.auth import UserPrincipal
 from app.core.passwords import hash_password
 from app.repositories.teacher_repository import TeacherRepository
-from app.schemas.teacher import TeacherCreateRequest, TeacherResponse, TeacherUpdateRequest
+from app.schemas.teacher import (
+    PendingTeacherResponse,
+    TeacherCreateRequest,
+    TeacherResponse,
+    TeacherUpdateRequest,
+)
 
 
 class TeacherService:
@@ -86,6 +91,48 @@ class TeacherService:
         deactivate = getattr(self.user_repository, "deactivate_by_email", None)
         if callable(deactivate) and current:
             deactivate(current.get("email", ""))
+
+    def list_pending(self) -> list[PendingTeacherResponse]:
+        return [
+            PendingTeacherResponse(
+                id=str(item.get("_id")),
+                name=item.get("name", ""),
+                email=item.get("email", ""),
+                subjects=item.get("subjects", []),
+                createdAt=item.get("created_at"),
+            )
+            for item in self.repository.find_pending_approval()
+        ]
+
+    def _pending_or_404(self, teacher_id: str) -> dict[str, Any]:
+        current = self.repository.find_by_id(teacher_id)
+        if not current or current.get("approval_status") != "PENDING":
+            raise HTTPException(status_code=404, detail=f"Cadastro pendente não encontrado: {teacher_id}")
+        return current
+
+    def approve(self, teacher_id: str, approver: UserPrincipal) -> TeacherResponse:
+        current = self._pending_or_404(teacher_id)
+        now = datetime.now(timezone.utc)
+        updated = self.repository.update(
+            teacher_id,
+            {
+                "active": True,
+                "approval_status": "APPROVED",
+                "approved_by": approver.email,
+                "approved_at": now,
+                "updated_at": now,
+            },
+        )
+        if self.user_repository is not None:
+            self.user_repository.approve_pending(current.get("email", ""))
+        return self.to_response(updated)
+
+    def reject(self, teacher_id: str) -> None:
+        current = self._pending_or_404(teacher_id)
+        # Nada referencia um cadastro que nunca foi aprovado: removê-lo libera o e-mail para um novo cadastro.
+        self.repository.delete_by_id(teacher_id)
+        if self.user_repository is not None:
+            self.user_repository.delete_pending(current.get("email", ""))
 
     def count(self) -> int:
         return self.repository.count_all()

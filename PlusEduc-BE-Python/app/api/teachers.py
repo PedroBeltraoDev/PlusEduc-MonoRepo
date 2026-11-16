@@ -2,10 +2,15 @@ from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.core.auth import UserPrincipal
 from app.dependencies import require_roles
-from app.schemas.teacher import TeacherCreateRequest, TeacherResponse, TeacherUpdateRequest
+from app.schemas.teacher import (
+    PendingTeacherResponse,
+    TeacherCreateRequest,
+    TeacherResponse,
+    TeacherUpdateRequest,
+)
 from app.services.teacher_service import TeacherService
 
-router = APIRouter(prefix="/api/teachers", tags=["Teachers"])
+router = APIRouter(prefix="/api/teachers", tags=["Professores"])
 
 
 def service(request: Request) -> TeacherService:
@@ -45,6 +50,45 @@ def get_teachers_by_subject(
     current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
 ):
     return service(request).by_subject(subject)
+
+
+@router.get(
+    "/pending",
+    response_model=list[PendingTeacherResponse],
+    summary="Listar cadastros públicos de professor aguardando aprovação (ADMIN)",
+)
+def list_pending_teachers(
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("ADMIN")),
+):
+    return service(request).list_pending()
+
+
+@router.post(
+    "/{teacher_id}/approve",
+    response_model=TeacherResponse,
+    summary="Aprovar cadastro de professor (ADMIN): libera o login",
+)
+def approve_teacher(
+    teacher_id: str,
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("ADMIN")),
+):
+    return service(request).approve(teacher_id, current_user)
+
+
+@router.post(
+    "/{teacher_id}/reject",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Recusar cadastro de professor (ADMIN): remove o cadastro pendente",
+)
+def reject_teacher(
+    teacher_id: str,
+    request: Request,
+    current_user: UserPrincipal = Depends(require_roles("ADMIN")),
+):
+    service(request).reject(teacher_id)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.get("/count", response_model=int)

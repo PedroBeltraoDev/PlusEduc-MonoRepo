@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     )
 
     app_name: str = "PlusEduc API"
-    app_version: str = "0.1.0"
+    app_version: str = "1.0.0-rc.1"
     app_env: str = "development"
     log_level: str = "INFO"
 
@@ -64,6 +64,10 @@ class Settings(BaseSettings):
     # Qualquer pessoa que conheça o e-mail de uma conta consegue trocar a senha dela, por isso
     # fica DESLIGADO por padrão e só deve ser ligado em máquina local, para apresentações.
     password_reset_demo_mode: bool = False
+
+    # Cadastro público de professor (RF04): a conta nasce pendente e só entra depois que um
+    # ADMIN aprova. Desligar (false) volta ao comportamento antigo de acesso imediato.
+    teacher_registration_requires_approval: bool = True
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

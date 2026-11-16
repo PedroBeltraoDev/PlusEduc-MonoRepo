@@ -73,6 +73,36 @@ class ResetPasswordResponse(BaseModel):
     message: str
 
 
+class RefreshTokenRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    refreshToken: str = Field(min_length=1, description="Refresh token recebido no login (validade de 7 dias por padrão)")
+
+
+class ChangePasswordRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    currentPassword: str = Field(min_length=1, max_length=100)
+    newPassword: str = Field(min_length=6, max_length=100)
+
+
+class ChangePasswordResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    message: str
+
+
+class TeacherRegistrationPendingResponse(BaseModel):
+    """Resposta do cadastro público de professor quando a aprovação do ADMIN é exigida."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    status: str = Field(description='Sempre "PENDING_APPROVAL"')
+    message: str
+    userEmail: str
+    name: str
+
+
 class AuthenticationResponse(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
