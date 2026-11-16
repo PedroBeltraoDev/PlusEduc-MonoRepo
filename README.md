@@ -15,3 +15,7 @@ Backend: `PlusEduc-BE-Python/.venv/Scripts/python.exe -m pytest --tb=no -q`
 Frontend: `npm run type-check` e `npm run build`
 
 Arquivos `.env`, ambientes virtuais, dependências, builds, logs e caches locais não são versionados.
+
+## Atualização de segurança e Ultra Motion
+Veja docs/ATUALIZACAO_SEGURANCA_E_ULTRA_MOTION.md (permissões por turma, aprovação de professores, refresh token rotativo, migração de dados e sistema de animações).
+Antes de usar com dados existentes, rode a migração: PlusEduc-BE-Python/.venv/Scripts/python.exe PlusEduc-BE-Python/scripts/migrate_security_integrity.py --apply

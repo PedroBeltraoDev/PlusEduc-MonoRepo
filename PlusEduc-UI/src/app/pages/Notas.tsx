@@ -346,12 +346,12 @@ export function Notas() {
               },
               { icon: ClipboardCheck, label: "Lançamentos", value: String(summary.totalLaunches), tone: "text-[#1E5AA8]" },
             ].map(({ icon: Icon, label, value, tone }) => (
-              <div key={label} className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+              <div key={label} className="pe-lift rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
                 <div className="flex items-center gap-2 text-sm font-medium text-gray-500 dark:text-gray-400">
                   <Icon className="h-4 w-4" />
                   {label}
                 </div>
-                <p className={`mt-2 text-3xl font-bold ${tone}`}>{value}</p>
+                <p className={`mt-2 text-3xl font-bold tabular-nums ${tone}`}>{value}</p>
               </div>
             ))}
           </section>

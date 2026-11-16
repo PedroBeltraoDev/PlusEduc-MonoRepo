@@ -2,7 +2,7 @@
 // páginas entram com profundidade, listas entram em sequência curta, números mudam com mola discreta,
 // painéis expandem com mola suave. Nada aqui roda em loop contínuo.
 import { useEffect, useRef, type ReactNode } from 'react';
-import { AnimatePresence, animate, motion, useInView, type HTMLMotionProps } from 'motion/react';
+import { AnimatePresence, m as motion, useInView, type HTMLMotionProps } from 'motion/react';
 import { useMotion } from './MotionProvider';
 
 /** Entrada de página (troca de rota). Sem animação de saída: a navegação nunca espera a anterior. */
@@ -89,14 +89,19 @@ export function AnimatedNumber({
       node.textContent = format(value);
       return;
     }
-    const controls = animate(from, value, {
-      duration: m.duration * 1.6,
-      ease: [0.16, 1, 0.3, 1],
-      onUpdate: (latest) => {
-        node.textContent = format(latest);
-      },
-    });
-    return () => controls.stop();
+    // Contagem curta com requestAnimationFrame apenas enquanto dura (sem loop permanente);
+    // segue a taxa de atualização do monitor, sem limite artificial de FPS.
+    const duration = m.duration * 1600;
+    const start = performance.now();
+    let frame = 0;
+    const tick = (now: number) => {
+      const t = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - t, 4);
+      node.textContent = format(from + (value - from) * eased);
+      if (t < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value, inView, m.reduced, m.profile]);
 

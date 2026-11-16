@@ -1,7 +1,7 @@
 import { Bell, ClipboardCheck } from "lucide-react";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Link } from "react-router";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { activitiesService } from "@/services";
 import type { PendingCorrection } from "@/types";
 import { useMotion } from "@/motion/MotionProvider";

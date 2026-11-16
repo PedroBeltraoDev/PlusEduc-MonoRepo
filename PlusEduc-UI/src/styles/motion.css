@@ -48,15 +48,13 @@
 
 /* Microinteração de toque/clique em botões (sem mexer no layout). */
 button:not(:disabled),
-[role="button"]:not([aria-disabled="true"]),
-a.pe-press {
+.pe-press {
   transition-property: color, background-color, border-color, box-shadow, opacity, transform;
   transition-duration: var(--pe-dur-micro);
   transition-timing-function: var(--pe-ease-out);
 }
 button:not(:disabled):active,
-[role="button"]:not([aria-disabled="true"]):active,
-a.pe-press:active {
+.pe-press:active {
   transform: scale(var(--pe-press-scale));
 }
 
@@ -141,3 +139,16 @@ a.pe-press:active {
     scroll-behavior: auto !important;
   }
 }
+
+/* Modais próprios das páginas (sem Radix): mesma entrada dos modais do sistema. */
+@keyframes pe-fade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes pe-pop-in { from { opacity: 0; transform: translateY(12px) scale(0.96); } to { opacity: 1; transform: none; } }
+.pe-backdrop { animation: pe-fade-in var(--pe-dur-exit) var(--pe-ease-out); }
+.pe-modal { animation: pe-pop-in var(--pe-dur-enter) var(--pe-spring); }
+
+/* Linhas clicáveis de listas: deslocamento sutil no hover. */
+@media (hover: hover) and (pointer: fine) {
+  .pe-row { transition: background-color var(--pe-dur-micro) var(--pe-ease-out), transform var(--pe-dur-micro) var(--pe-spring); }
+  .pe-row:hover { transform: translateX(2px); }
+}
+:root[data-reduce-motion="true"] .pe-row:hover { transform: none; }

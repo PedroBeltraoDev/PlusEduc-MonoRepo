@@ -1,4 +1,4 @@
-import { motion, type Variants } from "motion/react";
+import { m as motion, type Variants } from "motion/react";
 
 /**
  * Variantes opcionais para animar as partes do logo (usadas na abertura cinematográfica).

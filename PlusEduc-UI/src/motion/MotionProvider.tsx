@@ -1,5 +1,12 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { MotionConfig } from 'motion/react';
+import { LazyMotion, MotionConfig } from 'motion/react';
+
+// Recursos de animação (molas, layout, gestos) carregados à parte do bundle inicial.
+let featuresPromise: Promise<typeof import('./features').default> | null = null;
+export const loadFeatures = () => {
+  featuresPromise ??= import('./features').then((module) => module.default);
+  return featuresPromise;
+};
 import { PROFILE_TOKENS, downgrade, suggestedProfile, type MotionProfile, type MotionTokens } from './profiles';
 
 const STORAGE_KEY = 'pluseduc:motion';
@@ -161,9 +168,11 @@ export function MotionProvider({ children }: { children: ReactNode }) {
   return (
     <MotionContext.Provider value={value}>
       {/* reducedMotion "always": a biblioteca troca deslocamentos por mudanças instantâneas. */}
-      <MotionConfig reducedMotion={reduced ? 'always' : 'never'} transition={value.enter}>
-        {children}
-      </MotionConfig>
+      <LazyMotion features={loadFeatures}>
+        <MotionConfig reducedMotion={reduced ? 'always' : 'never'} transition={value.enter}>
+          {children}
+        </MotionConfig>
+      </LazyMotion>
     </MotionContext.Provider>
   );
 }

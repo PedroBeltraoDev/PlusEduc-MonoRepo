@@ -37,7 +37,7 @@ export function AlunoHome() {
             <Link
               key={item.to}
               to={item.to}
-              className="rounded-2xl bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md dark:bg-gray-800"
+              className="pe-lift rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800"
             >
               <div className={`mb-4 inline-flex rounded-xl p-3 text-white ${item.color}`}>
                 <Icon className="h-6 w-6" />

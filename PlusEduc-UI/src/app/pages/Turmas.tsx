@@ -89,23 +89,27 @@ const StudentModal = ({
 }) => {
   useEffect(() => {
     if (isOpen) {
-      console.log('=== MODAL PORTAL ABERTO ===');
       document.body.style.overflow = 'hidden';
     } else {
-      console.log('=== MODAL PORTAL FECHADO ===');
       document.body.style.overflow = 'unset';
     }
+    // Esc fecha o formulário (navegação por teclado).
+    const onKey = (event: KeyboardEvent) => {
+      if (isOpen && event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
 
     return () => {
       document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', onKey);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const modalContent = (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-slate-900/20 p-4 backdrop-blur-[2px]"
+      className="pe-backdrop fixed inset-0 flex items-center justify-center bg-slate-900/20 p-4 backdrop-blur-[2px]"
       style={{
         zIndex: 999999,
         position: 'fixed',
@@ -117,7 +121,7 @@ const StudentModal = ({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
+        className="pe-modal bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -467,11 +471,11 @@ const UnassignedStudentsModal = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
+      className="pe-backdrop fixed inset-0 z-[100000] flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+        className="pe-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -727,79 +731,6 @@ export function Turmas() {
 
     const cleanedStudents = rawAllStudents.map(cleanStudentData);
 
-    // Debug controlado - apenas uma vez quando dados mudarem
-    if (cleanedStudents.length > 0) {
-      console.log('=== DEBUG TODOS OS ALUNOS (CONTROLADO) ===');
-      console.log('Total de alunos:', cleanedStudents.length);
-
-      cleanedStudents.forEach((student, index) => {
-        console.log(`Aluno ${index + 1} - ${student.name}:`, {
-          id: student.id,
-          idLength: student.id?.length,
-          name: student.name,
-          email: student.email,
-          birthDate: student.birthDate,
-          classId: student.classId,
-          className: student._class,
-          active: student.active
-        });
-
-        const missingData = [];
-        if (!student.name || student.name.trim() === '') missingData.push('name');
-        if (!student.email || student.email.trim() === '') missingData.push('email');
-        if (!student.birthDate) missingData.push('birthDate');
-
-        // Verificar se ID tem tamanho correto (MongoDB ObjectID tem 24 caracteres)
-        if (!student.id || student.id.length !== 24) {
-          console.error(`🔴 ID inválido para ${student.name}:`, {
-            id: student.id,
-            length: student.id?.length,
-            expected: 24,
-            possibleFix: student.id?.length === 22 ? 'ID truncado - pode ter perdido últimos 2 caracteres' : 'ID corrompido'
-          });
-
-          // Se for João Silva com ID truncado, tentar algumas correções comuns
-          if (student.name === 'João Silva' && student.id?.length === 22) {
-            console.log('🔧 Tentativas de correção para João Silva:');
-            console.log('- ID atual:', student.id);
-            console.log('- Possíveis IDs completos para testar:');
-            // IDs terminam frequentemente em 00, 01, 02, etc
-            ['00', '01', '02', '03', '10', '11', '12', '20', '21'].forEach(suffix => {
-              console.log(`  - ${student.id}${suffix}`);
-            });
-          }
-        }
-
-        if (missingData.length > 0) {
-          console.warn(`⚠️ Aluno ${student.name || student.id} com dados faltando:`, missingData);
-
-          // Para Henrrique sem birthDate, sugerir uma data padrão
-          if (student.name === 'Henrrique Lopes' && missingData.includes('birthDate')) {
-            console.log('💡 Sugestão: Adicionar birthDate para Henrrique Lopes');
-            console.log('   Data sugerida: 2018-01-01 (pode ajustar depois)');
-          }
-        }
-      });
-
-      // Resumo dos problemas encontrados
-      const corruptedIds = cleanedStudents.filter(s => !s.id || s.id.length !== 24);
-      const missingBirthDates = cleanedStudents.filter(s => !s.birthDate);
-
-      if (corruptedIds.length > 0 || missingBirthDates.length > 0) {
-        console.log('📋 RESUMO DE PROBLEMAS:');
-        if (corruptedIds.length > 0) {
-          console.log(`- ${corruptedIds.length} aluno(s) com ID corrompido:`, corruptedIds.map(s => s.name));
-        }
-        if (missingBirthDates.length > 0) {
-          console.log(`- ${missingBirthDates.length} aluno(s) sem data de nascimento:`, missingBirthDates.map(s => s.name));
-        }
-        console.log('💡 AÇÕES SUGERIDAS:');
-        console.log('1. Verificar dados no MongoDB/Backend');
-        console.log('2. Corrigir IDs corrompidos');
-        console.log('3. Adicionar datas de nascimento faltantes');
-      }
-    }
-
     return cleanedStudents;
   }, [rawAllStudents]);
 
@@ -960,15 +891,11 @@ export function Turmas() {
     // Carregar alunos da turma
     try {
       if (classroom.studentIds && classroom.studentIds.length > 0) {
-        console.log('=== CARREGANDO ALUNOS DA TURMA ===');
-        console.log('Turma:', classroom.name);
-        console.log('Student IDs brutos:', classroom.studentIds);
 
         // Filtrar e validar IDs antes de tentar carregar
         const validStudentIds = classroom.studentIds
           .map(id => {
             const cleanId = cleanStudentId(id);
-            console.log(`ID bruto: "${id}" → ID limpo: "${cleanId}" (${cleanId.length} chars)`);
             return cleanId;
           })
           .filter(id => {
@@ -979,7 +906,6 @@ export function Turmas() {
             return isValid;
           });
 
-        console.log('IDs válidos para carregar:', validStudentIds);
 
         if (validStudentIds.length === 0) {
           console.warn('Nenhum ID válido encontrado para carregar');
@@ -991,10 +917,8 @@ export function Turmas() {
         const students = [];
         for (const studentId of validStudentIds) {
           try {
-            console.log(`Carregando aluno com ID: ${studentId}`);
             const student = await studentsService.getStudentById(studentId);
             students.push(student);
-            console.log(`✅ Aluno carregado: ${student.name}`);
           } catch (error) {
             console.error(`❌ Erro ao carregar aluno ${studentId}:`, error);
             // Continuar carregando os outros alunos mesmo se um falhar
@@ -1003,11 +927,9 @@ export function Turmas() {
 
         // Limpar dados dos estudantes carregados
         const cleanedStudents = students.map(cleanStudentData);
-        console.log(`Carregados ${cleanedStudents.length} de ${validStudentIds.length} alunos da turma`);
 
         setClassroomStudents(cleanedStudents);
       } else {
-        console.log('Turma sem alunos:', classroom.name);
         setClassroomStudents([]);
       }
     } catch (error) {
@@ -1017,9 +939,7 @@ export function Turmas() {
   };
 
   const handleViewStudentDetails = async (student: Student) => {
-    console.log('Visualizando detalhes do aluno:', student);
     const cleanedStudent = cleanStudentData(student);
-    console.log('Aluno com dados limpos:', cleanedStudent);
 
     setSelectedStudent(cleanedStudent);
     setViewMode('student-details');
@@ -1053,8 +973,6 @@ export function Turmas() {
 
   // Handler para abrir modal de criar aluno
   const handleCreateStudent = () => {
-    console.log('=== DEBUG CREATE STUDENT ===');
-    console.log('Abrindo modal para criar novo aluno');
 
     setEditingStudent(null);
     setStudentFormData({
@@ -1067,15 +985,10 @@ export function Turmas() {
     });
 
     setShowStudentModal(true);
-    console.log('Modal de criação aberto via Portal');
   };
 
   // Handler para abrir modal de editar aluno
   const handleEditStudent = (student: Student) => {
-    console.log('=== DEBUG EDIT STUDENT ===');
-    console.log('Aluno completo:', student);
-    console.log('ID bruto:', student.id);
-    console.log('Tipo do ID:', typeof student.id);
 
     // Limpar ID se estiver no formato ObjectId('...')
     let cleanId = student.id;
@@ -1083,7 +996,6 @@ export function Turmas() {
       const match = student.id.match(/ObjectId\('([^']+)'\)/);
       if (match) {
         cleanId = match[1];
-        console.log('ID limpo:', cleanId);
       }
     }
 
@@ -1111,16 +1023,12 @@ export function Turmas() {
     });
 
     setShowStudentModal(true);
-    console.log('Modal de edição aberto via Portal para:', student.name);
   };
 
   // Handler para submeter formulário de aluno
   const handleSubmitStudent = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log('=== DEBUG SUBMIT STUDENT ===');
-    console.log('editingStudent:', editingStudent);
-    console.log('studentFormData:', studentFormData);
 
     if (!studentFormData.name || !studentFormData.email) {
       toast.error('Por favor, preencha nome e email.');
@@ -1141,7 +1049,6 @@ export function Turmas() {
       const classExists = classrooms?.find(c => c.id === studentFormData.classId);
       if (!classExists) {
         console.error('Turma não encontrada:', studentFormData.classId);
-        console.log('Turmas disponíveis:', classrooms?.map(c => ({ id: c.id, name: c.name })));
         toast.error('A turma selecionada não existe. Selecione uma turma válida ou deixe em branco.');
         return;
       }
@@ -1151,7 +1058,6 @@ export function Turmas() {
 
     try {
       if (editingStudent) {
-        console.log('Atualizando aluno com ID:', editingStudent.id);
 
         const updateData = {
           name: studentFormData.name,
@@ -1164,13 +1070,11 @@ export function Turmas() {
           learningGaps: normalizedLearningGaps
         };
 
-        console.log('Dados de atualização:', updateData);
 
         // Atualizar aluno existente
         await studentsService.updateStudent(editingStudent.id, updateData);
         toast.success('Aluno atualizado com sucesso!');
       } else {
-        console.log('Criando novo aluno');
 
         const createData = {
           name: studentFormData.name,
@@ -1183,7 +1087,6 @@ export function Turmas() {
           learningGaps: normalizedLearningGaps
         };
 
-        console.log('Dados de criação:', createData);
 
         // Criar novo aluno
         await studentsService.createStudent(createData);
@@ -1237,38 +1140,27 @@ export function Turmas() {
     const currentClassroom = selectedStudent._class || selectedStudent.classId;
     const currentClassroomId = selectedStudent.classId;
 
-    console.log('=== TRANSFERINDO ALUNO ===');
-    console.log('Aluno:', selectedStudent.name);
-    console.log('Turma atual (_class):', selectedStudent._class);
-    console.log('Turma atual (classId):', selectedStudent.classId);
-    console.log('Nova turma ID:', classroomId);
 
     try {
       // Se o aluno tem uma turma atual (por ID), remover da turma atual
       if (currentClassroomId) {
-        console.log('Removendo da turma atual usando classId...');
         await classroomsService.unenrollStudent(currentClassroomId, selectedStudent.id);
       } else if (currentClassroom) {
-        console.log('Aluno tem turma (_class) mas não classId - pode precisar encontrar ID da turma');
         // Encontrar o ID da turma pelo nome
         const currentClassroomObj = classrooms?.find(c => c.name === currentClassroom);
         if (currentClassroomObj) {
-          console.log('Encontrou turma atual, removendo...');
           await classroomsService.unenrollStudent(currentClassroomObj.id, selectedStudent.id);
         }
       } else {
-        console.log('Aluno não tem turma atual - pulando desenrolamento');
       }
 
       // Adicionar aluno à nova turma
-      console.log('Adicionando à nova turma...');
       await classroomsService.enrollStudent(classroomId, selectedStudent.id);
 
       // Atualizar dados locais
       setSelectedStudent(prev => prev ? { ...prev, classId: classroomId, _class: classrooms?.find(c => c.id === classroomId)?.name } : null);
 
       // Recarregar dados
-      console.log('Recarregando dados...');
       await refetch();
 
       // Limpar campos
@@ -1331,7 +1223,6 @@ export function Turmas() {
     <StudentModal
       isOpen={showStudentModal}
       onClose={() => {
-        console.log('Fechando modal via portal');
         setShowStudentModal(false);
       }}
       editingStudent={editingStudent}
@@ -1345,11 +1236,11 @@ export function Turmas() {
 
   const sharedTransferModal = showTransferModal && selectedStudent ? (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
+      className="pe-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
       onClick={() => setShowTransferModal(false)}
     >
       <div
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+        className="pe-modal w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -1575,9 +1466,6 @@ export function Turmas() {
                 <button
                   type="button"
                   onClick={(e) => {
-                    console.log('=== CLIQUE NO BOTÃO EDITAR ALUNO ===');
-                    console.log('selectedStudent:', selectedStudent);
-                    console.log('Evento:', e);
                     e.preventDefault();
                     e.stopPropagation();
 
@@ -2076,8 +1964,6 @@ export function Turmas() {
                         <button
                           type="button"
                           onClick={(e) => {
-                            console.log('=== CLIQUE NO BOTÃO EDITAR (CARD) ===');
-                            console.log('student:', student);
                             e.preventDefault();
                             e.stopPropagation();
 
@@ -2128,7 +2014,6 @@ export function Turmas() {
           <button
             type="button"
             onClick={(e) => {
-              console.log('=== CLIQUE NO BOTÃO ADICIONAR ALUNO ===');
               e.preventDefault();
               e.stopPropagation();
 
@@ -2249,8 +2134,6 @@ export function Turmas() {
                   <button
                     type="button"
                     onClick={(e) => {
-                      console.log('=== CLIQUE NO BOTÃO EDITAR (BUSCA) ===');
-                      console.log('student:', student);
                       e.preventDefault();
                       e.stopPropagation();
 
@@ -2328,7 +2211,10 @@ export function Turmas() {
             {classrooms.map((classroom) => (
               <div
                 key={classroom.id}
-                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                className="pe-row p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus-visible:bg-gray-50 dark:focus-visible:bg-gray-700"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleViewClassroomDetails(classroom); } }}
                 onClick={() => handleViewClassroomDetails(classroom)}
               >
                 <div className="flex items-center justify-between">
@@ -2379,8 +2265,8 @@ export function Turmas() {
 
       {/* Modal Nova Turma */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transition-colors">
+        <div className="pe-backdrop fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
+          <div className="pe-modal bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transition-colors" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-2xl font-bold text-[#0A2463] dark:text-white mb-6">Nova Turma</h2>
             <form onSubmit={handleCreateClassroom} className="space-y-4">
               <div>

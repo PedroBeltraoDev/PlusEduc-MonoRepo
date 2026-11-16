@@ -2,7 +2,7 @@
 // "viaja" até o novo item com mola, em vez de piscar. Funciona igual nos dois portais.
 import type { ComponentType, ReactNode } from 'react';
 import { Link } from 'react-router';
-import { motion } from 'motion/react';
+import { m as motion } from 'motion/react';
 import { useMotion } from './MotionProvider';
 
 export function SidebarNavLink({

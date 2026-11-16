@@ -2,15 +2,17 @@
 // toca: o login/autenticação não espera a animação. Aparece uma vez por sessão do navegador, tem botão
 // "Pular" (e Esc), respeita o movimento reduzido e nunca bloqueia o usuário em caso de erro.
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AnimatePresence, motion, type Variants } from 'motion/react';
+import { AnimatePresence, m as motion, type Variants } from 'motion/react';
 import { LogoMark } from '@/app/components/Logo';
-import { useMotion } from './MotionProvider';
+import { loadFeatures, useMotion } from './MotionProvider';
 
 const SEEN_KEY = 'pluseduc:intro:seen';
 export const INTRO_ALWAYS_KEY = 'pluseduc:intro:always';
 const HARD_LIMIT_MS = 4000; // trava de segurança: a abertura some mesmo se algo falhar
 
 function shouldShow(): boolean {
+  // Aba aberta em segundo plano: o navegador pausa os quadros e a abertura não teria sentido.
+  if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return false;
   try {
     if (localStorage.getItem(INTRO_ALWAYS_KEY) === 'true') return true;
     return sessionStorage.getItem(SEEN_KEY) !== '1';
@@ -32,6 +34,28 @@ const TITLE = 'PlusEduc';
 export function CinematicIntro() {
   const m = useMotion();
   const [visible, setVisible] = useState(() => shouldShow() && !m.reduced);
+  // Os recursos de animação chegam num pacote à parte: a abertura só começa quando estão prontos.
+  // Se demorarem (rede lenta), ela é pulada para não atrasar o acesso.
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!visible) return;
+    let alive = true;
+    const giveUp = window.setTimeout(() => {
+      if (alive) {
+        markSeen();
+        setVisible(false);
+      }
+    }, 1200);
+    void loadFeatures().then(() => {
+      window.clearTimeout(giveUp);
+      if (alive) setReady(true);
+    });
+    return () => {
+      alive = false;
+      window.clearTimeout(giveUp);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visible]);
   const skipRef = useRef<HTMLButtonElement>(null);
   const full = m.profile === 'ultra';
   const total = full ? 2.2 : m.profile === 'balanced' ? 1.6 : 0.9;
@@ -46,6 +70,7 @@ export function CinematicIntro() {
       markSeen();
       return;
     }
+    if (!ready) return;
     const timer = window.setTimeout(finish, total * 1000);
     const safety = window.setTimeout(finish, HARD_LIMIT_MS);
     const onKey = (event: KeyboardEvent) => {
@@ -57,7 +82,7 @@ export function CinematicIntro() {
       window.clearTimeout(safety);
       window.removeEventListener('keydown', onKey);
     };
-  }, [visible, total, finish]);
+  }, [visible, ready, total, finish]);
 
   // Movimento reduzido ligado depois de abrir: encerra na hora.
   useEffect(() => {
@@ -96,7 +121,7 @@ export function CinematicIntro() {
     <AnimatePresence>
       {visible && (
         <motion.div
-          key="intro"
+          key={ready ? 'intro' : 'intro-wait'}
           role="dialog"
           aria-modal="true"
           aria-label="Abertura do PlusEduc"

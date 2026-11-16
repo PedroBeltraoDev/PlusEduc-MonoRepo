@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, m as motion } from "motion/react";
 import { Check, Loader2, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 import { adminService } from "@/services";

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { motion } from "motion/react";
+import { m as motion } from "motion/react";
 import { Gauge, Sparkles, Wind, Zap } from "lucide-react";
 import { useMotion } from "@/motion/MotionProvider";
 import { PROFILE_LABELS, type MotionProfile } from "@/motion/profiles";
