@@ -78,6 +78,25 @@ class TeacherCorrectionService:
         teacher_id = self._value(classroom, "teacher_id", "teacherId")
         return self._matches_user(teacher_id, current_user)
 
+    def _candidate_submissions(self, scope) -> list[dict[str, Any]]:
+        """Professor: só as submissões das atividades das turmas dele (uma consulta indexada).
+
+        Antes lia a coleção inteira de submissões a cada atualização do sino (30 s).
+        """
+        by_activities = getattr(self.submission_repository, "find_by_activities", None)
+        by_classrooms = getattr(self.activity_repository, "find_by_classrooms", None)
+        if scope is None or scope.is_admin or by_activities is None or by_classrooms is None:
+            return self.submission_repository.find_all()
+        activities = by_classrooms(list(scope.classroom_ids)) if scope.classroom_ids else []
+        finder = getattr(self.activity_repository, "find_by_creators", None)
+        if finder is not None:
+            activities = activities + finder(list(scope.actor_keys))
+        ids = list({str(item.get("_id")) for item in activities})
+        if not ids:
+            return []
+        grouped = by_activities(ids)
+        return [submission for items in grouped.values() for submission in items]
+
     @staticmethod
     def _is_discursive(question_type: str) -> bool:
         return str(question_type or "").strip().upper() in {"DISCURSIVA", "DISSERTATIVA", "ABERTA", "OPEN_ENDED"}
@@ -90,7 +109,7 @@ class TeacherCorrectionService:
         ]
 
     def list_pending(self, current_user: UserPrincipal, scope=None) -> list[PendingCorrectionResponse]:
-        submissions = self.submission_repository.find_all()
+        submissions = self._candidate_submissions(scope)
         activities = self.activity_repository.find_by_ids(
             self._value(submission, "activity_id", "activityId") for submission in submissions
         )

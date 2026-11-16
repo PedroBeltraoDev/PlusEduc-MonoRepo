@@ -198,7 +198,7 @@ continua funcionando pelo caminho em Python, que é também o oracle dos testes.
 | Variável | Padrão | Efeito |
 |---|---|---|
 | `OPENCL_ENABLED` | `true` | Liga/desliga o OpenCL. |
-| `OPENCL_MIN_RECORDS` | `0` | Abaixo desse número de lançamentos usa Python. O ponto de equilíbrio medido fica perto de 100 mil registros; em produção use algo como `50000`. |
+| `OPENCL_MIN_RECORDS` | `50000` | Abaixo desse número de lançamentos usa Python. O ponto de equilíbrio medido fica perto de 100 mil registros (antes o padrão era `0`, que mandava até cálculos pequenos para a GPU). |
 | `OPENCL_DEVICE` | vazio | Trecho do nome do dispositivo (ex.: `Radeon`); vazio escolhe a primeira GPU. |
 
 `GET /health` mostra o estado em `opencl` (dispositivo, se está ativo e quantas execuções do kernel já ocorreram). Para comparar Python x GPU:

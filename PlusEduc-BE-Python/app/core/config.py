@@ -46,7 +46,9 @@ class Settings(BaseSettings):
 
     # Estatísticas de notas em GPU/CPU via OpenCL (usa o caminho em Python se não houver dispositivo).
     opencl_enabled: bool = True
-    opencl_min_records: int = Field(default=0, ge=0)  # abaixo disso, o Python é mais rápido que o envio à GPU
+    # Abaixo disso o Python é mais rápido que o envio à GPU (equilíbrio medido perto de 100 mil registros,
+    # docs/sprint-08/resultados/benchmark_opencl.txt). Antes o padrão era 0: GPU até para 5 notas.
+    opencl_min_records: int = Field(default=50_000, ge=0)
     opencl_device: str = ""  # trecho do nome do dispositivo (ex.: "Radeon"); vazio = a primeira GPU
 
     smtp_host: str = "smtp.gmail.com"
