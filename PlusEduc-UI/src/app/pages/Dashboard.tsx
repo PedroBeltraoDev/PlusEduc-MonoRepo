@@ -55,7 +55,7 @@ const TICKS = [0, 2, 4, 6, 8, 10];
 
 function ChartCard({ title, subtitle, empty, children }: { title: string; subtitle?: string; empty: boolean; children: React.ReactNode }) {
   return (
-    <section className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+    <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
       <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">{title}</h2>
       {subtitle && <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
       {empty ? <p className="py-10 text-center text-sm text-gray-500 dark:text-gray-400">Sem dados para os filtros selecionados.</p> : children}
@@ -259,7 +259,7 @@ export function Dashboard() {
               </div>
             </ChartCard>
 
-            <section className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+            <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
               <div className="flex items-center justify-between gap-2">
                 <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">Alunos em atenção</h2>
                 <Link to="/relatorios?tipo=alunos-atencao" className="text-sm font-semibold text-[#1E5AA8] hover:underline dark:text-[#4FC3F7]">
@@ -285,7 +285,7 @@ export function Dashboard() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <section className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+            <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
               <h2 className="mb-3 text-lg font-semibold text-[#0A2463] dark:text-white">Atividades recentes</h2>
               {recentActivities.length === 0 ? (
                 <p className="py-8 text-center text-sm text-gray-500 dark:text-gray-400">Nenhuma atividade encontrada.</p>
@@ -315,7 +315,7 @@ export function Dashboard() {
               )}
             </section>
 
-            <section className="rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+            <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
               <div className="mb-3 flex items-center justify-between gap-2">
                 <h2 className="flex items-center gap-2 text-lg font-semibold text-[#0A2463] dark:text-white">
                   <History className="h-5 w-5" /> Últimas operações

@@ -63,7 +63,6 @@ export function AlunoTurma() {
             <li key={mate.id} className="flex items-center justify-between py-3">
               <div>
                 <p className="font-medium text-[#0A2463] dark:text-white">{mate.name}</p>
-                <p className="text-sm text-gray-500 dark:text-gray-400">{mate.email}</p>
               </div>
             </li>
           ))}

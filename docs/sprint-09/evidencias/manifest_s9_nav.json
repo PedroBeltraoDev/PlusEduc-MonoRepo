@@ -1,0 +1,20 @@
+[
+ {
+  "arquivo": "n01_menu_atividade_interna.png",
+  "legenda": "Navegação — em /atividades/{id} o item \"Atividades\" do menu continua destacado",
+  "url": "http://127.0.0.1:5183/atividades/6ac2ed6054fb67ac5e764135",
+  "hora": "03/11/2026 10:52:06"
+ },
+ {
+  "arquivo": "n02_rota_inexistente.png",
+  "legenda": "Navegação — rota inexistente com o professor autenticado",
+  "url": "http://127.0.0.1:5183/rota-que-nao-existe",
+  "hora": "03/11/2026 10:52:09"
+ },
+ {
+  "arquivo": "n03_rota_inexistente_aluno.png",
+  "legenda": "Navegação — rota inexistente com o aluno autenticado",
+  "url": "http://127.0.0.1:5183/rota-que-nao-existe",
+  "hora": "03/11/2026 10:53:25"
+ }
+]

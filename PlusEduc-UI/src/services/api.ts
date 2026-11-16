@@ -29,6 +29,30 @@ interface ApiError {
   status: number;
   error: string;
   message: string;
+  details?: { loc?: (string | number)[]; msg?: string; type?: string }[];
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  name: 'Nome', email: 'E-mail', password: 'Senha', newPassword: 'Nova senha', title: 'Título', topic: 'Tópico', subject: 'Matéria',
+  grade: 'Nota', date: 'Data', birthDate: 'Data de nascimento', classId: 'Turma', classroomId: 'Turma', studentId: 'Aluno', year: 'Ano', code: 'Código',
+  observations: 'Observações', questionsCount: 'Quantidade de questões',
+};
+
+// Transforma o erro 422 do servidor (em inglês, por campo) em uma frase que o usuário entende.
+function describeValidation(details: NonNullable<ApiError['details']>): string {
+  const parts = details.map((detail) => {
+    const field = String(detail.loc?.[detail.loc.length - 1] ?? '');
+    const label = FIELD_LABELS[field] ?? 'Campo';
+    const msg = detail.msg ?? '';
+    const min = msg.match(/at least (\d+) character/);
+    const max = msg.match(/at most (\d+) character/);
+    if (detail.type === 'missing') return `${label} é obrigatório.`;
+    if (min) return `${label} deve ter pelo menos ${min[1]} caracteres.`;
+    if (max) return `${label} deve ter no máximo ${max[1]} caracteres.`;
+    if (msg.startsWith('Value error, ')) return `${label}: ${msg.replace('Value error, ', '')}.`;
+    return `${label} está inválido.`;
+  });
+  return Array.from(new Set(parts)).join(' ');
 }
 
 // Interface para resposta paginada
@@ -76,6 +100,9 @@ class ApiClient {
       if (response.status === 401 && !endpoint.startsWith('/auth/') && localStorage.getItem(AUTH_KEYS.accessToken)) {
         endSession();
         throw new Error('Sua sessão expirou. Entre novamente.');
+      }
+      if (response.status === 422 && Array.isArray(error.details) && error.details.length > 0) {
+        throw new Error(describeValidation(error.details));
       }
       throw new Error(FRIENDLY_MESSAGES[error.message] ?? (error.message || 'Erro na API'));
     }

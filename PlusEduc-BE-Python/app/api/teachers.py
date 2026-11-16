@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/teachers", tags=["Teachers"])
 
 
 def service(request: Request) -> TeacherService:
-    return TeacherService(request.app.state.teacher_repository)
+    return TeacherService(request.app.state.teacher_repository, request.app.state.user_repository)
 
 
 @router.post("", response_model=TeacherResponse, status_code=status.HTTP_201_CREATED)

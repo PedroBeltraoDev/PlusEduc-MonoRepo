@@ -173,7 +173,6 @@ export interface StudentClassroom {
 export interface Classmate {
   id: string;
   name: string;
-  email: string;
 }
 
 export interface TeacherSummary {

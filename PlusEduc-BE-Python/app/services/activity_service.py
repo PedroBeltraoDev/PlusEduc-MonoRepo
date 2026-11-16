@@ -45,9 +45,9 @@ class ActivityService:
         self.demo_ai_service = DemoAIService()
 
     def create(self, request: ActivityCreateRequest, current_user: UserPrincipal) -> ActivityResponse:
-        self.require_classroom(request.classroomId)
+        classroom = self.require_classroom(request.classroomId)
         if request.studentId:
-            self.require_student(request.studentId)
+            self.resolve_student_for_classroom(request.studentId, classroom)  # RN10: aluno da turma escolhida
         content = self.serialize_content(request.questions, request.content)
         document = {
             "title": request.title,
@@ -145,13 +145,14 @@ class ActivityService:
         return self.to_response(item, include_participation)
 
     def update(self, activity_id: str, request: ActivityUpdateRequest, current_user: UserPrincipal) -> ActivityResponse:
-        if not self.repository.find_by_id(activity_id):
+        current = self.repository.find_by_id(activity_id)
+        if not current:
             raise HTTPException(status_code=404, detail=f"Atividade não encontrada: {activity_id}")
         values = request.model_dump(exclude_unset=True)
-        if "classroomId" in values:
-            self.require_classroom(values["classroomId"])
+        classroom_id = values.get("classroomId") or current.get("classroom_id", current.get("classroomId"))
+        classroom = self.require_classroom(classroom_id) if ("classroomId" in values or values.get("studentId")) else None
         if values.get("studentId"):
-            self.require_student(values["studentId"])
+            self.resolve_student_for_classroom(values["studentId"], classroom)  # RN10
         mapping = {
             "title": "title", "subject": "subject", "topic": "topic", "difficultyLevel": "difficulty_level",
             "questionsCount": "questions_count", "format": "format", "classroomId": "classroom_id",
@@ -202,8 +203,9 @@ class ActivityService:
         student_class_id = student.get("classId", student.get("class_id"))
         if student_class_id and str(student_class_id) != classroom_id:
             raise HTTPException(status_code=400, detail="O aluno informado não pertence à turma selecionada")
-        student_ids = classroom.get("studentIds", classroom.get("student_ids", [])) or []
-        if student_ids and student_id not in {str(value) for value in student_ids}:
+        # A matrícula também fica na lista de alunos da turma (campo "students" nos documentos reais).
+        members = classroom.get("studentIds", classroom.get("student_ids", classroom.get("students", []))) or []
+        if str(student_class_id or "") != classroom_id and str(student_id) not in {str(value) for value in members}:
             raise HTTPException(status_code=400, detail="O aluno informado não está matriculado na turma selecionada")
         return student
 

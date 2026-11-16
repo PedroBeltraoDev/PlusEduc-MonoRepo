@@ -47,6 +47,9 @@ class ActivitySubmissionRepository:
     def find_all(self) -> list[dict[str, Any]]:
         return list(self.collection.find({}).sort("submitted_at", -1))
 
+    def delete_by_activity(self, activity_id: str) -> int:
+        return self.collection.delete_many({"activity_id": activity_id}).deleted_count
+
     def find_by_activity(self, activity_id: str) -> list[dict[str, Any]]:
         return list(self.collection.find({
             "$or": [

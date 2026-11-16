@@ -159,8 +159,19 @@ class StudentService:
         )
 
     def delete(self, student_id: str) -> None:
+        current = self.repository.find_by_id(student_id)
         if not self.repository.soft_delete(student_id, datetime.now(timezone.utc)):
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
+        if not current:
+            return
+        # Exclusão lógica: o aluno não pode continuar entrando no portal nem contando como matriculado na turma.
+        deactivate = getattr(self.user_repository, "deactivate_by_email", None)
+        if callable(deactivate) and current.get("email"):
+            deactivate(current["email"])
+        class_id = current.get("class_id", current.get("classId"))
+        remove = getattr(self.classroom_repository, "remove_student", None)
+        if callable(remove) and class_id:
+            remove(str(class_id), str(student_id))
 
     @staticmethod
     def to_response(document: dict[str, Any] | None) -> StudentResponse:

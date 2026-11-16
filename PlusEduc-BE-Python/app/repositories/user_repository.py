@@ -88,6 +88,14 @@ class UserRepository:
             },
         )
 
+    def deactivate_by_email(self, email: str) -> int:
+        """Desativa o login de quem foi excluído (exclusão lógica): o token e a senha deixam de valer."""
+        result = self._mongo.database["users"].update_many(
+            {"email": email, "active": {"$ne": False}},
+            {"$set": {"active": False, "updatedAt": datetime.now(timezone.utc)}},
+        )
+        return result.modified_count
+
     def update_password(self, email: str, password_hash: str) -> bool:
         result = self._mongo.database["users"].update_one(
             {"email": email, "active": {"$ne": False}},

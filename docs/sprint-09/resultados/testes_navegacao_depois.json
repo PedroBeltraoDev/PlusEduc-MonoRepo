@@ -1,0 +1,722 @@
+[
+ {
+  "id": "NAV-A01",
+  "perfil": "anônimo",
+  "acao": "abrir /dashboard",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A02",
+  "perfil": "anônimo",
+  "acao": "abrir /turmas",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A03",
+  "perfil": "anônimo",
+  "acao": "abrir /notas",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A04",
+  "perfil": "anônimo",
+  "acao": "abrir /relatorios",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A05",
+  "perfil": "anônimo",
+  "acao": "abrir /historico",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A06",
+  "perfil": "anônimo",
+  "acao": "abrir /busca",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A07",
+  "perfil": "anônimo",
+  "acao": "abrir /atividades",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A08",
+  "perfil": "anônimo",
+  "acao": "abrir /atividades/{id}",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A09",
+  "perfil": "anônimo",
+  "acao": "abrir /gerar-atividade",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A10",
+  "perfil": "anônimo",
+  "acao": "abrir /nova-atividade",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A11",
+  "perfil": "anônimo",
+  "acao": "abrir /configuracoes",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A12",
+  "perfil": "anônimo",
+  "acao": "abrir /materias",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A13",
+  "perfil": "anônimo",
+  "acao": "abrir /materias-topicos",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A14",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A15",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/atividades",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A16",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/atividades/{id}",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A17",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/turma",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A18",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/professores",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A19",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/notas",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A20",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/desempenho",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A21",
+  "perfil": "anônimo",
+  "acao": "abrir /aluno/configuracoes",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-A99",
+  "perfil": "anônimo",
+  "acao": "abrir / (raiz)",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-P01",
+  "perfil": "professor",
+  "acao": "abrir /dashboard",
+  "esperado": "permanece em /dashboard, sem erro",
+  "obtido": "/dashboard; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P02",
+  "perfil": "professor",
+  "acao": "abrir /turmas",
+  "esperado": "permanece em /turmas, sem erro",
+  "obtido": "/turmas; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P03",
+  "perfil": "professor",
+  "acao": "abrir /notas",
+  "esperado": "permanece em /notas, sem erro",
+  "obtido": "/notas; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P04",
+  "perfil": "professor",
+  "acao": "abrir /relatorios",
+  "esperado": "permanece em /relatorios, sem erro",
+  "obtido": "/relatorios; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P05",
+  "perfil": "professor",
+  "acao": "abrir /historico",
+  "esperado": "permanece em /historico, sem erro",
+  "obtido": "/historico; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P06",
+  "perfil": "professor",
+  "acao": "abrir /busca",
+  "esperado": "permanece em /busca, sem erro",
+  "obtido": "/busca; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P07",
+  "perfil": "professor",
+  "acao": "abrir /atividades",
+  "esperado": "permanece em /atividades, sem erro",
+  "obtido": "/atividades; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P08",
+  "perfil": "professor",
+  "acao": "abrir /atividades/{id}",
+  "esperado": "permanece em /atividades/{id}, sem erro",
+  "obtido": "/atividades/{id}; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P09",
+  "perfil": "professor",
+  "acao": "abrir /gerar-atividade",
+  "esperado": "permanece em /gerar-atividade, sem erro",
+  "obtido": "/gerar-atividade; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P10",
+  "perfil": "professor",
+  "acao": "abrir /nova-atividade",
+  "esperado": "permanece em /nova-atividade, sem erro",
+  "obtido": "/nova-atividade; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P11",
+  "perfil": "professor",
+  "acao": "abrir /configuracoes",
+  "esperado": "permanece em /configuracoes, sem erro",
+  "obtido": "/configuracoes; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P12",
+  "perfil": "professor",
+  "acao": "abrir /materias",
+  "esperado": "permanece em /materias, sem erro",
+  "obtido": "/materias; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P13",
+  "perfil": "professor",
+  "acao": "abrir /materias-topicos",
+  "esperado": "permanece em /materias-topicos, sem erro",
+  "obtido": "/materias-topicos; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-P51",
+  "perfil": "professor",
+  "acao": "abrir /aluno (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P52",
+  "perfil": "professor",
+  "acao": "abrir /aluno/atividades (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P53",
+  "perfil": "professor",
+  "acao": "abrir /aluno/atividades/{id} (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P54",
+  "perfil": "professor",
+  "acao": "abrir /aluno/turma (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P55",
+  "perfil": "professor",
+  "acao": "abrir /aluno/professores (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P56",
+  "perfil": "professor",
+  "acao": "abrir /aluno/notas (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P57",
+  "perfil": "professor",
+  "acao": "abrir /aluno/desempenho (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-P58",
+  "perfil": "professor",
+  "acao": "abrir /aluno/configuracoes (área do aluno)",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-M01",
+  "perfil": "professor",
+  "acao": "clicar em \"Dashboard\" no menu lateral",
+  "esperado": "/dashboard",
+  "obtido": "/dashboard",
+  "ok": true
+ },
+ {
+  "id": "NAV-M02",
+  "perfil": "professor",
+  "acao": "clicar em \"Turmas\" no menu lateral",
+  "esperado": "/turmas",
+  "obtido": "/turmas",
+  "ok": true
+ },
+ {
+  "id": "NAV-M03",
+  "perfil": "professor",
+  "acao": "clicar em \"Atividades\" no menu lateral",
+  "esperado": "/atividades",
+  "obtido": "/atividades",
+  "ok": true
+ },
+ {
+  "id": "NAV-M04",
+  "perfil": "professor",
+  "acao": "clicar em \"Notas e Frequência\" no menu lateral",
+  "esperado": "/notas",
+  "obtido": "/notas",
+  "ok": true
+ },
+ {
+  "id": "NAV-M05",
+  "perfil": "professor",
+  "acao": "clicar em \"Relatórios\" no menu lateral",
+  "esperado": "/relatorios",
+  "obtido": "/relatorios",
+  "ok": true
+ },
+ {
+  "id": "NAV-M06",
+  "perfil": "professor",
+  "acao": "clicar em \"Histórico\" no menu lateral",
+  "esperado": "/historico",
+  "obtido": "/historico",
+  "ok": true
+ },
+ {
+  "id": "NAV-M07",
+  "perfil": "professor",
+  "acao": "clicar em \"Minhas matérias\" no menu lateral",
+  "esperado": "/materias",
+  "obtido": "/materias",
+  "ok": true
+ },
+ {
+  "id": "NAV-M08",
+  "perfil": "professor",
+  "acao": "clicar em \"Configurações\" no menu lateral",
+  "esperado": "/configuracoes",
+  "obtido": "/configuracoes",
+  "ok": true
+ },
+ {
+  "id": "NAV-M09",
+  "perfil": "professor",
+  "acao": "menu destaca \"Atividades\" ao abrir uma atividade",
+  "esperado": "item Atividades com destaque diferente dos demais",
+  "obtido": "classes diferentes: True",
+  "ok": true
+ },
+ {
+  "id": "NAV-R01",
+  "perfil": "professor",
+  "acao": "abrir uma rota inexistente (/rota-que-nao-existe)",
+  "esperado": "tela amigável de página não encontrada ou volta ao painel",
+  "obtido": "/rota-que-nao-existe; texto: 'Página não encontrada\\nO endereço digitado não existe ou foi '",
+  "ok": true
+ },
+ {
+  "id": "NAV-R02",
+  "perfil": "professor",
+  "acao": "recarregar a página em /relatorios (F5)",
+  "esperado": "continua em /relatorios, logado",
+  "obtido": "/relatorios",
+  "ok": true
+ },
+ {
+  "id": "NAV-R03",
+  "perfil": "professor",
+  "acao": "botão Voltar do navegador de /notas para /turmas",
+  "esperado": "/turmas",
+  "obtido": "/turmas",
+  "ok": true
+ },
+ {
+  "id": "NAV-L01",
+  "perfil": "professor",
+  "acao": "abrir /notas?turma={id} (atalho de outros módulos)",
+  "esperado": "turma já selecionada",
+  "obtido": "select=True",
+  "ok": true
+ },
+ {
+  "id": "NAV-L02",
+  "perfil": "professor",
+  "acao": "link \"Ver notas e frequência da turma\" na atividade",
+  "esperado": "/notas?turma={id}",
+  "obtido": "/notas?turma=…",
+  "ok": true
+ },
+ {
+  "id": "NAV-L03",
+  "perfil": "professor",
+  "acao": "pesquisa global: \"Ver todos os resultados\"",
+  "esperado": "/busca?q=lucas",
+  "obtido": "/busca?q=lucas",
+  "ok": true
+ },
+ {
+  "id": "NAV-S01",
+  "perfil": "professor",
+  "acao": "clicar em Sair",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-S02",
+  "perfil": "professor",
+  "acao": "depois de sair, abrir /dashboard",
+  "esperado": "/login",
+  "obtido": "/login",
+  "ok": true
+ },
+ {
+  "id": "NAV-S11",
+  "perfil": "aluno",
+  "acao": "abrir /aluno",
+  "esperado": "permanece em /aluno, sem erro",
+  "obtido": "/aluno; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S12",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/atividades",
+  "esperado": "permanece em /aluno/atividades, sem erro",
+  "obtido": "/aluno/atividades; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S13",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/atividades/{id}",
+  "esperado": "permanece em /aluno/atividades/{id}, sem erro",
+  "obtido": "/aluno/atividades/{id}; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S14",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/turma",
+  "esperado": "permanece em /aluno/turma, sem erro",
+  "obtido": "/aluno/turma; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S15",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/professores",
+  "esperado": "permanece em /aluno/professores, sem erro",
+  "obtido": "/aluno/professores; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S16",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/notas",
+  "esperado": "permanece em /aluno/notas, sem erro",
+  "obtido": "/aluno/notas; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S17",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/desempenho",
+  "esperado": "permanece em /aluno/desempenho, sem erro",
+  "obtido": "/aluno/desempenho; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S18",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/configuracoes",
+  "esperado": "permanece em /aluno/configuracoes, sem erro",
+  "obtido": "/aluno/configuracoes; tela ok",
+  "ok": true
+ },
+ {
+  "id": "NAV-S31",
+  "perfil": "aluno",
+  "acao": "abrir /dashboard (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S32",
+  "perfil": "aluno",
+  "acao": "abrir /turmas (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S33",
+  "perfil": "aluno",
+  "acao": "abrir /notas (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S34",
+  "perfil": "aluno",
+  "acao": "abrir /relatorios (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S35",
+  "perfil": "aluno",
+  "acao": "abrir /historico (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S36",
+  "perfil": "aluno",
+  "acao": "abrir /busca (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S37",
+  "perfil": "aluno",
+  "acao": "abrir /atividades (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S38",
+  "perfil": "aluno",
+  "acao": "abrir /atividades/{id} (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S39",
+  "perfil": "aluno",
+  "acao": "abrir /gerar-atividade (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S40",
+  "perfil": "aluno",
+  "acao": "abrir /nova-atividade (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S41",
+  "perfil": "aluno",
+  "acao": "abrir /configuracoes (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S42",
+  "perfil": "aluno",
+  "acao": "abrir /materias (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-S43",
+  "perfil": "aluno",
+  "acao": "abrir /materias-topicos (área do professor)",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM01",
+  "perfil": "aluno",
+  "acao": "clicar em \"Início\" no menu lateral",
+  "esperado": "/aluno",
+  "obtido": "/aluno",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM02",
+  "perfil": "aluno",
+  "acao": "clicar em \"Atividades\" no menu lateral",
+  "esperado": "/aluno/atividades",
+  "obtido": "/aluno/atividades",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM03",
+  "perfil": "aluno",
+  "acao": "clicar em \"Minha Turma\" no menu lateral",
+  "esperado": "/aluno/turma",
+  "obtido": "/aluno/turma",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM04",
+  "perfil": "aluno",
+  "acao": "clicar em \"Professores\" no menu lateral",
+  "esperado": "/aluno/professores",
+  "obtido": "/aluno/professores",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM05",
+  "perfil": "aluno",
+  "acao": "clicar em \"Minhas Notas\" no menu lateral",
+  "esperado": "/aluno/notas",
+  "obtido": "/aluno/notas",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM06",
+  "perfil": "aluno",
+  "acao": "clicar em \"Desempenho\" no menu lateral",
+  "esperado": "/aluno/desempenho",
+  "obtido": "/aluno/desempenho",
+  "ok": true
+ },
+ {
+  "id": "NAV-SM07",
+  "perfil": "aluno",
+  "acao": "clicar em \"Configurações\" no menu lateral",
+  "esperado": "/aluno/configuracoes",
+  "obtido": "/aluno/configuracoes",
+  "ok": true
+ },
+ {
+  "id": "NAV-SR01",
+  "perfil": "aluno",
+  "acao": "abrir uma rota inexistente",
+  "esperado": "tela amigável de página não encontrada ou volta ao início",
+  "obtido": "/rota-que-nao-existe; texto: 'Página não encontrada\\nO endereço digitado não existe ou foi '",
+  "ok": true
+ },
+ {
+  "id": "NAV-SS01",
+  "perfil": "aluno",
+  "acao": "abrir /aluno/notas com token inválido",
+  "esperado": "/login (sessão encerrada)",
+  "obtido": "/login",
+  "ok": true
+ }
+]

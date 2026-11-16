@@ -1,0 +1,122 @@
+[
+ {
+  "id": "VAL-UI-01",
+  "tela": "Login",
+  "acao": "clicar em Entrar com e-mail e senha vazios",
+  "esperado": "o navegador bloqueia o envio e pede o campo obrigatório",
+  "obtido": "['Preencha este campo.', 'Preencha este campo.']",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-02",
+  "tela": "Login",
+  "acao": "senha incorreta",
+  "esperado": "banner \"E-mail ou senha inválidos.\"",
+  "obtido": "E-mail ou senha inválidos.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-03",
+  "tela": "Cadastro de aluno",
+  "acao": "e-mail sem arroba",
+  "esperado": "o navegador recusa o formato do e-mail",
+  "obtido": "Inclua um \"@\" no endereço de e-mail. \"email-sem-arroba\" está com um \"@\" faltando.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-04",
+  "tela": "Cadastro de aluno",
+  "acao": "senha e confirmação diferentes",
+  "esperado": "\"As senhas não coincidem\"",
+  "obtido": "As senhas não coincidem",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-05",
+  "tela": "Cadastro de aluno",
+  "acao": "senha com 3 caracteres",
+  "esperado": "recusada (mínimo de 6 caracteres) com mensagem",
+  "obtido": "navegador: 'Aumente este texto para 6 caracteres ou mais. No momento, você está usando 3 caracteres).'; tela: 'As senhas não coincidem'",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-05b",
+  "tela": "Cadastro de aluno",
+  "acao": "nome com 2 letras (validação do servidor)",
+  "esperado": "mensagem compreensível citando o campo Nome",
+  "obtido": "Nome deve ter pelo menos 3 caracteres.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-06",
+  "tela": "Esqueci minha senha",
+  "acao": "código de verificação errado",
+  "esperado": "\"Código inválido ou expirado\"",
+  "obtido": "Código inválido ou expirado",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-07",
+  "tela": "Nova atividade",
+  "acao": "salvar com tudo em branco",
+  "esperado": "aviso pedindo título, matéria, tópico e turma",
+  "obtido": "Preencha título, matéria, tópico e turma. | Preencha título, matéria, tópico e turma.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-08",
+  "tela": "Nova atividade",
+  "acao": "salvar sem enunciado e sem opções",
+  "esperado": "aviso pedindo enunciado, opções e resposta correta",
+  "obtido": "Preencha o enunciado da questão 1. | Preencha título, matéria, tópico e turma. | Preencha o enunciado da questão 1. | Preencha título, matéria, tópico e turma.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-09",
+  "tela": "Lançar nota",
+  "acao": "lançar sem escolher o aluno",
+  "esperado": "aviso pedindo o aluno",
+  "obtido": "Selecione o aluno.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-10",
+  "tela": "Lançar nota",
+  "acao": "nota 11",
+  "esperado": "\"A nota deve ser um número entre 0 e 10.\"",
+  "obtido": "A nota deve ser um número entre 0 e 10. | Selecione o aluno.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-11",
+  "tela": "Lançar nota",
+  "acao": "nota com texto (abc)",
+  "esperado": "aviso de nota inválida",
+  "obtido": "A nota deve ser um número entre 0 e 10. | A nota deve ser um número entre 0 e 10. | Selecione o aluno.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-12",
+  "tela": "Atividade do aluno",
+  "acao": "enviar sem marcar nenhuma resposta",
+  "esperado": "\"Preencha todas as questões antes de enviar.\"",
+  "obtido": "Preencha todas as questões antes de enviar.",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-13",
+  "tela": "Adicionar aluno",
+  "acao": "e-mail que já pertence a outro aluno",
+  "esperado": "aviso de e-mail já cadastrado",
+  "obtido": "Erro ao criar aluno. Email já cadastrado: lucas.carvalho@aluno.local",
+  "ok": true
+ },
+ {
+  "id": "VAL-UI-14",
+  "tela": "Adicionar aluno",
+  "acao": "e-mail em formato inválido",
+  "esperado": "recusado antes do envio ou com aviso",
+  "obtido": "navegador: 'Inclua um \"@\" no endereço de e-mail.\\xa0\"email-invalido\" está com um \"@\" faltando.'; aviso: 'Erro ao criar aluno. Email já cadastrado: lucas.carvalho@aluno.local'",
+  "ok": true
+ }
+]

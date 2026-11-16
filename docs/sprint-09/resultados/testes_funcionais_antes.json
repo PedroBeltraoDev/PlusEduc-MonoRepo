@@ -1,0 +1,922 @@
+[
+ {
+  "id": "AUT-01",
+  "modulo": "Autenticação",
+  "titulo": "Login de professor",
+  "passos": "POST /api/auth/login com e-mail e senha válidos",
+  "esperado": "200, accessToken e refreshToken, papel TEACHER",
+  "obtido": "HTTP 200; role=TEACHER; tokens=sim",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-02",
+  "modulo": "Autenticação",
+  "titulo": "Login de aluno",
+  "passos": "POST /api/auth/login com conta de aluno",
+  "esperado": "200, papel STUDENT e studentId",
+  "obtido": "HTTP 200; role=STUDENT; studentId=sim",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-03",
+  "modulo": "Autenticação",
+  "titulo": "Login com senha errada",
+  "passos": "POST /api/auth/login com senha incorreta",
+  "esperado": "401 \"Invalid email or password\"",
+  "obtido": "HTTP 401 — Invalid email or password",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-04",
+  "modulo": "Autenticação",
+  "titulo": "Login com e-mail inexistente",
+  "passos": "POST /api/auth/login com e-mail que não existe",
+  "esperado": "401, mesma mensagem da senha errada (não revela a conta)",
+  "obtido": "HTTP 401 — Invalid email or password; mensagem igual à da senha errada: True",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-05",
+  "modulo": "Autenticação",
+  "titulo": "Login sem senha (campo obrigatório)",
+  "passos": "POST /api/auth/login só com o e-mail",
+  "esperado": "422 (validação)",
+  "obtido": "HTTP 422 — Erro de validação da requisição",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-06",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro público de aluno",
+  "passos": "POST /api/auth/register/student com dados válidos",
+  "esperado": "200, papel STUDENT, matrícula MAT-2026-NNNN gerada e conta gravada no banco",
+  "obtido": "HTTP 200; role=STUDENT; matrícula=MAT-2026-0080",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-07",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro de aluno com e-mail repetido",
+  "passos": "POST /api/auth/register/student com o e-mail do caso anterior",
+  "esperado": "409",
+  "obtido": "HTTP 409 — Email já cadastrado",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-08",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro de aluno com e-mail em formato inválido",
+  "passos": "POST /api/auth/register/student com e-mail \"isto-nao-e-email\"",
+  "esperado": "422 (e-mail inválido)",
+  "obtido": "HTTP 200",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "AUT-09",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro de aluno com senha curta",
+  "passos": "POST /api/auth/register/student com senha de 3 caracteres",
+  "esperado": "422",
+  "obtido": "HTTP 422 — Erro de validação da requisição",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-10",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro público de professor",
+  "passos": "POST /api/auth/register/teacher com dados válidos",
+  "esperado": "200, papel TEACHER e registros em users e teachers",
+  "obtido": "HTTP 200; role=TEACHER",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-11",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro de professor com e-mail repetido",
+  "passos": "POST /api/auth/register/teacher repetindo o e-mail",
+  "esperado": "409",
+  "obtido": "HTTP 409 — Email já cadastrado",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-12",
+  "modulo": "Autenticação",
+  "titulo": "Cadastro de professor com e-mail em formato inválido",
+  "passos": "POST /api/auth/register/teacher com e-mail \"@@@\"",
+  "esperado": "422",
+  "obtido": "HTTP 200",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "AUT-13",
+  "modulo": "Autenticação",
+  "titulo": "Edição do próprio perfil",
+  "passos": "PUT /api/auth/profile alterando o nome do aluno recém-cadastrado",
+  "esperado": "200 e nome atualizado",
+  "obtido": "HTTP 200; nome=Aluno Nome Editado",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-14",
+  "modulo": "Autenticação",
+  "titulo": "Perfil com e-mail já usado por outra conta",
+  "passos": "PUT /api/auth/profile trocando para o e-mail de outro usuário",
+  "esperado": "409",
+  "obtido": "HTTP 409 — Email already in use",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-15",
+  "modulo": "Autenticação",
+  "titulo": "Recuperação de senha: pedido",
+  "passos": "POST /api/auth/forgot-password com e-mail existente",
+  "esperado": "200, mensagem genérica e nenhum código na resposta",
+  "obtido": "HTTP 200; demoCode=None",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-16",
+  "modulo": "Autenticação",
+  "titulo": "Recuperação de senha: código inválido",
+  "passos": "POST /api/auth/reset-password com código errado",
+  "esperado": "400 \"Código inválido ou expirado\" e senha antiga continua valendo",
+  "obtido": "HTTP 400 — Código inválido ou expirado; senha antiga ainda funciona: True",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "AUT-17",
+  "modulo": "Autenticação",
+  "titulo": "Recuperação de senha: código correto troca a senha",
+  "passos": "Com o código gerado, POST /api/auth/reset-password e novo login",
+  "esperado": "200; login com a senha nova funciona e com a antiga não",
+  "obtido": "HTTP 200; login senha nova: True; login senha antiga: False",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "AUT-18",
+  "modulo": "Autenticação",
+  "titulo": "Rota protegida sem token e com token inválido",
+  "passos": "GET /api/students sem token e com \"abc\"",
+  "esperado": "401 nos dois casos",
+  "obtido": "sem token: 401; token inválido: 401",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-01",
+  "modulo": "Turmas",
+  "titulo": "Criar turma válida",
+  "passos": "POST /api/classrooms (nome, ano, série, professora)",
+  "esperado": "201 e turma gravada no banco",
+  "obtido": "HTTP 201; id gravado: True",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-02",
+  "modulo": "Turmas",
+  "titulo": "Criar turma com nome e ano repetidos",
+  "passos": "POST /api/classrooms repetindo nome e ano",
+  "esperado": "409 \"Já existe uma turma com este nome e ano\"",
+  "obtido": "HTTP 409 — Já existe uma turma com este nome e ano",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "TUR-03",
+  "modulo": "Turmas",
+  "titulo": "Criar turma com nome curto",
+  "passos": "POST /api/classrooms com nome \"AB\"",
+  "esperado": "422",
+  "obtido": "HTTP 422 — Erro de validação da requisição",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "TUR-04",
+  "modulo": "Turmas",
+  "titulo": "Criar turma com ano fora do intervalo",
+  "passos": "POST /api/classrooms com ano 1900",
+  "esperado": "400 \"Ano da turma fora do intervalo permitido\"",
+  "obtido": "HTTP 400 — Ano da turma fora do intervalo permitido",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "TUR-05",
+  "modulo": "Turmas",
+  "titulo": "Criar turma com professor inexistente",
+  "passos": "POST /api/classrooms com teacherId inexistente",
+  "esperado": "400 ou 404 (professor não encontrado)",
+  "obtido": "HTTP 201",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "TUR-06",
+  "modulo": "Turmas",
+  "titulo": "Consultar turma por id",
+  "passos": "GET /api/classrooms/{id} da turma criada e de um id inexistente",
+  "esperado": "200 com o nome certo; 404 para id inexistente",
+  "obtido": "existente: 200; inexistente: 404",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-07",
+  "modulo": "Turmas",
+  "titulo": "Editar turma",
+  "passos": "PUT /api/classrooms/{id} trocando o nome",
+  "esperado": "200 e nome novo na consulta seguinte",
+  "obtido": "HTTP 200; nome=Turma Teste S9 Editada 49d719",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-08",
+  "modulo": "Turmas",
+  "titulo": "Listagem e paginação de turmas",
+  "passos": "GET /api/classrooms e /api/classrooms/paginated?size=5",
+  "esperado": "200; página com no máximo 5 itens e totais coerentes",
+  "obtido": "lista=18 turmas; página: 5 itens de 18 (totalPages=4)",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-09",
+  "modulo": "Turmas",
+  "titulo": "Paginação com parâmetros inválidos",
+  "passos": "GET /api/classrooms/paginated?size=0 e size=1000",
+  "esperado": "422",
+  "obtido": "size=0: 422; size=1000: 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "TUR-10",
+  "modulo": "Turmas",
+  "titulo": "Matricular aluno",
+  "passos": "POST /api/classrooms/{id}/enroll/{aluno} com um aluno sem turma",
+  "esperado": "204; aluno aparece na turma e recebe class_id",
+  "obtido": "HTTP 204; na turma: True",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-11",
+  "modulo": "Turmas",
+  "titulo": "Matricular em segunda turma retira da primeira (RN28)",
+  "passos": "Matricular o mesmo aluno em outra turma",
+  "esperado": "O aluno sai da turma anterior",
+  "obtido": "HTTP 204; na turma 1: False; na turma 2: True",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-12",
+  "modulo": "Turmas",
+  "titulo": "Excluir turma com alunos matriculados",
+  "passos": "DELETE /api/classrooms/{id} da turma com aluno",
+  "esperado": "400 \"Não é possível excluir turma com alunos matriculados\"",
+  "obtido": "HTTP 400 — Não é possível excluir turma com alunos matriculados",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "TUR-13",
+  "modulo": "Turmas",
+  "titulo": "Desmatricular aluno",
+  "passos": "DELETE /api/classrooms/{id}/unenroll/{aluno}",
+  "esperado": "204 e aluno sem turma",
+  "obtido": "HTTP 204; ainda na turma: False",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-14",
+  "modulo": "Turmas",
+  "titulo": "Excluir turma vazia e id inexistente",
+  "passos": "DELETE /api/classrooms/{id} da turma vazia; DELETE de id inexistente",
+  "esperado": "204 e a turma sai da lista de ativas (exclusão lógica); 404",
+  "obtido": "vazia: 204; inexistente: 404; ainda na lista de turmas ativas: False",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "TUR-15",
+  "modulo": "Turmas",
+  "titulo": "Limite de 5 turmas ativas por professor",
+  "passos": "Criar turmas para a mesma professora até passar de 5",
+  "esperado": "A criação que passa do limite é recusada com 400 \"Limite máximo de 5 turmas ativas por professor\"",
+  "obtido": "respostas em sequência: [201, 201, 201, 201, 201, 400, 400]",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ALU-01",
+  "modulo": "Alunos",
+  "titulo": "Criar aluno válido",
+  "passos": "POST /api/students (nome, e-mail, nascimento)",
+  "esperado": "201 com matrícula gerada",
+  "obtido": "HTTP 201; matrícula=MAT-2026-0083",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ALU-02",
+  "modulo": "Alunos",
+  "titulo": "Criar aluno com e-mail repetido",
+  "passos": "POST /api/students repetindo o e-mail",
+  "esperado": "409",
+  "obtido": "HTTP 409 — Email já cadastrado: aluno.crud.49d719@aluno.local",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ALU-03",
+  "modulo": "Alunos",
+  "titulo": "Criar aluno com e-mail em formato inválido",
+  "passos": "POST /api/students com e-mail \"sem-arroba\"",
+  "esperado": "422",
+  "obtido": "HTTP 201",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "ALU-04",
+  "modulo": "Alunos",
+  "titulo": "Criar aluno sem nome / nome curto",
+  "passos": "POST /api/students com nome \"Al\" e sem nome",
+  "esperado": "422 nos dois",
+  "obtido": "nome curto: 422; sem nome: 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ALU-05",
+  "modulo": "Alunos",
+  "titulo": "Criar aluno em turma inexistente",
+  "passos": "POST /api/students com classId inexistente",
+  "esperado": "400 \"Turma não encontrada\"",
+  "obtido": "HTTP 400 — Turma não encontrada",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ALU-06",
+  "modulo": "Alunos",
+  "titulo": "Consultar e listar alunos",
+  "passos": "GET /api/students/{id}; GET /api/students/paginated?size=3; id inexistente",
+  "esperado": "200 com o aluno; página de até 3; 404 para inexistente",
+  "obtido": "consulta: 200; página: 3 itens de 84; inexistente: 404",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ALU-07",
+  "modulo": "Alunos",
+  "titulo": "Editar aluno",
+  "passos": "PUT /api/students/{id} alterando nome",
+  "esperado": "200 e nome atualizado",
+  "obtido": "HTTP 200; nome=Aluno Crud Editado",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ALU-08",
+  "modulo": "Alunos",
+  "titulo": "Editar aluno para e-mail já usado",
+  "passos": "PUT /api/students/{id} com o e-mail de outro aluno",
+  "esperado": "409",
+  "obtido": "HTTP 409 — Email já cadastrado: lucas.carvalho@aluno.local",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ALU-09",
+  "modulo": "Alunos",
+  "titulo": "Liberar acesso ao portal",
+  "passos": "POST /api/students/{id}/enable-access com senha válida e depois login do aluno",
+  "esperado": "204 e login do aluno funciona",
+  "obtido": "HTTP 204; login: 200",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ALU-10",
+  "modulo": "Alunos",
+  "titulo": "Liberar acesso com senha curta",
+  "passos": "POST /api/students/{id}/enable-access com senha \"123\"",
+  "esperado": "422",
+  "obtido": "HTTP 422 — Erro de validação da requisição",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ALU-11",
+  "modulo": "Alunos",
+  "titulo": "Excluir aluno (exclusão lógica)",
+  "passos": "DELETE /api/students/{id}; depois listar alunos ativos",
+  "esperado": "204 e aluno some da lista; id inexistente: 404",
+  "obtido": "HTTP 204; ainda listado: False; inexistente: 404",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ALU-12",
+  "modulo": "Alunos",
+  "titulo": "Aluno excluído não consegue entrar",
+  "passos": "Login do aluno que foi excluído/desativado",
+  "esperado": "401",
+  "obtido": "HTTP 200",
+  "ok": false,
+  "validacao": false
+ },
+ {
+  "id": "ALU-14",
+  "modulo": "Alunos",
+  "titulo": "Excluir aluno matriculado libera a turma",
+  "passos": "Criar aluno, matricular em turma nova, excluir o aluno e depois excluir a turma",
+  "esperado": "Turma deixa de listar o aluno e a turma pode ser excluída (204)",
+  "obtido": "exclusão do aluno 204; aluno ainda na lista da turma: True; exclusão da turma 400",
+  "ok": false,
+  "validacao": false
+ },
+ {
+  "id": "ALU-13",
+  "modulo": "Alunos",
+  "titulo": "Alunos sem turma",
+  "passos": "GET /api/students/unassigned",
+  "esperado": "200 e todos os itens sem classId",
+  "obtido": "HTTP 200; 5 alunos; todos sem turma: True",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "PRO-01",
+  "modulo": "Professores",
+  "titulo": "Criar professor válido",
+  "passos": "POST /api/teachers com senha",
+  "esperado": "201; resposta sem password; senha gravada com bcrypt; o professor criado consegue entrar",
+  "obtido": "HTTP 201; password na resposta: False; no banco: TEXTO PURO; login do professor criado: 401",
+  "ok": false,
+  "validacao": false
+ },
+ {
+  "id": "PRO-02",
+  "modulo": "Professores",
+  "titulo": "Criar professor com e-mail repetido",
+  "passos": "POST /api/teachers repetindo o e-mail",
+  "esperado": "409",
+  "obtido": "HTTP 409 — Email já cadastrado: prof.crud.49d719@professor.local",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "PRO-03",
+  "modulo": "Professores",
+  "titulo": "Criar professor com e-mail em formato inválido",
+  "passos": "POST /api/teachers com e-mail \"professor\"",
+  "esperado": "422",
+  "obtido": "HTTP 201",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "PRO-04",
+  "modulo": "Professores",
+  "titulo": "Criar professor sem senha",
+  "passos": "POST /api/teachers sem o campo password",
+  "esperado": "422 (professor sem senha não consegue entrar)",
+  "obtido": "HTTP 201",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "PRO-05",
+  "modulo": "Professores",
+  "titulo": "Consultar, editar e excluir professor",
+  "passos": "GET, PUT e DELETE /api/teachers/{id}",
+  "esperado": "200; 200 com nome novo; 204; professor sai da lista e o login é recusado (401)",
+  "obtido": "consulta 200; edição 200 (Professor Crud Editado); exclusão 204; ainda na lista: False; login do excluído 401",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "MAT-01",
+  "modulo": "Matérias e tópicos",
+  "titulo": "Criar matéria e recusar nome curto",
+  "passos": "POST /api/subjects válida e com nome de 1 letra",
+  "esperado": "201; 422",
+  "obtido": "válida: 201; nome curto: 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "MAT-02",
+  "modulo": "Matérias e tópicos",
+  "titulo": "Matéria repetida",
+  "passos": "POST /api/subjects com o mesmo nome",
+  "esperado": "201 reativando a mesma matéria ou 409, sem duplicar",
+  "obtido": "HTTP 201; documentos com o nome: 1 para 1",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "MAT-03",
+  "modulo": "Matérias e tópicos",
+  "titulo": "Desativar e excluir matéria",
+  "passos": "PATCH active=false e DELETE /api/subjects/{id}",
+  "esperado": "200 e 204; id inexistente 404",
+  "obtido": "PATCH 200; DELETE 204; inexistente 404",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "MAT-04",
+  "modulo": "Matérias e tópicos",
+  "titulo": "Tópicos de matéria: criar, editar, excluir",
+  "passos": "POST/PUT/DELETE /api/subject-topics",
+  "esperado": "201; 200; 204; tópico curto recusado (422)",
+  "obtido": "criar 201; inválido 422; editar 200; excluir 204",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ATI-01",
+  "modulo": "Atividades",
+  "titulo": "Criar atividade válida",
+  "passos": "POST /api/activities (2 questões objetivas) para a turma do Lucas",
+  "esperado": "201 e atividade gravada",
+  "obtido": "HTTP 201; no banco: True",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ATI-02",
+  "modulo": "Atividades",
+  "titulo": "Atividade com título curto e sem turma",
+  "passos": "POST /api/activities com título \"Abc\" e sem classroomId",
+  "esperado": "422 nos dois",
+  "obtido": "título curto: 422; sem turma: 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ATI-03",
+  "modulo": "Atividades",
+  "titulo": "Atividade para turma inexistente",
+  "passos": "POST /api/activities com classroomId inexistente",
+  "esperado": "400 ou 404",
+  "obtido": "HTTP 400 — Turma não encontrada: 000000000000000000000000",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "ATI-04",
+  "modulo": "Atividades",
+  "titulo": "Atividade para aluno que não é da turma (RN10)",
+  "passos": "POST /api/activities com studentId de aluno de outra turma",
+  "esperado": "400",
+  "obtido": "HTTP 201",
+  "ok": false,
+  "validacao": true
+ },
+ {
+  "id": "ATI-05",
+  "modulo": "Atividades",
+  "titulo": "Consultar, editar e excluir atividade",
+  "passos": "GET, PUT (novo título) e DELETE /api/activities/{id}",
+  "esperado": "200; 200; 204; depois 404",
+  "obtido": "consulta 200; edição 200 (Atividade Teste S9 Editada 49d719)",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ATI-06",
+  "modulo": "Atividades",
+  "titulo": "Gerar atividade com IA (alternativa determinística sem chave)",
+  "passos": "POST /api/activities/generate sem chave do Gemini configurada",
+  "esperado": "201/200 com questões geradas e indicação de que não veio do provedor externo",
+  "obtido": "HTTP 201; questões: 3; generatedByAI=None",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ATI-07",
+  "modulo": "Atividades",
+  "titulo": "Exportar atividade em PDF",
+  "passos": "GET /api/activities/{id}/export-pdf",
+  "esperado": "200, application/pdf, arquivo começa com %PDF",
+  "obtido": "HTTP 200; tipo=application/pdf; início=b'%PDF-'; 76418 bytes",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "ATI-08",
+  "modulo": "Atividades",
+  "titulo": "Atividade inexistente",
+  "passos": "GET e DELETE de id inexistente",
+  "esperado": "404",
+  "obtido": "GET 404; DELETE 404",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "SUB-01",
+  "modulo": "Submissões",
+  "titulo": "Aluno vê a atividade sem gabarito",
+  "passos": "GET /api/student-portal/activities/{id} como Lucas",
+  "esperado": "200, questões sem correctAnswer",
+  "obtido": "HTTP 200; correctAnswer presente: False",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "SUB-02",
+  "modulo": "Submissões",
+  "titulo": "Enviar respostas incompletas",
+  "passos": "POST .../submissions com 1 de 2 respostas",
+  "esperado": "400 \"Responda todas as questões antes de enviar\" e nada gravado",
+  "obtido": "HTTP 400 — Responda todas as questões antes de enviar; submissões no banco: 0",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "SUB-03",
+  "modulo": "Submissões",
+  "titulo": "Enviar respostas válidas (correção automática)",
+  "passos": "POST .../submissions com as 2 respostas (1 certa, 1 errada)",
+  "esperado": "200, 1/2 acertos (50%) e submissão gravada",
+  "obtido": "HTTP 200; acertos 1/2 (50%); submissões no banco: 1",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "SUB-04",
+  "modulo": "Submissões",
+  "titulo": "Reenvio da mesma atividade",
+  "passos": "Repetir o POST .../submissions",
+  "esperado": "409 \"Esta atividade já foi enviada\"",
+  "obtido": "HTTP 409 — Esta atividade já foi enviada",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "SUB-05",
+  "modulo": "Submissões",
+  "titulo": "Aluno consulta o próprio resultado",
+  "passos": "GET .../submissions como Lucas",
+  "esperado": "200 com o mesmo resultado (1/2)",
+  "obtido": "HTTP 200; acertos=1",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "SUB-06",
+  "modulo": "Submissões",
+  "titulo": "Professor vê as respostas individuais",
+  "passos": "GET /api/activities/{id}/submissions",
+  "esperado": "200 com 1 aluno e 1/2 acertos",
+  "obtido": "HTTP 200; 1 submissão(ões)",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "SUB-07",
+  "modulo": "Submissões",
+  "titulo": "Questão discursiva: fica pendente e o professor corrige",
+  "passos": "Criar atividade discursiva, aluno envia texto, professor corrige em /api/teacher/activity-corrections",
+  "esperado": "Pendente aparece na lista; correção 200; some da lista de pendentes",
+  "obtido": "envio 200; pendências antes: 1; correção: 200; pendências depois: 0",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "SUB-08",
+  "modulo": "Submissões",
+  "titulo": "Excluir atividade com submissões",
+  "passos": "DELETE /api/activities/{id} da atividade já respondida",
+  "esperado": "204 (e a atividade some) ou recusa explícita",
+  "obtido": "DELETE 204; consulta depois 404; submissões órfãs no banco: 1",
+  "ok": false,
+  "validacao": false
+ },
+ {
+  "id": "NOT-01",
+  "modulo": "Notas e frequência",
+  "titulo": "Lançar nota válida",
+  "passos": "POST /api/grades (7,5, presente) para Lucas",
+  "esperado": "201 e nota gravada",
+  "obtido": "HTTP 201; nota=7.5",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "NOT-02",
+  "modulo": "Notas e frequência",
+  "titulo": "Nota fora da faixa 0 a 10",
+  "passos": "POST /api/grades com 11, -1 e texto",
+  "esperado": "422 nos três",
+  "obtido": "11: 422; -1: 422; \"abc\": 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "NOT-03",
+  "modulo": "Notas e frequência",
+  "titulo": "Nota sem aluno, sem turma ou sem data",
+  "passos": "POST /api/grades omitindo campos obrigatórios",
+  "esperado": "422 em cada omissão",
+  "obtido": "sem aluno/turma/data: [422, 422, 422]",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "NOT-04",
+  "modulo": "Notas e frequência",
+  "titulo": "Nota para aluno que não é da turma (RN26)",
+  "passos": "POST /api/grades com aluno de outra turma",
+  "esperado": "400 \"O aluno não está matriculado na turma informada\"",
+  "obtido": "HTTP 400 — O aluno não está matriculado na turma informada",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "NOT-05",
+  "modulo": "Notas e frequência",
+  "titulo": "Nota com data futura e observação longa",
+  "passos": "POST /api/grades com data em 2030 e observação de 600 caracteres",
+  "esperado": "422 nos dois",
+  "obtido": "data futura: 422; observação longa: 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "NOT-06",
+  "modulo": "Notas e frequência",
+  "titulo": "Editar nota e recalcular média",
+  "passos": "PUT /api/grades/{id} para 9,0 e GET média do aluno",
+  "esperado": "200; média e resumo da turma refletem a mudança",
+  "obtido": "PUT 200; média antes 7.00 depois 7.50",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "NOT-07",
+  "modulo": "Notas e frequência",
+  "titulo": "Frequência calculada só com presença registrada",
+  "passos": "Lançar falta e nota sem presença; GET /api/students/{id}/attendance",
+  "esperado": "Total de aulas = lançamentos com presença registrada",
+  "obtido": "aulas 2 para 3; faltas 0 para 1",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "NOT-08",
+  "modulo": "Notas e frequência",
+  "titulo": "Lançar notas de uma atividade (idempotente)",
+  "passos": "POST /api/grades/from-activity/{id} duas vezes",
+  "esperado": "1ª cria a nota; 2ª não duplica",
+  "obtido": "1ª 200; 2ª 200; notas no banco: 1",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "NOT-09",
+  "modulo": "Notas e frequência",
+  "titulo": "Resumo da turma e consistência com o portal",
+  "passos": "GET /api/grades/classroom/{id}/summary e GET /api/student-portal/performance",
+  "esperado": "Mesma média e frequência para o aluno nos dois lados",
+  "obtido": "professor: média 7.92, freq 66%; aluno: média 7.92, freq 66%",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "NOT-10",
+  "modulo": "Notas e frequência",
+  "titulo": "Excluir nota e id inexistente",
+  "passos": "DELETE /api/grades/{id}; DELETE de id inexistente",
+  "esperado": "204; 404",
+  "obtido": "DELETE 204; inexistente 404; consulta depois 404",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "REL-01",
+  "modulo": "Dashboard e relatórios",
+  "titulo": "Indicadores do dashboard batem com o banco",
+  "passos": "GET /api/dashboard/overview e contagem direta no MongoDB",
+  "esperado": "Alunos ativos, atividades e lançamentos iguais ao banco",
+  "obtido": "dashboard (83, 42, None); banco (83, 42, 237)",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "REL-02",
+  "modulo": "Dashboard e relatórios",
+  "titulo": "Filtros inválidos",
+  "passos": "GET /api/dashboard/overview?from=2026-12-01&to=2026-01-01 e com classroomId inexistente",
+  "esperado": "422 e 404",
+  "obtido": "período invertido: 422; turma inexistente: 404",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "REL-03",
+  "modulo": "Dashboard e relatórios",
+  "titulo": "Os cinco relatórios abrem",
+  "passos": "GET /api/reports e cada /api/reports/{tipo}",
+  "esperado": "200 em todos, com linhas e resumo",
+  "obtido": "5 relatórios: {'boletim': 200, 'desempenho-disciplina': 200, 'alunos-atencao': 200, 'entregas-atividades': 200, 'historico-operacoes': 200}",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "REL-04",
+  "modulo": "Dashboard e relatórios",
+  "titulo": "Exportar relatório em CSV, Excel e PDF",
+  "passos": "GET /api/reports/boletim/export?format=csv|xlsx|pdf",
+  "esperado": "200 com o tipo e o conteúdo de cada formato",
+  "obtido": "csv: HTTP 200, 7232 bytes; xlsx: HTTP 200, 8824 bytes; pdf: HTTP 200, 11794 bytes",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "REL-05",
+  "modulo": "Dashboard e relatórios",
+  "titulo": "Exportação inválida",
+  "passos": "format=doc e relatório inexistente",
+  "esperado": "422 e 404",
+  "obtido": "formato inválido: 422; relatório inexistente: 404",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "REL-06",
+  "modulo": "Pesquisa",
+  "titulo": "Pesquisa global",
+  "passos": "GET /api/search?q=lucas, q=fracoes (sem acento) e q=a (1 caractere)",
+  "esperado": "Resultados; atividade com acento encontrada sem acento; 422 para 1 caractere",
+  "obtido": "\"lucas\": 3 resultado(s); \"fracoes\": 2; 1 caractere: 422",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "HIS-01",
+  "modulo": "Histórico",
+  "titulo": "Operações ficam registradas",
+  "passos": "Criar e excluir uma turma e consultar /api/audit-logs",
+  "esperado": "Criação e exclusão aparecem com autor e resultado",
+  "obtido": "20 registros; criada: True; excluída: True",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "HIS-02",
+  "modulo": "Histórico",
+  "titulo": "Histórico recusa leitura por aluno e filtros inválidos",
+  "passos": "GET /api/audit-logs como aluno; size=500",
+  "esperado": "403; 422",
+  "obtido": "aluno: 403; size=500: 422",
+  "ok": true,
+  "validacao": true
+ },
+ {
+  "id": "POR-01",
+  "modulo": "Portal do aluno",
+  "titulo": "Telas do portal respondem",
+  "passos": "GET /api/student-portal/{me,classroom,classmates,teachers,activities,grades,performance} como Lucas",
+  "esperado": "200 em todas",
+  "obtido": "{'me': 200, 'classroom': 200, 'classmates': 200, 'teachers': 200, 'activities': 200, 'grades': 200, 'performance': 200}",
+  "ok": true,
+  "validacao": false
+ },
+ {
+  "id": "POR-02",
+  "modulo": "Portal do aluno",
+  "titulo": "Portal não expõe dados sensíveis dos colegas",
+  "passos": "GET /api/student-portal/classmates",
+  "esperado": "Só nome (sem e-mail, senha ou notas)",
+  "obtido": "6 colegas; campos: ['email', 'id', 'name']",
+  "ok": false,
+  "validacao": false
+ }
+]

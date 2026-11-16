@@ -32,7 +32,6 @@ class Classmate(BaseModel):
 
     id: str
     name: str
-    email: str
 
 
 class TeacherSummary(BaseModel):

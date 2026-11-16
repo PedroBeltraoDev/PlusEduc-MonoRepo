@@ -1,0 +1,93 @@
+OK    AUT-01 Login de professor -> HTTP 200; role=TEACHER; tokens=sim
+OK    AUT-02 Login de aluno -> HTTP 200; role=STUDENT; studentId=sim
+OK    AUT-03 Login com senha errada -> HTTP 401 — Invalid email or password
+OK    AUT-04 Login com e-mail inexistente -> HTTP 401 — Invalid email or password; mensagem igual à da senha errada: True
+OK    AUT-05 Login sem senha (campo obrigatório) -> HTTP 422 — Erro de validação da requisição
+OK    AUT-06 Cadastro público de aluno -> HTTP 200; role=STUDENT; matrícula=MAT-2026-0080
+OK    AUT-07 Cadastro de aluno com e-mail repetido -> HTTP 409 — Email já cadastrado
+FALHA AUT-08 Cadastro de aluno com e-mail em formato inválido -> HTTP 200
+OK    AUT-09 Cadastro de aluno com senha curta -> HTTP 422 — Erro de validação da requisição
+OK    AUT-10 Cadastro público de professor -> HTTP 200; role=TEACHER
+OK    AUT-11 Cadastro de professor com e-mail repetido -> HTTP 409 — Email já cadastrado
+FALHA AUT-12 Cadastro de professor com e-mail em formato inválido -> HTTP 200
+OK    AUT-13 Edição do próprio perfil -> HTTP 200; nome=Aluno Nome Editado
+OK    AUT-14 Perfil com e-mail já usado por outra conta -> HTTP 409 — Email already in use
+OK    AUT-15 Recuperação de senha: pedido -> HTTP 200; demoCode=None
+OK    AUT-16 Recuperação de senha: código inválido -> HTTP 400 — Código inválido ou expirado; senha antiga ainda funciona: True
+OK    AUT-17 Recuperação de senha: código correto troca a senha -> HTTP 200; login senha nova: True; login senha antiga: False
+OK    AUT-18 Rota protegida sem token e com token inválido -> sem token: 401; token inválido: 401
+OK    TUR-01 Criar turma válida -> HTTP 201; id gravado: True
+OK    TUR-02 Criar turma com nome e ano repetidos -> HTTP 409 — Já existe uma turma com este nome e ano
+OK    TUR-03 Criar turma com nome curto -> HTTP 422 — Erro de validação da requisição
+OK    TUR-04 Criar turma com ano fora do intervalo -> HTTP 400 — Ano da turma fora do intervalo permitido
+FALHA TUR-05 Criar turma com professor inexistente -> HTTP 201
+OK    TUR-06 Consultar turma por id -> existente: 200; inexistente: 404
+OK    TUR-07 Editar turma -> HTTP 200; nome=Turma Teste S9 Editada 49d719
+OK    TUR-08 Listagem e paginação de turmas -> lista=18 turmas; página: 5 itens de 18 (totalPages=4)
+OK    TUR-09 Paginação com parâmetros inválidos -> size=0: 422; size=1000: 422
+OK    TUR-10 Matricular aluno -> HTTP 204; na turma: True
+OK    TUR-11 Matricular em segunda turma retira da primeira (RN28) -> HTTP 204; na turma 1: False; na turma 2: True
+OK    TUR-12 Excluir turma com alunos matriculados -> HTTP 400 — Não é possível excluir turma com alunos matriculados
+OK    TUR-13 Desmatricular aluno -> HTTP 204; ainda na turma: False
+OK    TUR-14 Excluir turma vazia e id inexistente -> vazia: 204; inexistente: 404; ainda na lista de turmas ativas: False
+OK    TUR-15 Limite de 5 turmas ativas por professor -> respostas em sequência: [201, 201, 201, 201, 201, 400, 400]
+OK    ALU-01 Criar aluno válido -> HTTP 201; matrícula=MAT-2026-0083
+OK    ALU-02 Criar aluno com e-mail repetido -> HTTP 409 — Email já cadastrado: aluno.crud.49d719@aluno.local
+FALHA ALU-03 Criar aluno com e-mail em formato inválido -> HTTP 201
+OK    ALU-04 Criar aluno sem nome / nome curto -> nome curto: 422; sem nome: 422
+OK    ALU-05 Criar aluno em turma inexistente -> HTTP 400 — Turma não encontrada
+OK    ALU-06 Consultar e listar alunos -> consulta: 200; página: 3 itens de 84; inexistente: 404
+OK    ALU-07 Editar aluno -> HTTP 200; nome=Aluno Crud Editado
+OK    ALU-08 Editar aluno para e-mail já usado -> HTTP 409 — Email já cadastrado: lucas.carvalho@aluno.local
+OK    ALU-09 Liberar acesso ao portal -> HTTP 204; login: 200
+OK    ALU-10 Liberar acesso com senha curta -> HTTP 422 — Erro de validação da requisição
+OK    ALU-11 Excluir aluno (exclusão lógica) -> HTTP 204; ainda listado: False; inexistente: 404
+FALHA ALU-12 Aluno excluído não consegue entrar -> HTTP 200
+FALHA ALU-14 Excluir aluno matriculado libera a turma -> exclusão do aluno 204; aluno ainda na lista da turma: True; exclusão da turma 400
+OK    ALU-13 Alunos sem turma -> HTTP 200; 5 alunos; todos sem turma: True
+FALHA PRO-01 Criar professor válido -> HTTP 201; password na resposta: False; no banco: TEXTO PURO; login do professor criado: 401
+OK    PRO-02 Criar professor com e-mail repetido -> HTTP 409 — Email já cadastrado: prof.crud.49d719@professor.local
+FALHA PRO-03 Criar professor com e-mail em formato inválido -> HTTP 201
+FALHA PRO-04 Criar professor sem senha -> HTTP 201
+OK    PRO-05 Consultar, editar e excluir professor -> consulta 200; edição 200 (Professor Crud Editado); exclusão 204; ainda na lista: False; login do excluído 401
+OK    MAT-01 Criar matéria e recusar nome curto -> válida: 201; nome curto: 422
+OK    MAT-02 Matéria repetida -> HTTP 201; documentos com o nome: 1 para 1
+OK    MAT-03 Desativar e excluir matéria -> PATCH 200; DELETE 204; inexistente 404
+OK    MAT-04 Tópicos de matéria: criar, editar, excluir -> criar 201; inválido 422; editar 200; excluir 204
+OK    ATI-01 Criar atividade válida -> HTTP 201; no banco: True
+OK    ATI-02 Atividade com título curto e sem turma -> título curto: 422; sem turma: 422
+OK    ATI-03 Atividade para turma inexistente -> HTTP 400 — Turma não encontrada: 000000000000000000000000
+FALHA ATI-04 Atividade para aluno que não é da turma (RN10) -> HTTP 201
+OK    ATI-05 Consultar, editar e excluir atividade -> consulta 200; edição 200 (Atividade Teste S9 Editada 49d719)
+OK    ATI-06 Gerar atividade com IA (alternativa determinística sem chave) -> HTTP 201; questões: 3; generatedByAI=None
+OK    ATI-07 Exportar atividade em PDF -> HTTP 200; tipo=application/pdf; início=b'%PDF-'; 76418 bytes
+OK    ATI-08 Atividade inexistente -> GET 404; DELETE 404
+OK    SUB-01 Aluno vê a atividade sem gabarito -> HTTP 200; correctAnswer presente: False
+OK    SUB-02 Enviar respostas incompletas -> HTTP 400 — Responda todas as questões antes de enviar; submissões no banco: 0
+OK    SUB-03 Enviar respostas válidas (correção automática) -> HTTP 200; acertos 1/2 (50%); submissões no banco: 1
+OK    SUB-04 Reenvio da mesma atividade -> HTTP 409 — Esta atividade já foi enviada
+OK    SUB-05 Aluno consulta o próprio resultado -> HTTP 200; acertos=1
+OK    SUB-06 Professor vê as respostas individuais -> HTTP 200; 1 submissão(ões)
+OK    SUB-07 Questão discursiva: fica pendente e o professor corrige -> envio 200; pendências antes: 1; correção: 200; pendências depois: 0
+FALHA SUB-08 Excluir atividade com submissões -> DELETE 204; consulta depois 404; submissões órfãs no banco: 1
+OK    NOT-01 Lançar nota válida -> HTTP 201; nota=7.5
+OK    NOT-02 Nota fora da faixa 0 a 10 -> 11: 422; -1: 422; "abc": 422
+OK    NOT-03 Nota sem aluno, sem turma ou sem data -> sem aluno/turma/data: [422, 422, 422]
+OK    NOT-04 Nota para aluno que não é da turma (RN26) -> HTTP 400 — O aluno não está matriculado na turma informada
+OK    NOT-05 Nota com data futura e observação longa -> data futura: 422; observação longa: 422
+OK    NOT-06 Editar nota e recalcular média -> PUT 200; média antes 7.00 depois 7.50
+OK    NOT-07 Frequência calculada só com presença registrada -> aulas 2 para 3; faltas 0 para 1
+OK    NOT-08 Lançar notas de uma atividade (idempotente) -> 1ª 200; 2ª 200; notas no banco: 1
+OK    NOT-09 Resumo da turma e consistência com o portal -> professor: média 7.92, freq 66%; aluno: média 7.92, freq 66%
+OK    NOT-10 Excluir nota e id inexistente -> DELETE 204; inexistente 404; consulta depois 404
+OK    REL-01 Indicadores do dashboard batem com o banco -> dashboard (83, 42, None); banco (83, 42, 237)
+OK    REL-02 Filtros inválidos -> período invertido: 422; turma inexistente: 404
+OK    REL-03 Os cinco relatórios abrem -> 5 relatórios: {'boletim': 200, 'desempenho-disciplina': 200, 'alunos-atencao': 200, 'entregas-atividades': 200, 'historico-operacoes': 200}
+OK    REL-04 Exportar relatório em CSV, Excel e PDF -> csv: HTTP 200, 7232 bytes; xlsx: HTTP 200, 8824 bytes; pdf: HTTP 200, 11794 bytes
+OK    REL-05 Exportação inválida -> formato inválido: 422; relatório inexistente: 404
+OK    REL-06 Pesquisa global -> "lucas": 3 resultado(s); "fracoes": 2; 1 caractere: 422
+OK    HIS-01 Operações ficam registradas -> 20 registros; criada: True; excluída: True
+OK    HIS-02 Histórico recusa leitura por aluno e filtros inválidos -> aluno: 403; size=500: 422
+OK    POR-01 Telas do portal respondem -> {'me': 200, 'classroom': 200, 'classmates': 200, 'teachers': 200, 'activities': 200, 'grades': 200, 'performance': 200}
+FALHA POR-02 Portal não expõe dados sensíveis dos colegas -> 6 colegas; campos: ['email', 'id', 'name']
+RESUMO: 80 aprovados de 92
