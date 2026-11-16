@@ -1,6 +1,6 @@
 // Serviço de autenticação
 
-import { apiClient } from './api';
+import { apiClient, storeTokens } from './api';
 import { AUTH_KEYS } from './authKeys';
 import type {
   AuthResponse,
@@ -8,6 +8,7 @@ import type {
   ProfileUpdateRequest,
   RegisterTeacherRequest,
   StudentRegistrationRequest,
+  TeacherRegistrationResponse,
   User,
 } from '@/types';
 
@@ -31,8 +32,13 @@ class AuthService {
     return response;
   }
 
-  async registerTeacher(data: RegisterTeacherRequest): Promise<AuthResponse> {
-    const response = await apiClient.post<AuthResponse>('/auth/register/teacher', data);
+  // Cadastro de professor fica pendente até um administrador aprovar: não abre sessão.
+  async registerTeacher(data: RegisterTeacherRequest): Promise<TeacherRegistrationResponse> {
+    return apiClient.post<TeacherRegistrationResponse>('/auth/register/teacher', data);
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>('/auth/change-password', { currentPassword, newPassword });
     this.persistSession(response);
     return response;
   }
@@ -46,6 +52,11 @@ class AuthService {
   }
 
   logout(): void {
+    // Revoga o refresh token no servidor (sem esperar a resposta) e limpa a sessão local.
+    const refreshToken = localStorage.getItem(AUTH_KEYS.refreshToken);
+    if (refreshToken) {
+      void apiClient.post('/auth/logout', { refreshToken }).catch(() => undefined);
+    }
     Object.values(AUTH_KEYS).forEach((key) => localStorage.removeItem(key));
   }
 
@@ -58,10 +69,12 @@ class AuthService {
       return false;
     }
 
-    const currentTime = Date.now();
+    // Access token vencido não encerra a sessão: o cliente HTTP renova com o refresh token.
+    if (localStorage.getItem(AUTH_KEYS.refreshToken)) {
+      return true;
+    }
     const tokenExpiration = parseInt(loginTime) + parseInt(expiresIn) * 1000;
-
-    if (currentTime >= tokenExpiration) {
+    if (Date.now() >= tokenExpiration) {
       this.logout();
       return false;
     }
@@ -132,11 +145,7 @@ class AuthService {
   private persistSession(response: AuthResponse): void {
     if (!response.accessToken) return;
 
-    localStorage.setItem(AUTH_KEYS.accessToken, response.accessToken);
-    localStorage.setItem(AUTH_KEYS.refreshToken, response.refreshToken);
-    localStorage.setItem(AUTH_KEYS.tokenType, response.tokenType);
-    localStorage.setItem(AUTH_KEYS.expiresIn, response.expiresIn.toString());
-    localStorage.setItem(AUTH_KEYS.loginTime, Date.now().toString());
+    storeTokens(response);
     localStorage.setItem(AUTH_KEYS.userId, response.userId);
     localStorage.setItem(AUTH_KEYS.userEmail, response.userEmail);
     localStorage.setItem(AUTH_KEYS.role, response.role);

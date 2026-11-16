@@ -307,6 +307,19 @@ export interface RegisterTeacherRequest {
   subjects: string[];
 }
 
+export interface TeacherRegistrationResponse {
+  message: string;
+  status: 'PENDING';
+}
+
+export interface TeacherRequest {
+  userId: string;
+  name?: string | null;
+  email: string;
+  status: string;
+  createdAt?: string | null;
+}
+
 export interface StudentRegistrationRequest {
   name: string;
   email: string;

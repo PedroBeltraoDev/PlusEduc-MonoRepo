@@ -1,0 +1,143 @@
+/* PlusEduc Ultra Motion: camada CSS (modais, menus, botões, cartões, carregamento).
+ * O perfil ativo vem de <html data-motion="ultra|balanced|performance" data-reduce-motion="true|false">,
+ * definido pelo MotionProvider. Só transform e opacity são animados (composição na GPU). */
+
+:root {
+  /* Curvas de mola em CSS (linear() amostrado de uma mola amortecida). */
+  --pe-spring: linear(0, 0.07, 0.235, 0.44, 0.645, 0.822, 0.959, 1.052, 1.105, 1.125, 1.122, 1.104, 1.079, 1.053, 1.029, 1.01, 0.997, 0.988, 0.985, 0.984, 0.986, 0.989, 0.992, 0.995, 0.998, 1, 1.001, 1.002, 1);
+  --pe-spring-soft: linear(0, 0.061, 0.198, 0.361, 0.519, 0.657, 0.77, 0.856, 0.918, 0.96, 0.988, 1.004, 1.012, 1.015, 1.015, 1.013, 1.011, 1.008, 1.006, 1.004, 1);
+  --pe-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --pe-dur-enter: 420ms;
+  --pe-dur-exit: 160ms;
+  --pe-dur-micro: 180ms;
+  --pe-press-scale: 0.96;
+  --pe-lift: -2px;
+}
+
+:root[data-motion="balanced"] {
+  --pe-spring: var(--pe-spring-soft);
+  --pe-dur-enter: 300ms;
+  --pe-dur-exit: 130ms;
+  --pe-dur-micro: 150ms;
+  --pe-press-scale: 0.97;
+  --pe-lift: -1px;
+}
+
+:root[data-motion="performance"] {
+  --pe-spring: var(--pe-ease-out);
+  --pe-dur-enter: 140ms;
+  --pe-dur-exit: 90ms;
+  --pe-dur-micro: 90ms;
+  --pe-press-scale: 1;
+  --pe-lift: 0px;
+}
+
+/* Modais, gavetas, menus e popovers do Radix: entrada com mola, saída rápida. */
+[data-state="open"][class*="animate-in"] {
+  animation-duration: var(--pe-dur-enter) !important;
+  animation-timing-function: var(--pe-spring) !important;
+}
+[data-state="closed"][class*="animate-out"] {
+  animation-duration: var(--pe-dur-exit) !important;
+  animation-timing-function: ease-in !important;
+}
+/* O fundo escurecido não deve "quicar": só aparece. */
+[data-slot$="overlay"][data-state="open"] {
+  animation-timing-function: var(--pe-ease-out) !important;
+}
+
+/* Microinteração de toque/clique em botões (sem mexer no layout). */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a.pe-press {
+  transition-property: color, background-color, border-color, box-shadow, opacity, transform;
+  transition-duration: var(--pe-dur-micro);
+  transition-timing-function: var(--pe-ease-out);
+}
+button:not(:disabled):active,
+[role="button"]:not([aria-disabled="true"]):active,
+a.pe-press:active {
+  transform: scale(var(--pe-press-scale));
+}
+
+/* Cartões interativos: leve elevação no hover (apenas com ponteiro fino, ou seja, mouse). */
+@media (hover: hover) and (pointer: fine) {
+  .pe-lift {
+    transition: transform var(--pe-dur-micro) var(--pe-spring), box-shadow var(--pe-dur-micro) var(--pe-ease-out);
+  }
+  .pe-lift:hover {
+    transform: translateY(var(--pe-lift));
+    box-shadow: 0 10px 28px -12px rgb(10 36 99 / 0.28);
+  }
+}
+
+/* Indicador de novidade (sino de notificações): um pulso só quando chega algo novo. */
+@keyframes pe-ping-once {
+  0% { transform: scale(1); opacity: 0.75; }
+  80%, 100% { transform: scale(2.2); opacity: 0; }
+}
+.pe-ping-once {
+  animation: pe-ping-once 900ms var(--pe-ease-out) 2;
+}
+
+/* Carregamento: brilho que percorre o esqueleto (somente transform). */
+@keyframes pe-shimmer {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(100%); }
+}
+.pe-skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgb(148 163 184 / 0.18);
+  border-radius: 0.5rem;
+}
+.pe-skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.45), transparent);
+  animation: pe-shimmer 1.3s ease-in-out infinite;
+}
+.dark .pe-skeleton::after {
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 0.08), transparent);
+}
+
+/* Troca de tema claro/escuro suave nas superfícies principais. */
+.pe-theme-transition,
+.pe-theme-transition * {
+  transition: background-color 260ms var(--pe-ease-out), border-color 260ms var(--pe-ease-out), color 200ms var(--pe-ease-out) !important;
+}
+
+/* Foco visível e consistente para navegação por teclado. */
+:focus-visible {
+  outline: 2px solid #4FC3F7;
+  outline-offset: 2px;
+}
+
+/* Perfil Desempenho: sem efeitos contínuos. */
+:root[data-motion="performance"] .pe-skeleton::after,
+:root[data-motion="performance"] .pe-ping-once {
+  animation: none;
+}
+
+/* Movimento reduzido (sistema operacional ou escolha do usuário): sem deslocamentos nem loops. */
+:root[data-reduce-motion="true"] *,
+:root[data-reduce-motion="true"] *::before,
+:root[data-reduce-motion="true"] *::after {
+  animation-duration: 1ms !important;
+  animation-iteration-count: 1 !important;
+  scroll-behavior: auto !important;
+}
+:root[data-reduce-motion="true"] button:active,
+:root[data-reduce-motion="true"] .pe-lift:hover {
+  transform: none !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}

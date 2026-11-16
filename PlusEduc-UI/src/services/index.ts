@@ -11,6 +11,7 @@ export { subjectsService } from './subjects';
 export { teachersService } from './teachers';
 export { gradesService } from './grades';
 export { reportsService } from './reports';
+export { adminService } from './admin';
 
 export type { PaginatedResponse, ApiError } from './api';
 export type { CreateStudentRequest, UpdateStudentRequest } from './students';

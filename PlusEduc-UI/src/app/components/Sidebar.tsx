@@ -1,4 +1,5 @@
-import { Link, useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
+import { SidebarNavLink } from "@/motion/SidebarNavLink";
 import { BarChart3, BookOpen, ClipboardCheck, History, LayoutDashboard, Users, ClipboardList, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "./ui/utils";
@@ -33,15 +34,14 @@ interface SidebarProps {
 export function Sidebar({ className, onNavigate }: SidebarProps) {
   const location = useLocation();
   const navigate = useNavigate();
-  const { userName, logout } = useAuth();
+  const { userName, logout, role } = useAuth();
 
   const handleLogout = () => {
     logout();
     navigate('/login');
   };
 
-  // Por enquanto, usar dados mock até implementarmos perfil do usuário
-  const displayName = userName || "Professor";
+  const displayName = userName || (role === "ADMIN" ? "Administrador" : "Professor");
   const displayInitials = userName
     ? userName.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : "PR";
@@ -59,7 +59,7 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
           <span className="text-2xl font-bold text-white">{displayInitials}</span>
         </div>
         <h3 className="font-semibold text-white">{displayName}</h3>
-        <p className="text-xs text-white/70 mt-1">Educador</p>
+        <p className="text-xs text-white/70 mt-1">{role === "ADMIN" ? "Administrador" : "Educador"}</p>
         <button
           onClick={handleLogout}
           className="mt-3 px-3 py-1 bg-white/10 hover:bg-white/20 text-white text-xs rounded-full transition-colors flex items-center gap-1"
@@ -77,31 +77,22 @@ export function Sidebar({ className, onNavigate }: SidebarProps) {
           const isActive = isMenuItemActive(item.path, location.pathname);
 
           return (
-            <Link
+            <SidebarNavLink
               key={item.path}
               to={item.path}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                isActive
-                  ? "bg-white/20 text-white shadow-lg"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
-              {(item as any).badge && (
-                <span className="ml-auto px-2 py-0.5 bg-[#FF9800] text-white text-xs font-semibold rounded-full">
-                  {(item as any).badge}
-                </span>
-              )}
-            </Link>
+              icon={Icon}
+              label={item.label}
+              active={isActive}
+              onNavigate={onNavigate}
+              indicatorId={onNavigate ? "staff-nav-mobile" : "staff-nav"}
+            />
           );
         })}
       </nav>
 
       {/* Footer */}
       <div className="p-4 border-t border-white/10">
-        <p className="text-xs text-white/60 text-center">PlusEduc © 2026</p>
+        <p className="text-xs text-white/60 text-center">PlusEduc © {new Date().getFullYear()}</p>
       </div>
     </div>
   );

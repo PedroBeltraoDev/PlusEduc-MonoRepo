@@ -50,16 +50,7 @@ class StudentPortalService {
   }
 
   async downloadActivityPdf(id: string, title: string): Promise<void> {
-    const response = await fetch(`/api/student-portal/activities/${id}/export-pdf`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Erro ao baixar PDF da atividade');
-    }
+    const response = await apiClient.download(`/student-portal/activities/${id}/export-pdf`);
 
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);

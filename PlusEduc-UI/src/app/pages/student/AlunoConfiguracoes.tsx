@@ -1,13 +1,15 @@
 import { Mail, LogOut, Moon, Palette, Sun, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSmoothTheme } from "@/motion/useSmoothTheme";
+import { MotionSettingsCard } from "../../components/settings/MotionSettingsCard";
+import { ChangePasswordDialog } from "../../components/settings/ChangePasswordDialog";
 import { studentPortalService } from "@/services";
 
 export function AlunoConfiguracoes() {
-  const { theme, setTheme } = useTheme();
+  const { theme, switchTheme } = useSmoothTheme();
   const { logout, userName, userEmail } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
@@ -104,7 +106,7 @@ export function AlunoConfiguracoes() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            onClick={() => setTheme("light")}
+            onClick={() => switchTheme("light")}
             aria-pressed={currentTheme === "light"}
             className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
               currentTheme === "light"
@@ -121,7 +123,7 @@ export function AlunoConfiguracoes() {
 
           <button
             type="button"
-            onClick={() => setTheme("dark")}
+            onClick={() => switchTheme("dark")}
             aria-pressed={currentTheme === "dark"}
             className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
               currentTheme === "dark"
@@ -136,6 +138,14 @@ export function AlunoConfiguracoes() {
             </span>
           </button>
         </div>
+      </section>
+
+      <MotionSettingsCard />
+
+      <section className="rounded-2xl bg-white p-6 shadow-sm transition-colors dark:bg-gray-800">
+        <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">Senha de acesso</h2>
+        <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Troque sua senha; os outros aparelhos conectados serão desconectados.</p>
+        <div className="mt-2"><ChangePasswordDialog /></div>
       </section>
 
       <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm transition-colors dark:border-rose-900/50 dark:bg-gray-800">

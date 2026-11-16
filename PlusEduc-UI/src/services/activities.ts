@@ -129,18 +129,8 @@ class ActivitiesService {
 
   // Exportar atividade em PDF
   async exportActivityToPDF(id: string, includeAnswers: boolean = false): Promise<Blob> {
-    const response = await fetch(`/api/activities/${id}/export-pdf?includeAnswers=${includeAnswers}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${localStorage.getItem('accessToken')}`,
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error('Erro ao exportar atividade para PDF');
-    }
-
+    // Mesmo cliente das demais chamadas: respeita VITE_API_BASE_URL e renova a sessão se preciso.
+    const response = await apiClient.download(`/activities/${id}/export-pdf?includeAnswers=${includeAnswers}`);
     return response.blob();
   }
 

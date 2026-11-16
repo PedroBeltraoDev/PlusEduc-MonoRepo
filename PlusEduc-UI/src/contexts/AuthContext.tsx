@@ -23,6 +23,7 @@ interface AuthContextType {
   login: (credentials: LoginRequest) => Promise<string>;
   registerStudent: (data: StudentRegistrationRequest) => Promise<string>;
   registerTeacher: (data: RegisterTeacherRequest) => Promise<string>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   updateProfile: (data: ProfileUpdateRequest) => Promise<AuthResponse>;
   logout: () => void;
   getToken: () => string | null;
@@ -52,6 +53,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUserId(authService.getUserId());
     setStudentId(authService.getStudentId());
   };
+
+  // Sessão encerrada pelo cliente HTTP (refresh recusado): reflete no estado da aplicação.
+  useEffect(() => {
+    const onEnded = () => syncFromStorage();
+    window.addEventListener('pluseduc:session-ended', onEnded);
+    return () => window.removeEventListener('pluseduc:session-ended', onEnded);
+  }, []);
 
   useEffect(() => {
     try {
@@ -90,23 +98,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Devolve a mensagem do servidor: o cadastro de professor aguarda aprovação (sem sessão).
   const registerTeacher = async (data: RegisterTeacherRequest) => {
     try {
       setLoadingState('loading');
       const response = await authService.registerTeacher(data);
-      syncFromStorage();
       setLoadingState('success');
-      return response.role === 'STUDENT' ? '/aluno' : '/dashboard';
+      return response.message;
     } catch (error) {
-      setIsAuthenticated(false);
-      setRole(null);
-      setUserName(null);
-      setUserEmail(null);
-      setUserId(null);
-      setStudentId(null);
       setLoadingState('error');
       throw error;
     }
+  };
+
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    await authService.changePassword(currentPassword, newPassword);
+    syncFromStorage();
   };
 
   const registerStudent = async (data: StudentRegistrationRequest) => {
@@ -140,6 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setRole(null);
     setUserName(null);
     setUserEmail(null);
+    setUserId(null);
     setStudentId(null);
     setLoadingState('idle');
   };
@@ -157,6 +165,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     login,
     registerStudent,
     registerTeacher,
+    changePassword,
     updateProfile,
     logout,
     getToken: () => authService.getAccessToken(),
