@@ -6,7 +6,6 @@ from app.core.access import AccessScope, staff_scope
 from app.core.audit_middleware import set_audit
 from app.schemas.grade import (
     ActivityGradesLaunchResponse,
-    GradeAverageResponse,
     GradeClassroomSummaryResponse,
     GradeCreateRequest,
     GradeResponse,

@@ -5,9 +5,21 @@
  */
 export function formatDate(date: string | Date | null | undefined): string {
   if (!date) return '-';
-  const d = typeof date === 'string' ? new Date(date) : date;
+  const d = typeof date === 'string' ? parseDateValue(date) : date;
   if (isNaN(d.getTime())) return '-';
   return d.toLocaleDateString('pt-BR');
+}
+
+/**
+ * Converte o texto de uma data. Data sem hora ("2012-08-14", como a data de nascimento) é tratada como data local:
+ * `new Date("2012-08-14")` seria meia-noite UTC, que no Brasil (UTC-3) ainda é o dia anterior.
+ */
+export function parseDateValue(value: string): Date {
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (dateOnly) {
+    return new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]));
+  }
+  return new Date(value);
 }
 
 /**

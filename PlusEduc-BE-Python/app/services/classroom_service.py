@@ -250,7 +250,7 @@ class ClassroomService:
         student_ids = list(classroom.get("students", classroom.get("student_ids", classroom.get("studentIds", []))) or [])
         if str(student_id) not in {str(item) for item in student_ids}:
             student_ids.append(student_id)
-        updated = self.repository.update(classroom_id, {"students": student_ids, "updated_at": datetime.now(timezone.utc)})
+        self.repository.update(classroom_id, {"students": student_ids, "updated_at": datetime.now(timezone.utc)})
         self.student_repository.update(student_id, {"class_id": classroom_id, "updated_at": datetime.now(timezone.utc)})
 
     def _leave_previous_classroom(self, student: dict[str, Any], student_id: str, new_classroom_id: str) -> None:

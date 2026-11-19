@@ -34,6 +34,9 @@ logger = logging.getLogger(__name__)
 INVALID_CREDENTIALS_MESSAGE = "Invalid email or password"
 PENDING_APPROVAL_MESSAGE = "Seu cadastro de professor aguarda a aprovação de um administrador."
 INVALID_REFRESH_MESSAGE = "Sessão expirada. Entre novamente."
+STUDENT_ALREADY_REGISTERED_MESSAGE = (
+    "Este e-mail já pertence a um aluno cadastrado pela escola. Peça ao professor para liberar seu acesso ao portal."
+)
 TEACHER_PENDING_REGISTRATION_MESSAGE = (
     "Cadastro recebido. Um administrador precisa aprovar seu acesso antes do primeiro login."
 )
@@ -168,6 +171,11 @@ class AuthService:
                 status_code=status.HTTP_409_CONFLICT,
                 detail="Email já cadastrado",
             )
+        # Aluno já cadastrado pela escola (sem login): o autocadastro criaria um segundo registro, fora da turma.
+        # O acesso desse aluno é liberado pelo professor (POST /api/students/{id}/enable-access).
+        existing = self._student_repository.find_by_email(normalized_email)
+        if existing and existing.get("active") is not False and not existing.get("user_id"):
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=STUDENT_ALREADY_REGISTERED_MESSAGE)
 
         student = None
         student_id = ""

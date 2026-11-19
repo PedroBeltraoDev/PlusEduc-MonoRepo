@@ -107,6 +107,8 @@ class StudentResponse(BaseModel):
     classId: str | None = None
     className: str | None = None
     active: bool | None = None
+    # O aluno já tem login no portal (conta em users ligada ao cadastro)?
+    hasPortalAccess: bool = False
     createdAt: datetime | None = None
     updatedAt: datetime | None = None
 

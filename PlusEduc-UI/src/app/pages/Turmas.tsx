@@ -8,6 +8,7 @@ import type { Activity, Classroom, Student, LearningGap, Subject, Teacher } from
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDate } from "@/utils";
 import { toast } from "sonner";
+import { PortalAccessButton } from "../components/PortalAccessButton";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -1474,7 +1475,11 @@ export function Turmas() {
               <span className={`px-3 py-1 rounded-full text-xs font-semibold ${selectedStudent.active ? 'bg-[#4CAF50] text-white' : 'bg-gray-400 text-white'}`}>
                 {selectedStudent.active ? 'Ativo' : 'Inativo'}
               </span>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
+                <PortalAccessButton
+                  student={selectedStudent}
+                  onEnabled={() => setSelectedStudent({ ...selectedStudent, hasPortalAccess: true })}
+                />
                 <button
                   type="button"
                   onClick={(e) => {

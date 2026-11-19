@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 from pymongo import MongoClient
 
 from app.core.config import get_settings
-from app.core.passwords import hash_password, verify_password
+from app.core.passwords import verify_password
 from app.main import create_app
 
 TEST_EMAIL = "cadastro.automatico@aluno.local"

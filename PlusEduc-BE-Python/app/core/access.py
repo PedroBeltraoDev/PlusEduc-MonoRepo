@@ -123,12 +123,6 @@ class AccessScope:
         if not self.can_access_activity(activity):
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=FORBIDDEN_ACTIVITY)
 
-    def filter_activities(self, activities: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
-        if self.is_admin:
-            return list(activities)
-        return [item for item in activities if self.can_access_activity(item)]
-
-
 def resolve_teacher(request: Request, principal: UserPrincipal) -> dict[str, Any] | None:
     repository = request.app.state.teacher_repository
     teacher = repository.find_active_by_email(principal.email)
@@ -182,6 +176,3 @@ def staff_scope(
 ) -> AccessScope:
     return build_scope(request, current_user)
 
-
-def require_admin(current_user: UserPrincipal = Depends(require_roles("ADMIN"))) -> UserPrincipal:
-    return current_user

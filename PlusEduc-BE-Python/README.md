@@ -24,7 +24,8 @@ O frontend React está no diretório irmão `PlusEduc-UI`. Este README documenta
 | `scripts/` | Seed de demonstração, servidor multiprocesso, build do backend e benchmarks. |
 | `tests/` | Testes automatizados da API e dos serviços. |
 | `.env` | Configuração local; não deve ser versionado nem publicado. |
-| `requirements.txt` | Dependências Python do backend. |
+| `requirements.txt` | Dependências Python para rodar a API. |
+| `requirements-dev.txt` | Dependências de desenvolvimento e testes (inclui as de `requirements.txt`). |
 
 ## Configuração do ambiente
 
@@ -43,7 +44,7 @@ py -3.11 -m venv .venv
 Instale as dependências usando o Python do ambiente virtual:
 
 ```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # só para rodar a API: requirements.txt
 ```
 
 O arquivo `.env` local deve conter as configurações do ambiente. Para começar usando o modelo seguro, execute:

@@ -29,10 +29,6 @@ from app.services.curriculum import (
 )
 
 
-def classroom_id_not_in(classroom_id: Any, classroom_ids: list[Any]) -> bool:
-    return str(classroom_id) not in {str(value) for value in classroom_ids}
-
-
 class SubjectCatalogService:
     def __init__(
         self,

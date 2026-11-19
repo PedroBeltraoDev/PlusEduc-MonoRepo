@@ -1,7 +1,7 @@
 from datetime import datetime, timezone
 from typing import Any
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException
 from pymongo.errors import DuplicateKeyError
 
 from app.core.auth import UserPrincipal
@@ -281,6 +281,7 @@ class StudentService:
             classId=document.get("class_id", document.get("classId")),
             className=document.get("class_name", document.get("className", document.get("_class"))),
             active=document.get("active"),
+            hasPortalAccess=bool(document.get("user_id")),
             createdAt=document.get("created_at", document.get("createdAt")),
             updatedAt=document.get("updated_at", document.get("updatedAt")),
         )

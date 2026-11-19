@@ -7,7 +7,6 @@ Este projeto utiliza componentes baseados em [shadcn/ui](https://ui.shadcn.com/)
 ## Ícones
 
 - [Lucide React](https://lucide.dev/) - Ícones utilizados na interface
-- [Material-UI Icons](https://mui.com/material-ui/material-icons/) - Ícones complementares
 
 ## Bibliotecas e Dependências
 
@@ -16,6 +15,10 @@ Este projeto utiliza componentes baseados em [shadcn/ui](https://ui.shadcn.com/)
 - [Tailwind CSS](https://tailwindcss.com/) - MIT License
 - [Radix UI](https://www.radix-ui.com/) - MIT License
 - [next-themes](https://github.com/pacocoursey/next-themes) - MIT License
+- [React Router](https://reactrouter.com/) - MIT License
+- [Recharts](https://recharts.org/) - MIT License (gráficos do dashboard)
+- [Motion](https://motion.dev/) - MIT License (animações do Ultra Motion)
+- [Sonner](https://sonner.emilkowal.ski/) - MIT License (avisos na tela)
 
 ## Fontes
 

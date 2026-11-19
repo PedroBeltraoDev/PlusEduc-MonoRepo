@@ -204,7 +204,6 @@ class StudentPortalService:
     def grades(self, current_user: UserPrincipal) -> list[StudentPortalGrade]:
         student = self.current_student(current_user)
         repository_items = self.grade_repository.find_by_student(self._id(student))
-        from app.services.grade_service import GradeService
         return [GradeService.to_response(item) for item in repository_items]
 
     def performance(self, current_user: UserPrincipal) -> StudentPortalPerformance:

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Any
 
 from pydantic import AliasChoices, BaseModel, ConfigDict, Field
 
@@ -55,10 +54,6 @@ class GradeResponse(BaseModel):
     observations: str | None = None
     activityId: str | None = None
     createdAt: datetime | None = None
-
-
-class GradeAverageResponse(BaseModel):
-    average: float
 
 
 class GradeStudentSummary(BaseModel):
