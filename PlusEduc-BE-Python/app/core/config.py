@@ -30,7 +30,8 @@ class Settings(BaseSettings):
     cors_allow_credentials: bool = True
 
     jwt_secret: str = ""
-    jwt_expiration_ms: int = Field(default=28_800_000, ge=1_000)
+    # Access token curto (30 min): a renovação é feita com o refresh token rotativo (/api/auth/refresh).
+    jwt_expiration_ms: int = Field(default=1_800_000, ge=1_000)
     jwt_refresh_expiration_ms: int = Field(default=604_800_000, ge=1_000)
 
     audit_enabled: bool | None = None  # None: ligado, exceto quando APP_ENV começa com "test"
@@ -45,7 +46,9 @@ class Settings(BaseSettings):
 
     # Estatísticas de notas em GPU/CPU via OpenCL (usa o caminho em Python se não houver dispositivo).
     opencl_enabled: bool = True
-    opencl_min_records: int = Field(default=0, ge=0)  # abaixo disso, o Python é mais rápido que o envio à GPU
+    # Abaixo disso o Python é mais rápido que o envio à GPU (equilíbrio medido perto de 100 mil registros,
+    # docs/sprint-08/resultados/benchmark_opencl.txt). Antes o padrão era 0: GPU até para 5 notas.
+    opencl_min_records: int = Field(default=50_000, ge=0)
     opencl_device: str = ""  # trecho do nome do dispositivo (ex.: "Radeon"); vazio = a primeira GPU
 
     smtp_host: str = "smtp.gmail.com"
@@ -68,6 +71,41 @@ class Settings(BaseSettings):
     # Cadastro público de professor (RF04): a conta nasce pendente e só entra depois que um
     # ADMIN aprova. Desligar (false) volta ao comportamento antigo de acesso imediato.
     teacher_registration_requires_approval: bool = True
+
+    # Aplicativo de desktop: pasta com o build do frontend (PlusEduc-UI/dist) servido pela própria API.
+    static_dir: str = ""
+
+    # Limite de tentativas (login, cadastro e recuperação de senha).
+    rate_limit_enabled: bool = True
+    login_max_failures: int = Field(default=5, ge=1)
+    login_window_seconds: int = Field(default=900, ge=1)
+    password_reset_max_requests: int = Field(default=5, ge=1)
+    password_reset_window_seconds: int = Field(default=900, ge=1)
+    registration_max_requests: int = Field(default=10, ge=1)
+    registration_window_seconds: int = Field(default=3600, ge=1)
+
+    @property
+    def is_production(self) -> bool:
+        return self.app_env.strip().lower() in {"production", "prod"}
+
+    def insecure_production_settings(self) -> list[str]:
+        """Configurações de demonstração que não podem ficar ativas em produção."""
+        problems: list[str] = []
+        if not self.is_production:
+            return problems
+        weak_secrets = {"", "change-this-to-a-long-random-secret", "secret", "changeme"}
+        if self.jwt_secret in weak_secrets or len(self.jwt_secret) < 32:
+            problems.append("JWT_SECRET ausente, fraco ou com o valor de exemplo")
+        if self.password_reset_demo_mode:
+            problems.append("PASSWORD_RESET_DEMO_MODE=true")
+        if self.password_reset_override_email:
+            problems.append("PASSWORD_RESET_OVERRIDE_EMAIL preenchido")
+        if not self.rate_limit_enabled:
+            problems.append("RATE_LIMIT_ENABLED=false")
+        if not self.teacher_registration_requires_approval:
+            # Sem aprovação, qualquer pessoa vira professor e acessa turmas, alunos e notas.
+            problems.append("TEACHER_REGISTRATION_REQUIRES_APPROVAL=false")
+        return problems
 
     @field_validator("cors_allowed_origins", mode="before")
     @classmethod

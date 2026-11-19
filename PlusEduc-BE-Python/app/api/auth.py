@@ -1,15 +1,16 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.core.audit_middleware import set_audit
-from app.dependencies import get_current_user
 from app.core.auth import UserPrincipal
+from app.core.rate_limit import client_ip, limiter_of, too_many
+from app.dependencies import get_current_user
 from app.schemas.auth import (
     AuthenticationRequest,
     AuthenticationResponse,
     ChangePasswordRequest,
-    ChangePasswordResponse,
     ForgotPasswordRequest,
     ForgotPasswordResponse,
+    LogoutRequest,
     ProfileUpdateRequest,
     RefreshTokenRequest,
     ResetPasswordRequest,
@@ -23,13 +24,20 @@ from app.services.auth_service import AuthService
 router = APIRouter(prefix="/api/auth", tags=["Autenticação"])
 
 
-def _service(request: Request) -> AuthService:
+def auth_service(request: Request) -> AuthService:
     return AuthService(
         request.app.state.user_repository,
         request.app.state.settings,
         request.app.state.teacher_repository,
         request.app.state.student_repository,
+        refresh_repository=getattr(request.app.state, "refresh_token_repository", None),
     )
+
+
+def _limit(request: Request, scope: str, identity: str, limit: int, window: int) -> None:
+    limiter = limiter_of(request)
+    if limiter is not None:
+        limiter.check_and_hit(f"{scope}:{client_ip(request)}:{identity.strip().lower()}", limit, window)
 
 
 @router.put(
@@ -43,13 +51,7 @@ def update_profile(
     payload: ProfileUpdateRequest,
     current_user: UserPrincipal = Depends(get_current_user),
 ) -> AuthenticationResponse:
-    service = AuthService(
-        request.app.state.user_repository,
-        request.app.state.settings,
-        request.app.state.teacher_repository,
-        request.app.state.student_repository,
-    )
-    return service.update_profile(current_user, payload)
+    return auth_service(request).update_profile(current_user, payload)
 
 
 @router.post(
@@ -59,14 +61,10 @@ def update_profile(
     summary="Cadastrar aluno com matrícula automática e emitir tokens",
 )
 def register_student(request: Request, payload: StudentRegistrationRequest) -> AuthenticationResponse:
-    service = AuthService(
-        request.app.state.user_repository,
-        request.app.state.settings,
-        request.app.state.teacher_repository,
-        request.app.state.student_repository,
-    )
+    settings = request.app.state.settings
+    _limit(request, "register", "any", settings.registration_max_requests, settings.registration_window_seconds)
     set_audit(request, actorEmail=payload.email)
-    return service.register_student(payload)
+    return auth_service(request).register_student(payload)
 
 
 @router.post(
@@ -84,40 +82,13 @@ def register_student(request: Request, payload: StudentRegistrationRequest) -> A
 def register_teacher(
     request: Request, response: Response, payload: TeacherRegistrationRequest
 ) -> AuthenticationResponse | TeacherRegistrationPendingResponse:
-    set_audit(request, actorEmail=payload.email)
-    result = _service(request).register_teacher(payload)
+    settings = request.app.state.settings
+    _limit(request, "register", "any", settings.registration_max_requests, settings.registration_window_seconds)
+    set_audit(request, actorEmail=payload.email, summary=f"Pedido de cadastro de professor: {payload.email}")
+    result = auth_service(request).register_teacher(payload)
     if isinstance(result, TeacherRegistrationPendingResponse):
         response.status_code = status.HTTP_202_ACCEPTED
     return result
-
-
-@router.post(
-    "/refresh",
-    response_model=AuthenticationResponse,
-    response_model_exclude_none=True,
-    summary="Renovar a sessão com o refresh token",
-    description=(
-        "Recebe o `refreshToken` do login e devolve um novo par de tokens. O token de acesso (8 h) não serve aqui, "
-        "e o refresh token não abre as demais rotas. Conta excluída ou desativada recebe 401."
-    ),
-)
-def refresh_session(request: Request, payload: RefreshTokenRequest) -> AuthenticationResponse:
-    return _service(request).refresh(payload.refreshToken)
-
-
-@router.post(
-    "/change-password",
-    response_model=ChangePasswordResponse,
-    summary="Trocar a própria senha (usuário autenticado)",
-    description="Exige a senha atual. A nova senha precisa ter de 6 a 100 caracteres e ser diferente da atual.",
-)
-def change_password(
-    request: Request,
-    payload: ChangePasswordRequest,
-    current_user: UserPrincipal = Depends(get_current_user),
-) -> ChangePasswordResponse:
-    set_audit(request, summary=f"Troca de senha de {current_user.email}")
-    return _service(request).change_password(current_user, payload)
 
 
 @router.post(
@@ -127,15 +98,67 @@ def change_password(
     summary="Autenticar usuário e emitir tokens",
 )
 def login(request: Request, payload: AuthenticationRequest) -> AuthenticationResponse:
-    service = AuthService(
-        request.app.state.user_repository,
-        request.app.state.settings,
-        request.app.state.teacher_repository,
-        request.app.state.student_repository,
-    )
+    settings = request.app.state.settings
+    limiter = limiter_of(request)
+    key = f"login:{client_ip(request)}:{payload.email.strip().lower()}"
+    if limiter is not None:
+        retry = limiter.is_blocked(key, settings.login_max_failures, settings.login_window_seconds)
+        if retry:
+            raise too_many(retry)
     set_audit(request, actorEmail=payload.email)  # fica registrado mesmo se o login falhar
-    response = service.login(payload)
+    try:
+        response = auth_service(request).login(payload)
+    except Exception:
+        # Só as falhas contam para o bloqueio; quem acerta a senha não é penalizado.
+        if limiter is not None:
+            limiter.hit(key, settings.login_window_seconds)
+        raise
+    if limiter is not None:
+        limiter.reset(key)
     set_audit(request, actorName=response.name, actorRole=response.role, summary=f"Login de {payload.email}")
+    return response
+
+
+@router.post(
+    "/refresh",
+    response_model=AuthenticationResponse,
+    response_model_exclude_none=True,
+    summary="Renovar a sessão com o refresh token",
+    description=(
+        "Recebe o `refreshToken` e devolve um novo par de tokens. Cada refresh token vale uma vez só: "
+        "reapresentar um já usado encerra todas as sessões daquele login. O token de acesso não serve aqui. "
+        "Conta excluída, desativada ou com a senha trocada depois da emissão recebe 401."
+    ),
+)
+def refresh(request: Request, payload: RefreshTokenRequest) -> AuthenticationResponse:
+    return auth_service(request).refresh(payload.refreshToken)
+
+
+@router.post("/logout", status_code=status.HTTP_204_NO_CONTENT, summary="Encerrar a sessão (revoga o refresh token)")
+def logout(request: Request, payload: LogoutRequest) -> Response:
+    auth_service(request).logout(payload.refreshToken)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/change-password",
+    response_model=AuthenticationResponse,
+    response_model_exclude_none=True,
+    summary="Trocar a própria senha (usuário autenticado)",
+    description=(
+        "Exige a senha atual. A nova senha precisa ter de 6 a 100 caracteres e ser diferente da atual. "
+        "Todas as sessões abertas são encerradas; esta recebe um novo par de tokens na resposta."
+    ),
+)
+def change_password(
+    request: Request,
+    payload: ChangePasswordRequest,
+    current_user: UserPrincipal = Depends(get_current_user),
+) -> AuthenticationResponse:
+    settings = request.app.state.settings
+    _limit(request, "change-password", current_user.email, settings.login_max_failures, settings.login_window_seconds)
+    response = auth_service(request).change_password(current_user, payload)
+    set_audit(request, summary="Senha alterada pelo próprio usuário")
     return response
 
 
@@ -145,14 +168,10 @@ def login(request: Request, payload: AuthenticationRequest) -> AuthenticationRes
     summary="Solicitar código de verificação para redefinição de senha",
 )
 def forgot_password(request: Request, payload: ForgotPasswordRequest) -> ForgotPasswordResponse:
-    service = AuthService(
-        request.app.state.user_repository,
-        request.app.state.settings,
-        request.app.state.teacher_repository,
-        request.app.state.student_repository,
-    )
+    settings = request.app.state.settings
+    _limit(request, "forgot", payload.email, settings.password_reset_max_requests, settings.password_reset_window_seconds)
     set_audit(request, actorEmail=payload.email)
-    return service.request_password_reset(payload)
+    return auth_service(request).request_password_reset(payload)
 
 
 @router.post(
@@ -161,11 +180,7 @@ def forgot_password(request: Request, payload: ForgotPasswordRequest) -> ForgotP
     summary="Redefinir senha a partir do código de verificação",
 )
 def reset_password(request: Request, payload: ResetPasswordRequest) -> ResetPasswordResponse:
-    service = AuthService(
-        request.app.state.user_repository,
-        request.app.state.settings,
-        request.app.state.teacher_repository,
-        request.app.state.student_repository,
-    )
+    settings = request.app.state.settings
+    _limit(request, "reset", payload.email, settings.password_reset_max_requests * 2, settings.password_reset_window_seconds)
     set_audit(request, actorEmail=payload.email)
-    return service.reset_password(payload)
+    return auth_service(request).reset_password(payload)

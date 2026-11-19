@@ -94,17 +94,23 @@ const StudentModal = ({
     } else {
       document.body.style.overflow = 'unset';
     }
+    // Esc fecha o formulário (navegação por teclado).
+    const onKey = (event: KeyboardEvent) => {
+      if (isOpen && event.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', onKey);
 
     return () => {
       document.body.style.overflow = 'unset';
+      window.removeEventListener('keydown', onKey);
     };
-  }, [isOpen]);
+  }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
   const modalContent = (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-slate-900/20 p-4 backdrop-blur-[2px]"
+      className="pe-backdrop fixed inset-0 flex items-center justify-center bg-slate-900/20 p-4 backdrop-blur-[2px]"
       style={{
         zIndex: 999999,
         position: 'fixed',
@@ -116,7 +122,7 @@ const StudentModal = ({
       onClick={onClose}
     >
       <div
-        className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
+        className="pe-modal bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto p-6"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-6">
@@ -466,11 +472,11 @@ const UnassignedStudentsModal = ({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[100000] flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
+      className="pe-backdrop fixed inset-0 z-[100000] flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+        className="pe-modal w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -1242,11 +1248,11 @@ export function Turmas() {
 
   const sharedTransferModal = showTransferModal && selectedStudent ? (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
+      className="pe-backdrop fixed inset-0 z-50 flex items-center justify-center bg-slate-900/25 p-4 backdrop-blur-[2px]"
       onClick={() => setShowTransferModal(false)}
     >
       <div
-        className="w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
+        className="pe-modal w-full max-w-md rounded-xl bg-white p-6 shadow-2xl dark:bg-gray-800"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-6 flex items-start justify-between gap-4">
@@ -2217,7 +2223,10 @@ export function Turmas() {
             {classrooms.map((classroom) => (
               <div
                 key={classroom.id}
-                className="p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer"
+                className="pe-row p-6 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer focus-visible:bg-gray-50 dark:focus-visible:bg-gray-700"
+                role="button"
+                tabIndex={0}
+                onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); handleViewClassroomDetails(classroom); } }}
                 onClick={() => handleViewClassroomDetails(classroom)}
               >
                 <div className="flex items-center justify-between">
@@ -2268,8 +2277,8 @@ export function Turmas() {
 
       {/* Modal Nova Turma */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transition-colors">
+        <div className="pe-backdrop fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setShowModal(false)}>
+          <div className="pe-modal bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 transition-colors" role="dialog" aria-modal="true" onClick={(e) => e.stopPropagation()}>
             <h2 className="text-2xl font-bold text-[#0A2463] dark:text-white mb-6">Nova Turma</h2>
             <form onSubmit={handleCreateClassroom} className="space-y-4">
               <div>

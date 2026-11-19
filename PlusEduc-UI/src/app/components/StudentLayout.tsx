@@ -1,4 +1,5 @@
-import { Outlet, Navigate } from "react-router";
+import { Outlet, Navigate, useLocation } from "react-router";
+import { PageTransition } from "@/motion/primitives";
 import { Loader2, Menu } from "lucide-react";
 import { useState } from "react";
 import { StudentSidebar } from "./StudentSidebar";
@@ -8,6 +9,7 @@ import { Sheet, SheetContent, SheetTitle } from "./ui/sheet";
 export function StudentLayout() {
   const { isAuthenticated, loadingState, isStudent } = useAuth();
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const location = useLocation();
 
   if (loadingState === "loading") {
     return (
@@ -30,6 +32,12 @@ export function StudentLayout() {
 
   return (
     <div className="min-h-screen bg-[#F5F7FA] dark:bg-gray-900 transition-colors">
+      <a
+        href="#conteudo"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[60] focus:rounded-lg focus:bg-white focus:px-4 focus:py-2 focus:text-[#0A2463] focus:shadow-lg"
+      >
+        Pular para o conteúdo
+      </a>
       <aside className="fixed inset-y-0 left-0 hidden w-64 lg:block">
         <StudentSidebar className="w-64" />
       </aside>
@@ -58,9 +66,11 @@ export function StudentLayout() {
         </SheetContent>
       </Sheet>
 
-      <div className="p-4 md:p-6 lg:ml-64 lg:p-8">
-        <Outlet />
-      </div>
+      <main id="conteudo" tabIndex={-1} className="p-4 outline-none md:p-6 lg:ml-64 lg:p-8">
+        <PageTransition routeKey={location.pathname}>
+          <Outlet />
+        </PageTransition>
+      </main>
     </div>
   );
 }

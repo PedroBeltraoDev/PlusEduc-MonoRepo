@@ -31,9 +31,13 @@ def teacher_corrections_context():
         for collection in ["activities", "activity_submissions", "students", "teachers", "classrooms"]:
             if collection not in db.list_collection_names():
                 pytest.fail(f"Collection {collection} não existe em escola_db")
-        student = db.students.find_one({})
-        teacher = db.teachers.find_one({})
-        classroom = db.classrooms.find_one({})
+        # Turma real com alunos, um aluno dela e o professor titular dela (antes os três eram
+        # escolhidos ao acaso e podiam não ter relação entre si).
+        from tests.database import TEST_DATABASE as _db  # noqa: F401
+        from app.repositories.base import id_candidates
+        classroom = db.classrooms.find_one({"active": True, "students.0": {"$exists": True}, "teacher_id": {"$nin": [None, ""]}})
+        student = db.students.find_one({"_id": {"$in": id_candidates([classroom["students"][0]])}}) if classroom else None
+        teacher = db.teachers.find_one({"_id": {"$in": id_candidates([classroom["teacher_id"]])}, "active": True}) if classroom else None
         if not student or not teacher or not classroom:
             pytest.fail("Dados reais de student, teacher e classroom são necessários")
         student_id = str(student["_id"])

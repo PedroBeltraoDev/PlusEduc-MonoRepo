@@ -7,8 +7,8 @@ Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.
 
 | RF | Requisito | Situação | Evidência / observação |
 |---|---|---|---|
-| RF01 | Login com JWT e refresh token | Concluído (Sprint 10) | Login e JWT: AUT-01 a AUT-05, AUT-18. Renovação em `POST /api/auth/refresh`, usada pelo frontend automaticamente (SES-01 a SES-03, NAV-SS01, NAV-SS02). |
-| RF02 | Perfis ADMIN, PROFESSOR, ALUNO com autorização por rota e por tela | Concluído | Matriz de rotas (Sprint 08, 99 rotas na Sprint 10) e testes de navegação NAV-A/P/S. O ADMIN é criado com `scripts/create_admin.py`. |
+| RF01 | Login com JWT e refresh token | Concluído (Sprint 10) | Login e JWT: AUT-01 a AUT-05, AUT-18. Renovação em `POST /api/auth/refresh`, usada pelo frontend automaticamente (SES-01 a SES-03, NAV-SS01, NAV-SS02). Depois da Sprint 10: refresh token rotativo com detecção de reuso, logout que revoga a sessão e limite de tentativas no login. |
+| RF02 | Perfis ADMIN, PROFESSOR, ALUNO com autorização por rota e por tela | Concluído | Matriz de rotas (Sprint 08, 99 rotas na Sprint 10, 100 com o logout); professor restrito às próprias turmas (`core/access.py`) e testes de navegação NAV-A/P/S. O ADMIN é criado com `scripts/create_admin.py`. |
 | RF03 | Edição de perfil e troca de senha pelo próprio usuário | Concluído (Sprint 10) | Perfil: AUT-13, AUT-14. Troca de senha logado em `POST /api/auth/change-password` e nas Configurações (SEN-01 a SEN-03). |
 | RF04 | Cadastro público de professores com aprovação/ativação | Concluído (Sprint 10) | A conta nasce pendente e o ADMIN aprova ou recusa nas Configurações (AUT-10, APR-01 a APR-04). |
 | RF05 | CRUD de alunos, professores e turmas | Concluído | TUR-01 a TUR-14, ALU-01 a ALU-14, PRO-01 a PRO-05 |

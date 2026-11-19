@@ -124,7 +124,10 @@ class ReportService:
         activity_repository: ActivityRepository,
         submission_repository: ActivitySubmissionRepository,
         audit_repository: AuditRepository,
+        scope=None,
     ) -> None:
+        # Escopo de acesso: professor só enxerga dados das próprias turmas (ADMIN vê tudo).
+        self.scope = scope
         self.students = student_repository
         self.classrooms = classroom_repository
         self.grades = grade_repository
@@ -133,19 +136,44 @@ class ReportService:
         self.audit = audit_repository
 
     # ------------------------------------------------------------------ dados
+    def _restricted(self) -> bool:
+        return self.scope is not None and not self.scope.is_admin
+
+    def _allowed_class(self, class_id: str) -> bool:
+        return not self._restricted() or class_id in self.scope.classroom_ids
+
+    def _active_students(self) -> list[dict[str, Any]]:
+        if self._restricted():
+            finder = getattr(self.students, "find_active_in_scope", None)
+            if finder is not None:
+                return finder(self.scope.classroom_ids, self.scope.member_ids)
+            return self.scope.filter_students(self.students.find_active())
+        return self.students.find_active()
+
+    def _all_grades(self) -> list[dict[str, Any]]:
+        finder = getattr(self.grades, "find_by_classrooms", None)
+        if self._restricted() and finder is not None:
+            return finder(list(self.scope.classroom_ids))
+        return [g for g in self.grades.find_all() if self._allowed_class(str(g.get("classroomId", "")))]
+
+    def _all_activities(self) -> list[dict[str, Any]]:
+        if self._restricted():
+            return self.activities.find_by_classrooms(list(self.scope.classroom_ids)) if self.scope.classroom_ids else []
+        return self.activities.find_all()
+
     def _load(self, filters: Filters) -> dict[str, Any]:
-        classrooms = {str(c["_id"]): c for c in self.classrooms.find_active()}
+        classrooms = {str(c["_id"]): c for c in self.classrooms.find_active() if self._allowed_class(str(c["_id"]))}
         if filters.classroom_id and filters.classroom_id not in classrooms:
             raise HTTPException(status_code=404, detail=f"Turma não encontrada: {filters.classroom_id}")
         students = {}
-        for student in self.students.find_active():
+        for student in self._active_students():
             class_id = str(student.get("class_id") or student.get("classId") or "")
             if filters.classroom_id and class_id != filters.classroom_id:
                 continue
             student["_class_id"] = class_id
             students[str(student["_id"])] = student
         grades = []
-        for grade in self.grades.find_all():
+        for grade in self._all_grades():
             if filters.classroom_id and str(grade.get("classroomId", "")) != filters.classroom_id:
                 continue
             if filters.subject and norm(grade.get("subject")) != norm(filters.subject):
@@ -199,13 +227,20 @@ class ReportService:
 
     def _activity_rows(self, data: dict[str, Any], filters: Filters) -> list[dict[str, Any]]:
         students_by_class: dict[str, int] = defaultdict(int)
-        for student in self.students.find_active():
+        for student in self._active_students():
             students_by_class[str(student.get("class_id") or student.get("classId") or "")] += 1
+        activities = self._all_activities()
         submissions: dict[str, list[dict[str, Any]]] = defaultdict(list)
-        for submission in self.submissions.find_all():
-            submissions[str(submission.get("activity_id", submission.get("activityId", "")))].append(submission)
+        by_activities = getattr(self.submissions, "find_by_activities", None)
+        if by_activities is not None:
+            # Uma consulta só, restrita às atividades consideradas (antes: coleção inteira).
+            for key, items in by_activities([str(a["_id"]) for a in activities]).items():
+                submissions[str(key)].extend(items)
+        else:
+            for submission in self.submissions.find_all():
+                submissions[str(submission.get("activity_id", submission.get("activityId", "")))].append(submission)
         rows = []
-        for activity in self.activities.find_all():
+        for activity in activities:
             class_id = str(activity.get("classroom_id") or activity.get("classroomId") or "")
             if filters.classroom_id and class_id != filters.classroom_id:
                 continue

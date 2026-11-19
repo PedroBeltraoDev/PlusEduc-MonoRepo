@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, Request, Response, status
 
 from app.core.auth import UserPrincipal
-from app.dependencies import require_roles
+from app.core.access import AccessScope, staff_scope
 from app.schemas.subject_topic import (
     SubjectTopicCreateRequest,
     SubjectTopicResponse,
@@ -19,7 +19,8 @@ def service(request: Request) -> SubjectTopicService:
     )
 
 
-teacher_user = require_roles("TEACHER", "ADMIN")
+def teacher_user(scope: AccessScope = Depends(staff_scope)) -> UserPrincipal:
+    return scope.principal
 
 
 @router.get("", response_model=list[SubjectTopicResponse])

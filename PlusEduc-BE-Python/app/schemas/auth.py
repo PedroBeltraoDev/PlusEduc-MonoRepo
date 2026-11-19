@@ -76,7 +76,9 @@ class ResetPasswordResponse(BaseModel):
 class RefreshTokenRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
-    refreshToken: str = Field(min_length=1, description="Refresh token recebido no login (validade de 7 dias por padrão)")
+    refreshToken: str = Field(
+        min_length=1, max_length=4096, description="Refresh token recebido no login (validade de 7 dias por padrão)"
+    )
 
 
 class ChangePasswordRequest(BaseModel):
@@ -84,12 +86,6 @@ class ChangePasswordRequest(BaseModel):
 
     currentPassword: str = Field(min_length=1, max_length=100)
     newPassword: str = Field(min_length=6, max_length=100)
-
-
-class ChangePasswordResponse(BaseModel):
-    model_config = ConfigDict(extra="forbid")
-
-    message: str
 
 
 class TeacherRegistrationPendingResponse(BaseModel):
@@ -115,3 +111,10 @@ class AuthenticationResponse(BaseModel):
     role: str
     studentId: str | None = None
     name: str | None = None
+
+
+
+class LogoutRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    refreshToken: str | None = Field(default=None, max_length=4096)

@@ -18,9 +18,16 @@ atividades, notas, frequência, relatórios e portal do aluno.
 
 ### Autenticação
 
-1. `POST /api/auth/login` com e-mail e senha devolve `accessToken` (8 h) e `refreshToken` (7 dias).
+1. `POST /api/auth/login` com e-mail e senha devolve `accessToken` (30 min) e `refreshToken` (7 dias).
 2. Envie o token de acesso em todas as rotas protegidas: `Authorization: Bearer <accessToken>`.
 3. Quando o token de acesso vencer, troque o refresh token por um novo par em `POST /api/auth/refresh`.
+   O refresh token vale **uma vez só**: cada renovação devolve outro. Reapresentar um refresh token já
+   usado encerra todas as sessões daquele login.
+4. `POST /api/auth/logout` revoga o refresh token. Trocar ou redefinir a senha, ou desativar a conta,
+   invalida todos os tokens já emitidos.
+
+Login, cadastro e recuperação de senha têm limite de tentativas: acima dele a resposta é `429` com o
+cabeçalho `Retry-After` (segundos).
 
 No Swagger, clique em **Authorize** e cole o `accessToken`.
 
@@ -28,11 +35,12 @@ No Swagger, clique em **Authorize** e cole o `accessToken`.
 
 | Perfil | O que acessa |
 |---|---|
-| `TEACHER` | gestão de turmas, alunos, atividades, notas, relatórios e o próprio histórico |
-| `ADMIN` | o mesmo que o professor, mais a aprovação de cadastros de professor e o histórico de todos |
+| `TEACHER` | turmas sob sua responsabilidade (titular, disciplina atribuída ou ligadas ao cadastro) e os alunos, atividades, notas e relatórios delas; o próprio histórico |
+| `ADMIN` | todas as turmas, mais o cadastro de professores, a aprovação de cadastros públicos, a alteração do catálogo de matérias e o histórico de todos |
 | `STUDENT` | apenas `/api/student-portal/**` e os próprios dados de desempenho |
 
 Cada rota informa o perfil exigido no campo **Acesso**. Sem token a resposta é `401`; com perfil errado, `403`.
+Um professor que pede uma turma, aluno ou atividade fora do seu escopo também recebe `403`.
 
 ### Erros
 
@@ -160,6 +168,7 @@ PUBLIC = {
     ("GET", "/health"),
     ("POST", "/api/auth/login"),
     ("POST", "/api/auth/refresh"),
+    ("POST", "/api/auth/logout"),
     ("POST", "/api/auth/register/student"),
     ("POST", "/api/auth/register/teacher"),
     ("POST", "/api/auth/forgot-password"),
@@ -174,6 +183,11 @@ ADMIN_ONLY = {
     ("GET", "/api/teachers/pending"),
     ("POST", "/api/teachers/{teacher_id}/approve"),
     ("POST", "/api/teachers/{teacher_id}/reject"),
+    ("POST", "/api/teachers"),
+    ("PUT", "/api/teachers/{teacher_id}"),
+    ("DELETE", "/api/teachers/{teacher_id}"),
+    ("PATCH", "/api/subjects/{subject_id}"),
+    ("DELETE", "/api/subjects/{subject_id}"),
 }
 _OWN_RECORD = re.compile(r"^/api/students/\{student_id\}/(performance|attendance|pedagogical-recommendation)$")
 

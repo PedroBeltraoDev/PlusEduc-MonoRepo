@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Lock, Mail, UserRound } from "lucide-react";
 import { Logo } from "../components/Logo";
 import { useAuth } from "@/contexts/AuthContext";
 import { SESSION_EXPIRED_FLAG } from "@/services/authKeys";
+import { FeedbackMessage, Reveal, SwapContent } from "@/motion/primitives";
 
 // Aviso deixado quando a sessão foi encerrada pelo servidor (a marca é apagada depois que a tela abre).
 function sessionExpiredNotice(): boolean {
@@ -53,10 +54,10 @@ export function Login() {
     }
   }, [isAuthenticated, getHomePath, navigate]);
 
-  const changeMode = (nextMode: LoginMode) => {
+  const changeMode = (nextMode: LoginMode, keepMessage = false) => {
     setMode(nextMode);
     setError("");
-    setSuccessMessage("");
+    if (!keepMessage) setSuccessMessage("");
     setName("");
     setEmail("");
     setPassword("");
@@ -79,7 +80,7 @@ export function Login() {
         if (typeof result !== "string") {
           // Cadastro de professor aguardando aprovação do administrador: volta para o login com o aviso.
           const registeredEmail = result.userEmail;
-          changeMode("login");
+          changeMode("login", true);
           setEmail(registeredEmail);
           setSuccessMessage(result.message);
           return;
@@ -110,9 +111,10 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0A2463] via-[#1E5AA8] to-[#4FC3F7] dark:from-gray-900 dark:via-gray-800 dark:to-gray-700 flex items-center justify-center p-4 transition-colors">
-      <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-8 transition-colors">
+      <Reveal from="scale" className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-md p-8 transition-colors">
         <Logo className="mb-8" />
 
+        <SwapContent swapKey={mode} direction={mode === "login" ? -1 : 1}>
         <div className="mb-6">
           <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
             {isTeacherRegistering ? "Cadastro de professor" : isRegistering ? "Cadastro de aluno" : "Acesse sua conta"}
@@ -126,19 +128,19 @@ export function Login() {
           </p>
         </div>
 
-        {successMessage && (
+        <FeedbackMessage show={Boolean(successMessage)} tone="success" messageKey={successMessage}>
           <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
             <span className="text-sm text-green-700 dark:text-green-400">{successMessage}</span>
           </div>
-        )}
+        </FeedbackMessage>
 
-        {error && (
+        <FeedbackMessage show={Boolean(error)} tone="error" messageKey={error}>
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
             <span className="text-sm text-red-700 dark:text-red-400">{error}</span>
           </div>
-        )}
+        </FeedbackMessage>
 
         <form onSubmit={handleSubmit} className="space-y-5">
           {isRegistering && (
@@ -251,6 +253,7 @@ export function Login() {
             </div>
           )}
         </form>
+        </SwapContent>
 
         <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-600 text-center">
           {isRegistering ? (
@@ -285,7 +288,7 @@ export function Login() {
             </>
           )}
         </div>
-      </div>
+      </Reveal>
     </div>
   );
 }

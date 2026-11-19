@@ -45,14 +45,25 @@ class UserRepository:
         )
         return str(result.inserted_id)
 
-    def insert_teacher_user(self, email: str, password_hash: str, pending_approval: bool = False) -> str:
+    def insert_teacher_user(
+        self,
+        email: str,
+        password_hash: str | None,
+        pending_approval: bool = False,
+        active: bool = True,
+        name: str | None = None,
+    ) -> str:
         document: dict[str, Any] = {
             "email": email,
-            "password": password_hash,
             "role": "TEACHER",
-            "active": not pending_approval,
+            "active": active and not pending_approval,
+            "tokenVersion": 0,
             "createdAt": datetime.now(timezone.utc),
         }
+        if password_hash:
+            document["password"] = password_hash
+        if name:
+            document["name"] = name
         if pending_approval:
             # Conta criada pelo cadastro público: só passa a entrar depois da aprovação do ADMIN.
             document["pendingApproval"] = True
@@ -67,10 +78,21 @@ class UserRepository:
                 "role": "ADMIN",
                 "name": name,
                 "active": True,
+                "tokenVersion": 0,
                 "createdAt": datetime.now(timezone.utc),
             }
         )
         return str(result.inserted_id)
+
+    # ---- consultas sem filtro de ativo (cadastro pendente, sincronização) -----------------
+    def find_by_email(self, email: str) -> dict[str, Any] | None:
+        return self._mongo.database["users"].find_one({"email": email})
+
+    def find_by_id(self, user_id: str) -> dict[str, Any] | None:
+        candidates: list[Any] = [user_id]
+        if ObjectId.is_valid(user_id):
+            candidates.append(ObjectId(user_id))
+        return self._mongo.database["users"].find_one({"_id": {"$in": candidates}})
 
     def find_pending_by_email(self, email: str) -> dict[str, Any] | None:
         return self._mongo.database["users"].find_one({"email": email, "pendingApproval": True})
@@ -87,6 +109,23 @@ class UserRepository:
 
     def delete_pending(self, email: str) -> int:
         return self._mongo.database["users"].delete_many({"email": email, "pendingApproval": True}).deleted_count
+
+    def update_fields(self, email: str, values: dict[str, Any]) -> bool:
+        result = self._mongo.database["users"].update_one(
+            {"email": email},
+            {"$set": {**values, "updatedAt": datetime.now(timezone.utc)}},
+        )
+        return result.matched_count == 1
+
+    def unset_fields(self, email: str, *fields: str) -> None:
+        self._mongo.database["users"].update_one({"email": email}, {"$unset": {field: "" for field in fields}})
+
+    def revoke_sessions(self, email: str) -> None:
+        """Invalida todos os tokens já emitidos para a conta (access e refresh)."""
+        self._mongo.database["users"].update_one(
+            {"email": email},
+            {"$inc": {"tokenVersion": 1}, "$set": {"updatedAt": datetime.now(timezone.utc)}},
+        )
 
     def set_password_reset_code(self, email: str, code_hash: str, expires_at: datetime) -> bool:
         result = self._mongo.database["users"].update_one(
@@ -120,16 +159,20 @@ class UserRepository:
         )
 
     def deactivate_by_email(self, email: str) -> int:
-        """Desativa o login de quem foi excluído (exclusão lógica): o token e a senha deixam de valer."""
+        """Desativa o login de quem foi excluído (exclusão lógica): os tokens já emitidos deixam de valer."""
         result = self._mongo.database["users"].update_many(
             {"email": email, "active": {"$ne": False}},
-            {"$set": {"active": False, "updatedAt": datetime.now(timezone.utc)}},
+            {"$set": {"active": False, "updatedAt": datetime.now(timezone.utc)}, "$inc": {"tokenVersion": 1}},
         )
         return result.modified_count
 
     def update_password(self, email: str, password_hash: str) -> bool:
+        """Troca a senha e encerra as sessões abertas (tokens antigos deixam de valer)."""
         result = self._mongo.database["users"].update_one(
             {"email": email, "active": {"$ne": False}},
-            {"$set": {"password": password_hash, "updatedAt": datetime.now(timezone.utc)}},
+            {
+                "$set": {"password": password_hash, "updatedAt": datetime.now(timezone.utc)},
+                "$inc": {"tokenVersion": 1},
+            },
         )
         return result.matched_count == 1

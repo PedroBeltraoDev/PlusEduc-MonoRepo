@@ -47,7 +47,12 @@ class StudentRepository:
             ).sort("name", 1)
         )
 
-    def next_matricula(self, prefix: str = "MAT-2026-") -> str:
+    def next_matricula(self, prefix: str | None = None) -> str:
+        """Próxima matrícula do ano corrente (ex.: MAT-2027-0001); antes o ano era fixo em 2026."""
+        if prefix is None:
+            from datetime import datetime, timezone
+
+            prefix = f"MAT-{datetime.now(timezone.utc).year}-"
         highest = 0
         for document in self.collection.find({"matricula": {"$regex": f"^{prefix}\\d+$"}}, {"matricula": 1}):
             value = str(document.get("matricula", ""))
@@ -87,6 +92,24 @@ class StudentRepository:
                 {"learning_gaps.subject": {"$regex": subject, "$options": "i"}, "active": True}
             )
         )
+
+    def find_active_page(self, query: dict[str, Any], skip: int, limit: int) -> tuple[list[dict[str, Any]], int]:
+        """Paginação feita no MongoDB (skip/limit), sem carregar a coleção inteira."""
+        criteria = {"active": True, **query}
+        total = self.collection.count_documents(criteria)
+        items = list(self.collection.find(criteria).sort([("name", 1), ("_id", 1)]).skip(skip).limit(limit))
+        return items, total
+
+    def find_active_in_scope(self, classroom_ids: Iterable[str], member_ids: Iterable[str], include_unassigned: bool = False) -> list[dict[str, Any]]:
+        """Alunos ativos das turmas informadas (pelo class_id ou pela lista de membros da turma)."""
+        conditions: list[dict[str, Any]] = [
+            {"class_id": {"$in": list(classroom_ids)}},
+            {"classId": {"$in": list(classroom_ids)}},
+            {"_id": {"$in": id_candidates(member_ids)}},
+        ]
+        if include_unassigned:
+            conditions.extend([{"class_id": {"$in": [None, ""]}}, {"class_id": {"$exists": False}, "classId": {"$in": [None, ""]}}, {"class_id": {"$exists": False}, "classId": {"$exists": False}}])
+        return list(self.collection.find({"active": True, "$or": conditions}).sort("name", 1))
 
     def count_active(self) -> int:
         return self.collection.count_documents({"active": True})

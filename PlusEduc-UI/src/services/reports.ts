@@ -132,13 +132,7 @@ class ReportsService {
 
   // Baixa o relatório no formato escolhido (o navegador recebe o arquivo gerado pelo backend).
   async exportReport(type: string, format: ExportFormat, filters: ReportFilters): Promise<string> {
-    const response = await fetch(`/api/reports/${type}/export${queryString({ ...filters, format })}`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` },
-    });
-    if (!response.ok) {
-      const error = await response.json().catch(() => null);
-      throw new Error(error?.message || 'Não foi possível exportar o relatório.');
-    }
+    const response = await apiClient.download(`/reports/${type}/export${queryString({ ...filters, format })}`);
     const blob = await response.blob();
     const disposition = response.headers.get('Content-Disposition') ?? '';
     const filename = /filename="?([^";]+)"?/.exec(disposition)?.[1] ?? `relatorio.${format}`;

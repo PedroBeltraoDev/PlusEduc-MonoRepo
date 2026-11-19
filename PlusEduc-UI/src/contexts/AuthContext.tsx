@@ -55,6 +55,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setStudentId(authService.getStudentId());
   };
 
+  // Sessão encerrada pelo cliente HTTP (refresh recusado): reflete no estado da aplicação.
+  useEffect(() => {
+    const onEnded = () => syncFromStorage();
+    window.addEventListener('pluseduc:session-ended', onEnded);
+    return () => window.removeEventListener('pluseduc:session-ended', onEnded);
+  }, []);
+
   useEffect(() => {
     try {
       setLoadingState('loading');
@@ -92,23 +99,18 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
+  // Com a aprovação ligada (padrão) o cadastro fica pendente e não abre sessão: devolve os dados do pedido.
   const registerTeacher = async (data: RegisterTeacherRequest) => {
     try {
       setLoadingState('loading');
       const response = await authService.registerTeacher(data);
-      syncFromStorage();
       setLoadingState('success');
       if (!('accessToken' in response)) {
         return response;
       }
+      syncFromStorage();
       return response.role === 'STUDENT' ? '/aluno' : '/dashboard';
     } catch (error) {
-      setIsAuthenticated(false);
-      setRole(null);
-      setUserName(null);
-      setUserEmail(null);
-      setUserId(null);
-      setStudentId(null);
       setLoadingState('error');
       throw error;
     }
@@ -145,6 +147,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setRole(null);
     setUserName(null);
     setUserEmail(null);
+    setUserId(null);
     setStudentId(null);
     setLoadingState('idle');
   };

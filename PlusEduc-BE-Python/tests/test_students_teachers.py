@@ -134,7 +134,7 @@ class FakeUserRepository:
                 "_id": "user-teacher",
                 "email": "teacher@example.com",
                 "password": password_hash,
-                "role": "TEACHER",
+                "role": "ADMIN",
                 "active": True,
             }
         }
@@ -146,13 +146,37 @@ class FakeUserRepository:
             return user
         return None
 
-    def insert_teacher_user(self, email, password_hash):
-        self.users[email] = {"_id": f"teacher-user-{email}", "email": email, "password": password_hash, "role": "TEACHER", "active": True}
+    def find_by_email(self, email):
+        return self.users.get(email)
+
+    def insert_teacher_user(self, email, password_hash, pending_approval=False, active=True, name=None):
+        self.users[email] = {
+            "_id": f"teacher-user-{email}",
+            "email": email,
+            "password": password_hash,
+            "role": "TEACHER",
+            "active": active and not pending_approval,
+            "tokenVersion": 0,
+            "name": name,
+        }
         return self.users[email]["_id"]
+
+    def update_fields(self, email, values):
+        if email not in self.users:
+            return False
+        user = self.users.pop(email)
+        user.update(values)
+        self.users[user["email"]] = user
+        return True
+
+    def revoke_sessions(self, email):
+        if email in self.users:
+            self.users[email]["tokenVersion"] = self.users[email].get("tokenVersion", 0) + 1
 
     def update_password(self, email, password_hash):
         if email in self.users:
             self.users[email]["password"] = password_hash
+            self.revoke_sessions(email)
         return email in self.users
 
     def deactivate_by_email(self, email):

@@ -20,7 +20,9 @@ const normalizeSubjectKey = (value: string) =>
   value.trim().toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 
 export function Materias() {
-  const { userEmail } = useAuth();
+  const { userEmail, role } = useAuth();
+  // Apagar uma matéria do catálogo afeta todas as turmas: só o administrador pode.
+  const canDeleteSubjects = role === "ADMIN";
   const [subjects, setSubjects] = useState<Subject[]>([]);
   const [teacherSubjectNames, setTeacherSubjectNames] = useState<string[] | null>(null);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
@@ -241,7 +243,7 @@ export function Materias() {
                   </div>
                   <ArrowRight className="h-5 w-5 shrink-0 text-gray-400 transition group-hover:translate-x-1 group-hover:text-[#1E5AA8] dark:group-hover:text-[#4FC3F7]" />
                 </Link>
-                <div className="relative pr-3">
+                {canDeleteSubjects && <div className="relative pr-3">
                   <button
                     type="button"
                     aria-label={`Mais opções da matéria ${subject.name}`}
@@ -267,7 +269,7 @@ export function Materias() {
                       </button>
                     </div>
                   )}
-                </div>
+                </div>}
               </div>
             ))}
           </div>

@@ -67,8 +67,12 @@ def users():
 
 @pytest.fixture
 def client(settings, users):
+    teachers = FakeTeacherRepository()
+    # O professor das contas de teste precisa de cadastro ativo em teachers (sem ele, nada é liberado).
+    teachers.items.append({"_id": "teacher-perm", "name": "Professor Permissões", "email": "teacher@example.com",
+                           "subjects": [], "classrooms": ["class-1"], "active": True})
     app = create_app(settings, user_repository=users, student_repository=FakeStudentRepository(),
-                     teacher_repository=FakeTeacherRepository(), classroom_repository=FakeClassroomRepository())
+                     teacher_repository=teachers, classroom_repository=FakeClassroomRepository())
     with TestClient(app) as test_client:
         yield test_client
 
@@ -88,6 +92,7 @@ PUBLIC = {
     ("POST", "/api/auth/forgot-password"),
     ("POST", "/api/auth/reset-password"),
     ("POST", "/api/auth/refresh"),  # Sprint 10: autenticado pelo refresh token do corpo, não pelo cabeçalho
+    ("POST", "/api/auth/logout"),  # revoga o refresh token informado no corpo
 }
 # Qualquer usuário autenticado; cada rota confere internamente se o registro pertence a quem pede.
 OWN_RECORD = re.compile(r"^/api/students/\{student_id\}/(performance|attendance|pedagogical-recommendation)$")

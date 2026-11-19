@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
+import uuid
+
 import jwt
 from jwt import ExpiredSignatureError, InvalidTokenError
 
@@ -21,23 +23,45 @@ def _secret(settings: Settings) -> str:
     return settings.jwt_secret
 
 
-def _create_token(subject: str, settings: Settings, expiration_ms: int, token_type: str) -> str:
+def _create_token(
+    subject: str,
+    settings: Settings,
+    expiration_ms: int,
+    token_type: str,
+    extra: dict[str, Any] | None = None,
+) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "sub": subject,
         "type": token_type,
         "iat": now,
         "exp": now + timedelta(milliseconds=expiration_ms),
+        "jti": uuid.uuid4().hex,
     }
+    if extra:
+        payload.update(extra)
     return jwt.encode(payload, _secret(settings), algorithm=ALGORITHM)
 
 
-def create_access_token(subject: str, settings: Settings) -> str:
-    return _create_token(subject, settings, settings.jwt_expiration_ms, ACCESS_TOKEN)
+def create_access_token(subject: str, settings: Settings, token_version: int = 0) -> str:
+    """``ver`` acompanha ``users.tokenVersion``: trocar a senha ou desativar a conta invalida o token."""
+    return _create_token(subject, settings, settings.jwt_expiration_ms, ACCESS_TOKEN, {"ver": token_version})
 
 
-def create_refresh_token(subject: str, settings: Settings) -> str:
-    return _create_token(subject, settings, settings.jwt_refresh_expiration_ms, REFRESH_TOKEN)
+def create_refresh_token(
+    subject: str,
+    settings: Settings,
+    token_version: int = 0,
+    family: str | None = None,
+) -> str:
+    """Refresh token rotativo: ``fam`` identifica a cadeia de renovações de um mesmo login."""
+    return _create_token(
+        subject,
+        settings,
+        settings.jwt_refresh_expiration_ms,
+        REFRESH_TOKEN,
+        {"ver": token_version, "fam": family or uuid.uuid4().hex},
+    )
 
 
 def decode_token(token: str, settings: Settings, expected_type: str = ACCESS_TOKEN) -> dict[str, Any]:

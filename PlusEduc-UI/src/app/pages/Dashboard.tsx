@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import {
   AlertCircle,
@@ -13,6 +13,8 @@ import {
   Send,
   TrendingUp,
 } from "lucide-react";
+import { AnimatedNumber, Reveal, StaggerItem } from "@/motion/primitives";
+import { useMotion } from "@/motion/MotionProvider";
 import {
   Bar,
   BarChart,
@@ -53,13 +55,21 @@ const compactClassroom = (name: string) =>
   name.replace(/^Turma /, "").replace("Ano do Ensino Fundamental", "Ano (EF)").replace("Ano do Ensino Médio", "Ano (EM)");
 const TICKS = [0, 2, 4, 6, 8, 10];
 
-function ChartCard({ title, subtitle, empty, children }: { title: string; subtitle?: string; empty: boolean; children: React.ReactNode }) {
+// Indicador numérico com transição discreta; textos como "-" ficam como estão.
+function KpiValue({ value }: { value: string }) {
+  const match = /^(-?d+(?:,d+)?)(%?)$/.exec(value);
+  if (!match) return <>{value}</>;
+  const decimals = match[1].includes(",") ? match[1].split(",")[1].length : 0;
+  return <AnimatedNumber value={Number(match[1].replace(",", "."))} decimals={decimals} suffix={match[2]} />;
+}
+
+function ChartCard({ title, subtitle, empty, children, index = 0 }: { title: string; subtitle?: string; empty: boolean; children: React.ReactNode; index?: number }) {
   return (
-    <section className="min-w-0 rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
+    <StaggerItem index={index + 2} className="min-w-0 rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800">
       <h2 className="text-lg font-semibold text-[#0A2463] dark:text-white">{title}</h2>
       {subtitle && <p className="mb-3 text-sm text-gray-500 dark:text-gray-400">{subtitle}</p>}
       {empty ? <p className="py-10 text-center text-sm text-gray-500 dark:text-gray-400">Sem dados para os filtros selecionados.</p> : children}
-    </section>
+    </StaggerItem>
   );
 }
 
@@ -69,6 +79,13 @@ export function Dashboard() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filters, setFilters] = useState<ReportFilters>({});
   const [data, setData] = useState<DashboardOverview | null>(null);
+  const m = useMotion();
+  // Gráficos animam só na primeira carga: trocar filtros atualiza sem repetir a animação.
+  const firstChartLoad = useRef(true);
+  const animateCharts = firstChartLoad.current && !m.reduced && m.profile !== "performance";
+  useEffect(() => {
+    if (data) firstChartLoad.current = false;
+  }, [data]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
@@ -135,7 +152,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-3">
+      <Reveal className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-bold text-[#0A2463] dark:text-white">Dashboard</h1>
           <p className="mt-1 text-gray-600 dark:text-gray-300">Indicadores calculados a partir das notas, frequências e atividades reais do sistema.</p>
@@ -143,7 +160,7 @@ export function Dashboard() {
         <Link to="/relatorios" className="rounded-lg border border-[#1E5AA8] px-4 py-2 text-sm font-semibold text-[#1E5AA8] transition hover:bg-[#1E5AA8] hover:text-white dark:border-[#4FC3F7] dark:text-[#4FC3F7]">
           Ver relatórios e exportar
         </Link>
-      </header>
+      </Reveal>
 
       <FiltersBar filters={filters} onChange={setFilters} classrooms={classrooms} />
 
@@ -158,32 +175,39 @@ export function Dashboard() {
       )}
 
       {loading && !data && (
-        <div className="flex items-center gap-2 py-10 text-gray-500 dark:text-gray-400">
-          <Loader2 className="h-6 w-6 animate-spin text-[#1E5AA8]" /> Carregando indicadores...
+        <div className="space-y-6" aria-busy="true" aria-label="Carregando indicadores">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
+            {Array.from({ length: 6 }, (_, i) => <div key={i} className="pe-skeleton h-24 rounded-2xl" />)}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="pe-skeleton h-72 rounded-2xl" />
+            <div className="pe-skeleton h-72 rounded-2xl" />
+          </div>
+          <span className="sr-only"><Loader2 /> Carregando indicadores...</span>
         </div>
       )}
 
       {data && (
         <div className={loading ? "space-y-6 opacity-60 transition-opacity" : "space-y-6 transition-opacity"} aria-busy={loading}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-6">
-            {cards.map(({ icon: Icon, label, value, detail, color }) => (
-              <div key={label} className="rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800">
+            {cards.map(({ icon: Icon, label, value, detail, color }, index) => (
+              <StaggerItem key={label} index={index} className="pe-lift rounded-2xl bg-white p-4 shadow-sm dark:bg-gray-800">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="text-sm text-gray-600 dark:text-gray-300">{label}</p>
-                    <p className="mt-1 text-2xl font-bold text-[#0A2463] dark:text-white">{value}</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums text-[#0A2463] dark:text-white"><KpiValue value={value} /></p>
                     <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">{detail}</p>
                   </div>
                   <div className={`${color} shrink-0 rounded-lg p-2.5`}>
                     <Icon className="h-5 w-5 text-white" />
                   </div>
                 </div>
-              </div>
+              </StaggerItem>
             ))}
           </div>
 
           <div className="grid gap-6 lg:grid-cols-2">
-            <ChartCard title="Média por turma" subtitle="Nota de 0 a 10; passe o mouse para ver o nome completo." empty={classroomChart.length === 0}>
+            <ChartCard index={0} title="Média por turma" subtitle="Nota de 0 a 10; passe o mouse para ver o nome completo." empty={classroomChart.length === 0}>
               <div style={{ height: Math.max(240, classroomChart.length * 30 + 40) }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={classroomChart} layout="vertical" margin={{ left: 8, right: 24 }}>
@@ -191,13 +215,13 @@ export function Dashboard() {
                     <XAxis type="number" domain={[0, 10]} ticks={TICKS} tick={{ fill: AXIS, fontSize: 12 }} />
                     <YAxis type="category" dataKey="label" width={120} tick={{ fill: AXIS, fontSize: 11 }} />
                     <Tooltip formatter={(value: number) => [decimal(value, 2), "Média"]} labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""} />
-                    <Bar dataKey="average" fill={BLUE} radius={[0, 4, 4, 0]} />
+                    <Bar isAnimationActive={animateCharts} dataKey="average" fill={BLUE} radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </ChartCard>
 
-            <ChartCard title="Média por disciplina" subtitle="Disciplinas com o mesmo nome (com ou sem acento) são agrupadas." empty={subjectChart.length === 0}>
+            <ChartCard index={1} title="Média por disciplina" subtitle="Disciplinas com o mesmo nome (com ou sem acento) são agrupadas." empty={subjectChart.length === 0}>
               <div style={{ height: Math.max(240, subjectChart.length * 34 + 40) }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={subjectChart} layout="vertical" margin={{ left: 8, right: 24 }}>
@@ -205,13 +229,13 @@ export function Dashboard() {
                     <XAxis type="number" domain={[0, 10]} ticks={TICKS} tick={{ fill: AXIS, fontSize: 12 }} />
                     <YAxis type="category" dataKey="label" width={140} tick={{ fill: AXIS, fontSize: 11 }} />
                     <Tooltip formatter={(value: number) => [decimal(value, 2), "Média"]} labelFormatter={(_, payload) => payload?.[0]?.payload?.name ?? ""} />
-                    <Bar dataKey="average" fill={GREEN} radius={[0, 4, 4, 0]} />
+                    <Bar isAnimationActive={animateCharts} dataKey="average" fill={GREEN} radius={[0, 4, 4, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </ChartCard>
 
-            <ChartCard title="Evolução da média" subtitle="Média das notas lançadas em cada mês." empty={monthlyChart.length === 0}>
+            <ChartCard index={2} title="Evolução da média" subtitle="Média das notas lançadas em cada mês." empty={monthlyChart.length === 0}>
               <div style={{ height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={monthlyChart} margin={{ left: 0, right: 16, top: 8 }}>
@@ -219,13 +243,13 @@ export function Dashboard() {
                     <XAxis dataKey="label" tick={{ fill: AXIS, fontSize: 12 }} />
                     <YAxis domain={[0, 10]} ticks={TICKS} tick={{ fill: AXIS, fontSize: 12 }} />
                     <Tooltip formatter={(value: number) => [decimal(value, 2), "Média"]} />
-                    <Line type="monotone" dataKey="average" stroke={BLUE} strokeWidth={2} dot={{ r: 4 }} />
+                    <Line isAnimationActive={animateCharts} type="monotone" dataKey="average" stroke={BLUE} strokeWidth={2} dot={{ r: 4 }} />
                   </LineChart>
                 </ResponsiveContainer>
               </div>
             </ChartCard>
 
-            <ChartCard title="Distribuição das notas" subtitle="Quantidade de lançamentos por faixa de nota." empty={(kpis?.gradeLaunches ?? 0) === 0}>
+            <ChartCard index={3} title="Distribuição das notas" subtitle="Quantidade de lançamentos por faixa de nota." empty={(kpis?.gradeLaunches ?? 0) === 0}>
               <div style={{ height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={data.distribution} margin={{ left: 0, right: 16, top: 8 }}>
@@ -233,7 +257,7 @@ export function Dashboard() {
                     <XAxis dataKey="range" tick={{ fill: AXIS, fontSize: 12 }} />
                     <YAxis allowDecimals={false} tick={{ fill: AXIS, fontSize: 12 }} />
                     <Tooltip formatter={(value: number) => [value, "Lançamentos"]} />
-                    <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                    <Bar isAnimationActive={animateCharts} dataKey="count" radius={[4, 4, 0, 0]}>
                       {data.distribution.map((bucket, index) => (
                         <Cell key={bucket.range} fill={index < 3 ? "#E53935" : index === 3 ? LIGHT_BLUE : GREEN} />
                       ))}
@@ -243,11 +267,11 @@ export function Dashboard() {
               </div>
             </ChartCard>
 
-            <ChartCard title="Entrega de atividades" subtitle="Submissões recebidas em relação ao esperado (alunos × atividades)." empty={!hasParticipation}>
+            <ChartCard index={4} title="Entrega de atividades" subtitle="Submissões recebidas em relação ao esperado (alunos × atividades)." empty={!hasParticipation}>
               <div style={{ height: 260 }}>
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={participation} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
+                    <Pie isAnimationActive={animateCharts} data={participation} dataKey="value" nameKey="name" innerRadius={55} outerRadius={90} paddingAngle={2}>
                       {participation.map((item) => (
                         <Cell key={item.name} fill={item.color} />
                       ))}

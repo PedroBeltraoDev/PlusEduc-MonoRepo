@@ -42,6 +42,13 @@ def get_current_user(
             detail="User not found or inactive",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    # Senha trocada, sessão revogada ou conta reativada depois do login: o token antigo não vale mais.
+    if int(payload.get("ver", 0) or 0) != int(user.get("tokenVersion", 0) or 0):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Session revoked",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     principal = principal_from_document(user)
     request.state.principal = principal  # usado pelo histórico de operações para identificar o autor
     return principal

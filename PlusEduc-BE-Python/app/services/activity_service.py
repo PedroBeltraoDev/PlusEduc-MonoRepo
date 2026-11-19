@@ -138,6 +138,17 @@ class ActivityService:
     def list_all(self, include_participation: bool = False) -> list[ActivityResponse]:
         return self.to_responses(self.repository.find_all(), include_participation)
 
+    def list_scoped(self, scope, include_participation: bool = False) -> list[ActivityResponse]:
+        """Atividades visíveis ao usuário: ADMIN vê todas; professor, as das turmas dele."""
+        if scope is None or scope.is_admin:
+            return self.list_all(include_participation)
+        documents = self.repository.find_by_classrooms(list(scope.classroom_ids)) if scope.classroom_ids else []
+        finder = getattr(self.repository, "find_by_creators", None)
+        if finder is not None:
+            documents.extend(item for item in finder(list(scope.actor_keys)) if not item.get("classroom_id") and not item.get("classroomId"))
+        unique = {str(item.get("_id")): item for item in documents}
+        return self.to_responses(list(unique.values()), include_participation)
+
     def get(self, activity_id: str, include_participation: bool = False) -> ActivityResponse:
         item = self.repository.find_by_id(activity_id)
         if not item:

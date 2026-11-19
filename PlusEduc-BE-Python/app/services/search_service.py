@@ -14,7 +14,8 @@ TYPES = ("students", "classrooms", "activities")
 class SearchService:
     """Pesquisa global (sem acento e sem diferenciar maiúsculas) em alunos, turmas e atividades."""
 
-    def __init__(self, students: StudentRepository, classrooms: ClassroomRepository, activities: ActivityRepository) -> None:
+    def __init__(self, students: StudentRepository, classrooms: ClassroomRepository, activities: ActivityRepository, scope=None) -> None:
+        self.scope = scope
         self.students = students
         self.classrooms = classrooms
         self.activities = activities
@@ -51,15 +52,36 @@ class SearchService:
             total += score
         return total
 
+    # A pesquisa respeita o escopo: professor só encontra alunos, turmas e atividades dele.
+    def _restricted(self) -> bool:
+        return self.scope is not None and not self.scope.is_admin
+
+    def _classrooms(self) -> list:
+        items = self.classrooms.find_active()
+        return self.scope.filter_classrooms(items) if self._restricted() else items
+
+    def _students(self) -> list:
+        if self._restricted():
+            finder = getattr(self.students, "find_active_in_scope", None)
+            if finder is not None:
+                return finder(self.scope.classroom_ids, self.scope.member_ids)
+            return self.scope.filter_students(self.students.find_active())
+        return self.students.find_active()
+
+    def _activities(self) -> list:
+        if self._restricted():
+            return self.activities.find_by_classrooms(list(self.scope.classroom_ids)) if self.scope.classroom_ids else []
+        return self.activities.find_all()
+
     def search(self, query: str, kinds: list[str] | None, limit: int) -> SearchResponse:
         term = norm(query)
         selected = [kind for kind in (kinds or TYPES) if kind in TYPES]
         scored: list[tuple[int, SearchHit]] = []
         class_names: dict[str, str] = {}
         if "students" in selected or "activities" in selected:
-            class_names = {str(c["_id"]): str(c.get("name", "")) for c in self.classrooms.find_active()}
+            class_names = {str(c["_id"]): str(c.get("name", "")) for c in self._classrooms()}
         if "students" in selected:
-            for student in self.students.find_active():
+            for student in self._students():
                 score = self._score(term, student.get("name"), student.get("matricula"), student.get("email"))
                 if score is None:
                     continue
@@ -67,7 +89,7 @@ class SearchService:
                 subtitle = " • ".join(part for part in [student.get("matricula"), class_names.get(class_id) or "Sem turma"] if part)
                 scored.append((score, SearchHit(type="students", id=str(student["_id"]), title=str(student.get("name", "")), subtitle=subtitle, url=f"/notas?turma={class_id}" if class_id else "/turmas")))
         if "classrooms" in selected:
-            for classroom in self.classrooms.find_active():
+            for classroom in self._classrooms():
                 level = classroom.get("grade_level") or classroom.get("gradeLevel")
                 score = self._score(term, classroom.get("name"), level)
                 if score is None:
@@ -76,7 +98,7 @@ class SearchService:
                 subtitle = " • ".join(part for part in [level, f"{count} aluno(s)"] if part)
                 scored.append((score, SearchHit(type="classrooms", id=str(classroom["_id"]), title=str(classroom.get("name", "")), subtitle=subtitle, url=f"/notas?turma={classroom['_id']}")))
         if "activities" in selected:
-            for activity in self.activities.find_all():
+            for activity in self._activities():
                 score = self._score(term, activity.get("title"), activity.get("topic"), activity.get("subject"))
                 if score is None:
                     continue

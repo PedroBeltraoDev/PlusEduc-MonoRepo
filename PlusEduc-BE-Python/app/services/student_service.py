@@ -34,15 +34,53 @@ class StudentService:
         generator = getattr(self.repository, "next_matricula", None)
         if callable(generator):
             return generator()
+        prefix = f"MAT-{datetime.now(timezone.utc).year}-"
         highest = 0
         for item in self.repository.find_active():
             value = str(item.get("matricula", ""))
-            if value.startswith("MAT-2026-"):
+            if value.startswith(prefix):
                 try:
-                    highest = max(highest, int(value.removeprefix("MAT-2026-")))
+                    highest = max(highest, int(value.removeprefix(prefix)))
                 except ValueError:
                     continue
-        return f"MAT-2026-{highest + 1:04d}"
+        return f"{prefix}{highest + 1:04d}"
+
+    # ---- coerência aluno, turma e conta de acesso ---------------------------------------
+    def _set_membership(self, student_id: str, new_class_id: str | None, old_class_id: str | None) -> None:
+        """Atualiza a lista de alunos das turmas quando o class_id do aluno muda."""
+        update = getattr(self.classroom_repository, "update", None)
+        finder = getattr(self.classroom_repository, "find_by_id", None)
+        if update is None or finder is None:
+            return
+        now = datetime.now(timezone.utc)
+        remover = getattr(self.classroom_repository, "remove_student_everywhere", None)
+        if remover is not None:
+            remover(student_id, keep_classroom_id=new_class_id or None)
+        elif old_class_id and old_class_id != new_class_id:
+            old = finder(old_class_id)
+            if old:
+                members = [m for m in old.get("students", []) or [] if str(m) != str(student_id)]
+                update(old_class_id, {"students": members, "updated_at": now})
+        if new_class_id:
+            new = finder(new_class_id)
+            if new:
+                members = list(new.get("students", []) or [])
+                if str(student_id) not in {str(m) for m in members}:
+                    members.append(student_id)
+                    update(new_class_id, {"students": members, "updated_at": now})
+
+    def _sync_user(self, student: dict[str, Any], values: dict[str, Any], revoke: bool = False) -> None:
+        email = str(student.get("email", ""))
+        if not email or self.user_repository is None:
+            return
+        finder = getattr(self.user_repository, "find_by_email", None) or self.user_repository.find_active_by_email
+        user = finder(email)
+        if not user or user.get("role") != "STUDENT":
+            return
+        if hasattr(self.user_repository, "update_fields") and values:
+            self.user_repository.update_fields(email, values)
+        if revoke and hasattr(self.user_repository, "revoke_sessions"):
+            self.user_repository.revoke_sessions(values.get("email", email))
 
     def create(self, request: StudentCreateRequest, current_user: UserPrincipal) -> StudentResponse:
         if self.repository.find_by_email(request.email):
@@ -71,11 +109,9 @@ class StudentService:
                 created = self.repository.insert(document)
             except DuplicateKeyError:
                 continue
-            # A matrícula fica nos dois lados (students.class_id e classrooms.students[]): sem isto o aluno
-            # criado já com turma não aparecia na lista dela.
-            add_student = getattr(self.classroom_repository, "add_student", None)
-            if request.classId and callable(add_student):
-                add_student(request.classId, str(created["_id"]))
+            if request.classId:
+                # Antes o aluno ganhava class_id, mas não entrava na lista de alunos da turma.
+                self._set_membership(str(created.get("_id")), request.classId, None)
             return self.to_response(created)
 
         raise HTTPException(status_code=409, detail="Não foi possível gerar uma matrícula disponível")
@@ -86,13 +122,38 @@ class StudentService:
     def list_unassigned(self) -> list[StudentResponse]:
         return [self.to_response(item) for item in self.repository.find_unassigned_active()]
 
-    def page(self, page: int, size: int) -> StudentPageResponse:
+    def list_scoped(self, scope) -> list[StudentResponse]:
+        if scope is None or scope.is_admin:
+            return self.list_active()
+        finder = getattr(self.repository, "find_active_in_scope", None)
+        if finder is not None:
+            return [self.to_response(item) for item in finder(scope.classroom_ids, scope.member_ids)]
+        return [self.to_response(item) for item in scope.filter_students(self.repository.find_active())]
+
+    def page(self, page: int, size: int, scope=None) -> StudentPageResponse:
         page = max(page, 0)
         size = min(max(size, 1), 100)
-        items = self.repository.find_active()
         start = page * size
-        content = items[start : start + size]
-        total = len(items)
+        pager = getattr(self.repository, "find_active_page", None)
+        if pager is not None:
+            # Paginação no MongoDB (skip/limit + count), sem carregar todos os alunos.
+            query: dict[str, Any] = {}
+            if scope is not None and not scope.is_admin:
+                from app.repositories.base import id_candidates
+
+                ids = list(scope.classroom_ids)
+                query = {"$or": [
+                    {"class_id": {"$in": ids}},
+                    {"classId": {"$in": ids}},
+                    {"_id": {"$in": id_candidates(scope.member_ids)}},
+                ]}
+            content, total = pager(query, start, size)
+        else:
+            items = self.repository.find_active()
+            if scope is not None:
+                items = scope.filter_students(items)
+            content = items[start : start + size]
+            total = len(items)
         total_pages = (total + size - 1) // size if total else 0
         return StudentPageResponse(
             content=[self.to_response(item) for item in content],
@@ -143,7 +204,22 @@ class StudentService:
             updates["learning_gaps"] = [gap.to_document() for gap in (request.learningGaps or [])]
         updates["updated_at"] = datetime.now(timezone.utc)
         updates["updated_by"] = current_user.email
+        if updates.get("class_id") and not self.classroom_repository.exists_by_id(updates["class_id"]):
+            raise HTTPException(status_code=400, detail="Turma não encontrada")
         updated = self.repository.update(student_id, updates)
+        old_class = str(current.get("class_id", current.get("classId")) or "") or None
+        if "class_id" in updates and (updates["class_id"] or None) != old_class:
+            self._set_membership(student_id, updates["class_id"] or None, old_class)
+        user_values: dict[str, Any] = {}
+        if "email" in updates and updates["email"] != current.get("email"):
+            user_values["email"] = updates["email"]
+        if "name" in updates:
+            user_values["name"] = updates["name"]
+        if updates.get("active") is False:
+            user_values["active"] = False
+        elif updates.get("active") is True and current.get("active") is False:
+            user_values["active"] = True
+        self._sync_user(current, user_values, revoke="email" in user_values or user_values.get("active") is False)
         return self.to_response(updated)
 
     def enable_access(self, student_id: str, request: EnableStudentAccessRequest) -> None:
@@ -166,18 +242,11 @@ class StudentService:
 
     def delete(self, student_id: str) -> None:
         current = self.repository.find_by_id(student_id)
-        if not self.repository.soft_delete(student_id, datetime.now(timezone.utc)):
+        if not current or not self.repository.soft_delete(student_id, datetime.now(timezone.utc)):
             raise HTTPException(status_code=404, detail=f"Aluno não encontrado: {student_id}")
-        if not current:
-            return
-        # Exclusão lógica: o aluno não pode continuar entrando no portal nem contando como matriculado na turma.
-        deactivate = getattr(self.user_repository, "deactivate_by_email", None)
-        if callable(deactivate) and current.get("email"):
-            deactivate(current["email"])
-        class_id = current.get("class_id", current.get("classId"))
-        remove = getattr(self.classroom_repository, "remove_student", None)
-        if callable(remove) and class_id:
-            remove(str(class_id), str(student_id))
+        # Exclusão lógica coerente: o aluno sai da turma e a conta do portal deixa de entrar.
+        self._set_membership(student_id, None, str(current.get("class_id", current.get("classId")) or "") or None)
+        self._sync_user(current, {"active": False}, revoke=True)
 
     @staticmethod
     def to_response(document: dict[str, Any] | None) -> StudentResponse:

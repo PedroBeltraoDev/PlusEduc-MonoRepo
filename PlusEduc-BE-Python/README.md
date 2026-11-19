@@ -60,7 +60,7 @@ Depois, edite somente o `.env` local e preencha os segredos necessários. Nunca 
 | `MONGODB_DATABASE` | `escola_db` |
 | `MONGODB_REQUIRED` | `false` ou `true`, conforme a política do ambiente |
 | `JWT_SECRET` | Segredo forte definido somente no `.env` local |
-| `JWT_EXPIRATION_MS` | `28800000`, equivalente a 8 horas |
+| `JWT_EXPIRATION_MS` | `1800000`, equivalente a 30 minutos (a sessão é renovada pelo refresh token) |
 | `JWT_REFRESH_EXPIRATION_MS` | `604800000`, equivalente a 7 dias |
 | `CORS_ALLOWED_ORIGINS` | Origens do frontend, por exemplo `http://localhost:5173` |
 | `GEMINI_API_KEY` | Chave local do Gemini; quando vazia, a aplicação usa o fallback educacional |
@@ -207,7 +207,7 @@ continua funcionando pelo caminho em Python, que é também o oracle dos testes.
 | Variável | Padrão | Efeito |
 |---|---|---|
 | `OPENCL_ENABLED` | `true` | Liga/desliga o OpenCL. |
-| `OPENCL_MIN_RECORDS` | `0` | Abaixo desse número de lançamentos usa Python. O ponto de equilíbrio medido fica perto de 100 mil registros; em produção use algo como `50000`. |
+| `OPENCL_MIN_RECORDS` | `50000` | Abaixo desse número de lançamentos usa Python. O ponto de equilíbrio medido fica perto de 100 mil registros (antes o padrão era `0`, que mandava até cálculos pequenos para a GPU). |
 | `OPENCL_DEVICE` | vazio | Trecho do nome do dispositivo (ex.: `Radeon`); vazio escolhe a primeira GPU. |
 
 `GET /health` mostra o estado em `opencl` (dispositivo, se está ativo e quantas execuções do kernel já ocorreram). Para comparar Python x GPU:
@@ -267,7 +267,11 @@ Verifique se o Uvicorn está em execução na porta `8080`, se o Vite está em e
 
 ### Erro `401 Unauthorized`
 
-O token de acesso vale 8 horas e não é renovado automaticamente (o refresh token é emitido, mas ainda não há rota de renovação). Quando o token vence, o frontend encerra a sessão e volta ao login com o aviso "Sua sessão expirou". Só tokens do tipo `access` abrem a API.
+O token de acesso vale 30 minutos e o frontend o renova sozinho em `POST /api/auth/refresh`. O 401 aparece quando a renovação também falha: refresh token vencido (7 dias), já usado (cada um vale uma vez), senha trocada ou conta desativada depois do login. Nesses casos o frontend encerra a sessão e volta ao login com o aviso "Sua sessão expirou". Só tokens do tipo `access` abrem a API.
+
+### Erro `429 Too Many Requests`
+
+Login, cadastro e recuperação de senha têm limite de tentativas (padrão: 5 falhas de login em 15 minutos por IP e e-mail). Espere o tempo indicado no cabeçalho `Retry-After`; o limite fica em memória e zera ao reiniciar a API.
 
 ### Geração por IA retorna modo de demonstração
 
