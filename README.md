@@ -156,7 +156,7 @@ funcional contra o sistema em execução (104 casos de API, 91 de navegação e 
 
 | Onde | Conteúdo |
 |---|---|
-| [`docs/API.md`](docs/API.md) | referência das 99 rotas: autenticação, perfis, exemplos com `curl`, parâmetros, corpos e respostas |
+| [`docs/API.md`](docs/API.md) | referência das 100 rotas: autenticação, perfis, exemplos com `curl`, parâmetros, corpos e respostas |
 | `http://127.0.0.1:8080/docs` | Swagger UI interativo (com o backend em execução) |
 | `http://127.0.0.1:8080/redoc` | ReDoc |
 | [`docs/api/openapi.json`](docs/api/openapi.json) | esquema OpenAPI 3.1 (importável no Postman ou Insomnia) |
@@ -202,7 +202,20 @@ PlusEduc-MonoRepo/
 ## Pendências conhecidas
 
 Registradas em [`docs/sprint-10/README.md`](docs/sprint-10/README.md): predição de risco, agrupamento por perfil e
-otimização de grupos de reforço (RF19, RF21 e RF22), o escopo de dados por turma para cada professor e a
-integração contínua (os testes ainda rodam manualmente).
+otimização de grupos de reforço (RF19, RF21 e RF22) e a integração contínua (os testes ainda rodam manualmente).
+O escopo de dados por turma para cada professor entrou depois da Sprint 10, com a atualização de segurança abaixo.
 
 Arquivos `.env`, ambientes virtuais, dependências, builds, logs e caches locais não são versionados.
+
+## Atualização de segurança e Ultra Motion
+
+Veja [`docs/ATUALIZACAO_SEGURANCA_E_ULTRA_MOTION.md`](docs/ATUALIZACAO_SEGURANCA_E_ULTRA_MOTION.md): permissões por turma,
+refresh token rotativo, limite de tentativas, migração de dados, sistema de animações e o aplicativo de desktop
+(`PlusEduc-Desktop/`).
+
+Antes de usar com dados existentes, rode uma vez a migração (idempotente; sem `--apply` só simula):
+
+```powershell
+cd PlusEduc-BE-Python
+.\.venv\Scripts\python.exe scripts\migrate_security_integrity.py --apply
+```

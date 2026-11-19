@@ -28,6 +28,11 @@ class GradeRepository:
     def find_by_classroom(self, classroom_id: str) -> list[dict[str, Any]]:
         return list(self.collection.find({"classroomId": classroom_id}).sort("date", -1))
 
+    def find_by_classrooms(self, classroom_ids: list[str]) -> list[dict[str, Any]]:
+        if not classroom_ids:
+            return []
+        return list(self.collection.find({"classroomId": {"$in": classroom_ids}}).sort("date", -1))
+
     def find_by_activity(self, activity_id: str) -> list[dict[str, Any]]:
         return list(self.collection.find({"activityId": activity_id}))
 

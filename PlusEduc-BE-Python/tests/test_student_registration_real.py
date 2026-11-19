@@ -145,8 +145,16 @@ def test_registration_rejects_duplicate_email_without_creating_second_student(re
 
 def test_teacher_can_list_students_without_class(registration_context):
     client, database, _ = registration_context
-    teacher_email = "professor.fisica@professor.local"
-    teacher_password = "Demo@123"
+    from tests.teacher_fixture import temporary_teacher
+
+    # Professor e turma descartáveis: o professor só matricula alunos na própria turma.
+    with temporary_teacher(database, with_classroom=True) as temp:
+        _teacher_flow(client, database, temp)
+
+
+def _teacher_flow(client, database, temp):
+    teacher_email = temp["email"]
+    teacher_password = temp["password"]
 
     register_response = client.post(
         "/api/auth/register/student",
@@ -175,7 +183,7 @@ def test_teacher_can_list_students_without_class(registration_context):
     assert created_payload["matricula"].startswith(MATRICULA_PREFIX)
     assert created_payload["classId"] is None
 
-    classroom = database.classrooms.find_one({"active": True})
+    classroom = database.classrooms.find_one({"_id": ObjectId(temp["classroom_id"])})
     assert classroom is not None
     enroll_response = client.post(
         f"/api/classrooms/{classroom['_id']}/enroll/{created_student_id}",

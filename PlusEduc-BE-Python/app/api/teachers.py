@@ -14,14 +14,21 @@ router = APIRouter(prefix="/api/teachers", tags=["Professores"])
 
 
 def service(request: Request) -> TeacherService:
-    return TeacherService(request.app.state.teacher_repository, request.app.state.user_repository)
+    return TeacherService(
+        request.app.state.teacher_repository,
+        request.app.state.user_repository,
+        getattr(request.app.state, "refresh_token_repository", None),
+    )
+
+
+# Criar, alterar e desativar professores é tarefa administrativa: professor não gerencia colegas.
 
 
 @router.post("", response_model=TeacherResponse, status_code=status.HTTP_201_CREATED)
 def create_teacher(
     payload: TeacherCreateRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    current_user: UserPrincipal = Depends(require_roles("ADMIN")),
 ):
     return service(request).create(payload)
 
@@ -113,7 +120,7 @@ def update_teacher(
     teacher_id: str,
     payload: TeacherUpdateRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    current_user: UserPrincipal = Depends(require_roles("ADMIN")),
 ):
     return service(request).update(teacher_id, payload)
 
@@ -122,7 +129,7 @@ def update_teacher(
 def delete_teacher(
     teacher_id: str,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    current_user: UserPrincipal = Depends(require_roles("ADMIN")),
 ):
     service(request).delete(teacher_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

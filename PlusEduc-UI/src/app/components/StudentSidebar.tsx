@@ -1,9 +1,10 @@
-import { Link, useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import { useEffect, useState } from "react";
 import { BarChart3, BookOpen, ClipboardList, GraduationCap, Home, LogOut, Settings, Users } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { studentPortalService } from "@/services";
 import { cn } from "./ui/utils";
+import { SidebarNavLink } from "@/motion/SidebarNavLink";
 
 export const studentMenuItems = [
   { icon: Home, label: "Início", path: "/aluno" },
@@ -88,25 +89,21 @@ export function StudentSidebar({ className, onNavigate }: StudentSidebarProps) {
             (item.path !== "/aluno" && location.pathname.startsWith(item.path));
 
           return (
-            <Link
+            <SidebarNavLink
               key={item.path}
               to={item.path}
-              onClick={onNavigate}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                isActive
-                  ? "bg-white/20 text-white shadow-lg"
-                  : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
-            >
-              <Icon className="w-5 h-5" />
-              <span className="font-medium">{item.label}</span>
-            </Link>
+              icon={Icon}
+              label={item.label}
+              active={isActive}
+              onNavigate={onNavigate}
+              indicatorId={onNavigate ? "aluno-nav-mobile" : "aluno-nav"}
+            />
           );
         })}
       </nav>
 
       <div className="p-4 border-t border-white/10">
-        <p className="text-xs text-white/60 text-center">PlusEduc © 2026</p>
+        <p className="text-xs text-white/60 text-center">PlusEduc © {new Date().getFullYear()}</p>
       </div>
     </div>
   );

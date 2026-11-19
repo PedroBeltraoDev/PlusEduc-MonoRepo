@@ -40,6 +40,7 @@ class TeacherResponse(BaseModel):
     subjects: list[str] | None = None
     classroomIds: list[str] | None = None
     active: bool | None = None
+    approvalStatus: str | None = None
     createdAt: datetime | None = None
     updatedAt: datetime | None = None
 

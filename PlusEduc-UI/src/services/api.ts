@@ -6,40 +6,58 @@ import { clearSession, isAccessTokenExpired, persistSession } from './session';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? '/api';
 
-// Mensagens padrão do backend (em inglês) traduzidas para o usuário.
+// Mensagens do servidor (em inglês ou genéricas) traduzidas para o usuário.
 const FRIENDLY_MESSAGES: Record<string, string> = {
   'Invalid email or password': 'E-mail ou senha inválidos.',
   'Access denied': 'Você não tem permissão para realizar esta ação.',
   'Email already in use': 'Este e-mail já está em uso por outra conta.',
+  'Authentication required': 'Sua sessão expirou. Entre novamente.',
+  'Session revoked': 'Sua sessão foi encerrada. Entre novamente.',
+  'Erro de validação da requisição': 'Confira os campos preenchidos e tente novamente.',
+  'Erro interno do servidor': 'O servidor encontrou um erro. Tente novamente em instantes.',
 };
 
+// Renova o token de acesso quando faltar menos que isto para ele vencer.
+const REFRESH_MARGIN_MS = 30_000;
+
+// Rotas de /auth que não usam a sessão (login, cadastro, renovação, saída, recuperação de senha).
+function isPublicAuthRoute(endpoint: string): boolean {
+  return endpoint.startsWith('/auth/') && endpoint !== '/auth/profile' && endpoint !== '/auth/change-password';
+}
+
 // Renovação da sessão com o refresh token (RF01). Uma única renovação por vez, mesmo que várias
-// requisições recebam 401 ao mesmo tempo; se falhar, a sessão é encerrada.
+// requisições recebam 401 ao mesmo tempo: o refresh token vale uma vez só, e duas renovações
+// paralelas com o mesmo token fariam o servidor encerrar a sessão por "reuso".
 let refreshInFlight: Promise<boolean> | null = null;
 
-function refreshSession(): Promise<boolean> {
+export function refreshSession(): Promise<boolean> {
+  if (refreshInFlight) return refreshInFlight;
   const refreshToken = localStorage.getItem(AUTH_KEYS.refreshToken);
   if (!refreshToken) return Promise.resolve(false);
-  if (!refreshInFlight) {
-    refreshInFlight = fetch(`${API_BASE_URL}/auth/refresh`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refreshToken }),
-    })
-      .then(async (response) => {
-        if (!response.ok) return false;
-        persistSession((await response.json()) as AuthResponse);
-        return true;
-      })
-      .catch(() => false)
-      .finally(() => {
-        refreshInFlight = null;
+
+  refreshInFlight = (async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refreshToken }),
       });
-  }
+      if (!response.ok) return false;
+      persistSession((await response.json()) as AuthResponse);
+      return true;
+    } catch {
+      return false;
+    } finally {
+      // libera depois que todos os que esperavam já receberam o resultado
+      setTimeout(() => {
+        refreshInFlight = null;
+      }, 0);
+    }
+  })();
   return refreshInFlight;
 }
 
-// Sessão inválida (token vencido, usuário desativado...): limpa o login e volta para a tela de entrada.
+// Sessão inválida (refresh recusado, usuário desativado...): limpa o login e volta para a entrada.
 function endSession(): void {
   clearSession();
   try {
@@ -47,6 +65,7 @@ function endSession(): void {
   } catch {
     // sem sessionStorage: a tela de login só não mostra o aviso
   }
+  window.dispatchEvent(new Event('pluseduc:session-ended'));
   if (window.location.pathname !== '/login') {
     window.location.assign('/login');
   }
@@ -59,6 +78,14 @@ interface ApiError {
   error: string;
   message: string;
   details?: { loc?: (string | number)[]; msg?: string; type?: string }[];
+}
+
+// Erro de uma chamada à API, com o status HTTP (ex.: 403 para tratar "sem permissão" na tela).
+export class HttpError extends Error {
+  constructor(message: string, readonly status: number) {
+    super(message);
+    this.name = 'HttpError';
+  }
 }
 
 const FIELD_LABELS: Record<string, string> = {
@@ -97,11 +124,19 @@ interface PaginatedResponse<T> {
 
 class ApiClient {
   private getAuthHeaders(): HeadersInit {
-    const token = localStorage.getItem('accessToken');
+    const token = localStorage.getItem(AUTH_KEYS.accessToken);
     return {
       'Content-Type': 'application/json',
       ...(token && { 'Authorization': `Bearer ${token}` }),
     };
+  }
+
+  // Token de acesso vencido (ou quase) pelo relógio: renova antes de chamar, em vez de esperar o 401.
+  private async ensureFreshToken(endpoint: string): Promise<void> {
+    if (isPublicAuthRoute(endpoint) || !localStorage.getItem(AUTH_KEYS.accessToken)) return;
+    if (isAccessTokenExpired(REFRESH_MARGIN_MS)) {
+      await refreshSession();
+    }
   }
 
   async request<T>(
@@ -110,11 +145,8 @@ class ApiClient {
     retried = false,
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`;
-    const isAuthRoute = endpoint.startsWith('/auth/') && endpoint !== '/auth/profile' && endpoint !== '/auth/change-password';
-
-    // Token de acesso vencido pelo relógio: renova antes de chamar, em vez de esperar o 401.
-    if (!isAuthRoute && !retried && localStorage.getItem(AUTH_KEYS.accessToken) && isAccessTokenExpired(30_000)) {
-      await refreshSession();
+    if (!retried) {
+      await this.ensureFreshToken(endpoint);
     }
 
     const response = await fetch(url, {
@@ -132,19 +164,22 @@ class ApiClient {
         error: response.statusText,
         message: 'Erro na comunicação com o servidor'
       }));
-      // 401 numa chamada autenticada: tenta renovar a sessão uma vez; sem sucesso, volta ao login.
-      // O login em si (401 por senha errada) segue normal.
-      if (response.status === 401 && !isAuthRoute && localStorage.getItem(AUTH_KEYS.accessToken)) {
+      // 401 numa chamada autenticada: tenta renovar a sessão uma vez e repete a requisição, sem
+      // perder o que o usuário estava fazendo. O login em si (401 por senha errada) segue normal.
+      if (response.status === 401 && !isPublicAuthRoute(endpoint) && localStorage.getItem(AUTH_KEYS.accessToken)) {
         if (!retried && (await refreshSession())) {
           return this.request<T>(endpoint, options, true);
         }
         endSession();
-        throw new Error('Sua sessão expirou. Entre novamente.');
+        throw new HttpError('Sua sessão expirou. Entre novamente.', 401);
+      }
+      if (response.status === 429) {
+        throw new HttpError(error.message || 'Muitas tentativas. Aguarde alguns minutos.', 429);
       }
       if (response.status === 422 && Array.isArray(error.details) && error.details.length > 0) {
-        throw new Error(describeValidation(error.details));
+        throw new HttpError(describeValidation(error.details), 422);
       }
-      throw new Error(FRIENDLY_MESSAGES[error.message] ?? (error.message || 'Erro na API'));
+      throw new HttpError(FRIENDLY_MESSAGES[error.message] ?? (error.message || 'Erro na API'), response.status);
     }
 
     // Para respostas vazias (204 No Content)
@@ -153,6 +188,21 @@ class ApiClient {
     }
 
     return response.json();
+  }
+
+  /** Download autenticado (PDF, CSV...) com a mesma renovação de sessão das demais chamadas. */
+  async download(endpoint: string): Promise<Response> {
+    await this.ensureFreshToken(endpoint);
+    const send = () => fetch(`${API_BASE_URL}${endpoint}`, { headers: this.getAuthHeaders() });
+    let response = await send();
+    if (response.status === 401 && (await refreshSession())) {
+      response = await send();
+    }
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new HttpError(body?.message ?? 'Não foi possível baixar o arquivo.', response.status);
+    }
+    return response;
   }
 
   // Métodos HTTP

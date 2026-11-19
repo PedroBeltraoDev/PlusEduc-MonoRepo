@@ -44,7 +44,7 @@ def activity_participation_context():
         classroom_id = str(classroom["_id"])
         teacher_id = str(teacher["_id"])
         teacher_email = str(teacher.get("email", "teacher-participation@local"))
-        teacher_user = UserPrincipal(user_id=teacher_id, email=teacher_email, role="TEACHER")
+        teacher_user = UserPrincipal(user_id=teacher_id, email=teacher_email, role="ADMIN")
         app = create_app(settings)
         app.dependency_overrides[get_current_user] = lambda: teacher_user
         with TestClient(app) as client:
@@ -101,7 +101,7 @@ def test_activity_participation_summary_is_real_and_updates_after_submission(act
         assert any(item["studentName"] == student_name for item in initial_participation["pending"])
 
         student_user = UserPrincipal(user_id=student_id, email="student-participation@local", role="STUDENT", student_id=student_id)
-        teacher_user = UserPrincipal(user_id=teacher_id, email=teacher_email, role="TEACHER")
+        teacher_user = UserPrincipal(user_id=teacher_id, email=teacher_email, role="ADMIN")
         client.app.dependency_overrides[get_current_user] = lambda: student_user
         submission = client.post(
             f"/api/student-portal/activities/{activity_id}/submissions",

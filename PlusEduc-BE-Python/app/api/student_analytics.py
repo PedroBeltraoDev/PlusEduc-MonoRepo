@@ -29,17 +29,32 @@ def recommendation_service(request: Request) -> PedagogicalRecommendationService
     )
 
 
-def ensure_student_data_access(student_id: str, current_user: UserPrincipal, detail: str = "Você não tem permissão para consultar os dados deste aluno") -> None:
+def ensure_student_data_access(
+    student_id: str,
+    current_user: UserPrincipal,
+    detail: str = "Você não tem permissão para consultar os dados deste aluno",
+    request: Request | None = None,
+) -> None:
     role = (current_user.role or "").upper()
-    if role in {"TEACHER", "ADMIN"}:
+    if role == "ADMIN":
+        return
+    if role == "TEACHER":
+        # Professor só consulta alunos das próprias turmas (antes qualquer professor via todos).
+        if request is None:
+            raise HTTPException(status_code=403, detail=detail)
+        from app.core.access import build_scope
+
+        student = request.app.state.student_repository.find_by_id(student_id)
+        if not build_scope(request, current_user).can_access_student(student):
+            raise HTTPException(status_code=403, detail=detail)
         return
     if role == "STUDENT" and current_user.student_id and str(current_user.student_id) == str(student_id):
         return
     raise HTTPException(status_code=403, detail=detail)
 
 
-def ensure_recommendation_access(student_id: str, current_user: UserPrincipal) -> None:
-    ensure_student_data_access(student_id, current_user, "Você não tem permissão para consultar esta recomendação")
+def ensure_recommendation_access(student_id: str, current_user: UserPrincipal, request: Request | None = None) -> None:
+    ensure_student_data_access(student_id, current_user, "Você não tem permissão para consultar esta recomendação", request)
 
 
 @router.get("/{student_id}/performance", response_model=StudentPerformanceResponse)
@@ -48,7 +63,7 @@ def student_performance(
     request: Request,
     current_user: UserPrincipal = Depends(get_current_user),
 ):
-    ensure_student_data_access(student_id, current_user)
+    ensure_student_data_access(student_id, current_user, request=request)
     return service(request).performance(student_id)
 
 
@@ -58,7 +73,7 @@ def student_attendance(
     request: Request,
     current_user: UserPrincipal = Depends(get_current_user),
 ):
-    ensure_student_data_access(student_id, current_user)
+    ensure_student_data_access(student_id, current_user, request=request)
     return service(request).attendance(student_id)
 
 
@@ -68,5 +83,5 @@ def student_pedagogical_recommendation(
     request: Request,
     current_user: UserPrincipal = Depends(get_current_user),
 ):
-    ensure_recommendation_access(student_id, current_user)
+    ensure_recommendation_access(student_id, current_user, request)
     return recommendation_service(request).recommend(student_id)

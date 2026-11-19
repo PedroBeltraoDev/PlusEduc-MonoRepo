@@ -405,7 +405,7 @@ export function Atividades() {
                       navigate(`/atividades/${activity.id}`);
                     }
                   }}
-                  className="relative flex cursor-pointer items-center justify-between rounded-lg bg-gray-50 p-4 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] dark:bg-gray-700 dark:hover:bg-gray-600"
+                  className="pe-row relative flex cursor-pointer items-center justify-between rounded-lg bg-gray-50 p-4 transition-colors hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] dark:bg-gray-700 dark:hover:bg-gray-600"
                 >
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">

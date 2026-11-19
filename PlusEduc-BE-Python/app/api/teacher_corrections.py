@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, Request
 
-from app.core.auth import UserPrincipal
-from app.dependencies import require_roles
+from app.core.access import AccessScope, staff_scope
 from app.schemas.activity_submission import (
     PendingCorrectionResponse,
     ReviewQuestionRequest,
@@ -25,9 +24,9 @@ def service(request: Request) -> TeacherCorrectionService:
 @router.get("/pending", response_model=list[PendingCorrectionResponse])
 def list_pending(
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    return service(request).list_pending(current_user)
+    return service(request).list_pending(scope.principal, scope)
 
 
 @router.put("/{submission_id}/questions/{question_index}", response_model=StudentSubmissionResult)
@@ -36,17 +35,17 @@ def review_question(
     question_index: int,
     payload: ReviewQuestionRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    return service(request).review_question(submission_id, question_index, payload, current_user)
+    return service(request).review_question(submission_id, question_index, payload, scope.principal, scope)
 
 
 @legacy_router.get("/pending", response_model=list[PendingCorrectionResponse])
 def list_pending_legacy(
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    return service(request).list_pending(current_user)
+    return service(request).list_pending(scope.principal, scope)
 
 
 @legacy_router.put("/{submission_id}/questions/{question_index}", response_model=StudentSubmissionResult)
@@ -55,6 +54,6 @@ def review_question_legacy(
     question_index: int,
     payload: ReviewQuestionRequest,
     request: Request,
-    current_user: UserPrincipal = Depends(require_roles("TEACHER", "ADMIN")),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    return service(request).review_question(submission_id, question_index, payload, current_user)
+    return service(request).review_question(submission_id, question_index, payload, scope.principal, scope)

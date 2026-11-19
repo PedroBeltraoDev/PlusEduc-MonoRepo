@@ -42,7 +42,7 @@ def real_grade_context():
         app.dependency_overrides[get_current_user] = lambda: UserPrincipal(
             user_id="real-test-user",
             email="teacher-test@local",
-            role="TEACHER",
+            role="ADMIN",
         )
         with TestClient(app) as client:
             yield client, student_id, classroom_id

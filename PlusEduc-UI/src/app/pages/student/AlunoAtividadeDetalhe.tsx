@@ -1,4 +1,9 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, m as motion } from "motion/react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useLocalDraft } from "@/hooks/useLocalDraft";
+import { useMotion } from "@/motion/MotionProvider";
+import { Reveal, StaggerItem } from "@/motion/primitives";
 import { Link, useNavigate, useParams } from "react-router";
 import { ArrowLeft, CheckCircle2, Clock3, Download, Loader2, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -17,8 +22,14 @@ function isDiscursiveQuestion(questionType: string) {
 export function AlunoAtividadeDetalhe() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const { userId, studentId } = useAuth();
+  const m = useMotion();
+  // Rascunho por aluno e por atividade: atualizar a página não perde as respostas.
+  const draftKey = id && (studentId || userId) ? `atividade:${studentId || userId}:${id}` : null;
+  const { value: answers, setValue: setAnswers, savedAt, restored, clear: clearDraft } = useLocalDraft<Record<number, string>>(draftKey, {});
   const [submitting, setSubmitting] = useState(false);
+  const [missing, setMissing] = useState<number | null>(null);
+  const notifiedRestore = useRef(false);
   const [downloading, setDownloading] = useState(false);
 
   const { data: activity, loading, error, refetch } = useApi(
@@ -28,7 +39,15 @@ export function AlunoAtividadeDetalhe() {
 
   const handleSelect = (questionIndex: number, value: string) => {
     setAnswers((prev) => ({ ...prev, [questionIndex]: value }));
+    if (missing === questionIndex) setMissing(null);
   };
+
+  useEffect(() => {
+    if (restored && activity && !activity.submitted && !notifiedRestore.current && Object.keys(answers).length) {
+      notifiedRestore.current = true;
+      toast.info("Suas respostas salvas neste aparelho foram recuperadas.");
+    }
+  }, [restored, activity, answers]);
 
   const handleSubmit = async () => {
     if (!id || !activity?.questions?.length) return;
@@ -38,7 +57,10 @@ export function AlunoAtividadeDetalhe() {
       selectedAnswer: answers[q.questionIndex] ?? "",
     }));
 
-    if (payload.some((a) => !a.selectedAnswer?.trim())) {
+    const firstEmpty = payload.find((a) => !a.selectedAnswer?.trim());
+    if (firstEmpty) {
+      setMissing(firstEmpty.questionIndex);
+      document.getElementById(`questao-${firstEmpty.questionIndex}`)?.scrollIntoView({ behavior: m.reduced ? "auto" : "smooth", block: "center" });
       toast.error("Preencha todas as questões antes de enviar.");
       return;
     }
@@ -46,6 +68,7 @@ export function AlunoAtividadeDetalhe() {
     try {
       setSubmitting(true);
       await studentPortalService.submitActivity(id, payload);
+      clearDraft();
       toast.success("Atividade enviada!");
       refetch();
     } catch (err) {
@@ -99,16 +122,18 @@ export function AlunoAtividadeDetalhe() {
           Voltar às atividades feitas
         </button>
 
-        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
+        <Reveal from="scale" className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
           <h1 className="text-2xl font-bold text-[#0A2463] dark:text-white">{activity.title}</h1>
           <p className="mt-2 text-gray-600 dark:text-gray-300">
             {activity.pendingCount ? `${activity.correctCount}/${activity.totalQuestions} acertos (${activity.scorePercent}%) • ${activity.pendingCount} aguardando correção` : `${activity.subject} • ${activity.correctCount}/${activity.totalQuestions} acertos (${activity.scorePercent}%)`}
           </p>
-        </div>
+        </Reveal>
 
         <div className="space-y-4">
-          {activity.results?.map((result) => (
-            <ResultCard key={result.questionIndex} result={result} />
+          {activity.results?.map((result, index) => (
+            <StaggerItem key={result.questionIndex} index={index}>
+              <ResultCard result={result} />
+            </StaggerItem>
           ))}
         </div>
       </div>
@@ -135,11 +160,17 @@ export function AlunoAtividadeDetalhe() {
           {downloading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
           Baixar PDF
         </button>
+        <AnswerProgress answered={activity.questions?.filter((q) => answers[q.questionIndex]?.trim()).length ?? 0} total={activity.questions?.length ?? 0} savedAt={savedAt} />
       </div>
 
       <div className="space-y-4">
         {activity.questions?.map((question, idx) => (
-          <div key={question.questionIndex} className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
+          <StaggerItem
+            key={question.questionIndex}
+            index={idx}
+            id={`questao-${question.questionIndex}`}
+            className={`scroll-mt-24 rounded-2xl bg-white p-6 shadow-sm ring-2 transition-[box-shadow] dark:bg-gray-800 ${missing === question.questionIndex ? "ring-red-400" : "ring-transparent"}`}
+          >
             <h2 className="font-semibold text-[#0A2463] dark:text-white">
               Questão {idx + 1}
             </h2>
@@ -178,13 +209,28 @@ export function AlunoAtividadeDetalhe() {
                         />
                         <span className="font-medium text-[#1E5AA8]">{label})</span>
                         <span className="text-gray-700 dark:text-gray-300">{option}</span>
+                        <AnimatePresence>
+                          {selected && (
+                            <motion.span
+                              key="ok"
+                              className="ml-auto text-[#1E5AA8] dark:text-[#4FC3F7]"
+                              initial={m.reduced ? false : { scale: 0, rotate: -30 }}
+                              animate={{ scale: 1, rotate: 0 }}
+                              exit={{ scale: 0, transition: { duration: 0.1 } }}
+                              transition={m.snappy}
+                              aria-hidden="true"
+                            >
+                              <CheckCircle2 className="h-5 w-5" />
+                            </motion.span>
+                          )}
+                        </AnimatePresence>
                       </label>
                     );
                   })}
                 </div>
               )}
             </div>
-          </div>
+          </StaggerItem>
         ))}
       </div>
 
@@ -194,7 +240,7 @@ export function AlunoAtividadeDetalhe() {
         className="inline-flex items-center gap-2 rounded-lg bg-[#4CAF50] px-6 py-3 font-semibold text-white hover:bg-green-700 disabled:opacity-60"
       >
         {submitting ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
-        Enviar atividade
+        {submitting ? "Enviando..." : "Enviar atividade"}
       </button>
     </div>
   );
@@ -238,6 +284,27 @@ function ResultCard({ result }: { result: QuestionResult }) {
             </div>
           ) : null}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function AnswerProgress({ answered, total, savedAt }: { answered: number; total: number; savedAt: number | null }) {
+  const m = useMotion();
+  const ratio = total ? answered / total : 0;
+  return (
+    <div className="mt-5">
+      <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+        <span aria-live="polite">{answered} de {total} questões respondidas</span>
+        {savedAt ? <span>Rascunho salvo neste aparelho às {new Date(savedAt).toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</span> : null}
+      </div>
+      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-gray-200 dark:bg-gray-700" role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={answered} aria-label="Progresso das respostas">
+        <motion.div
+          className="h-full origin-left rounded-full bg-gradient-to-r from-[#1E5AA8] to-[#4FC3F7]"
+          initial={false}
+          animate={{ scaleX: ratio }}
+          transition={m.gentle}
+        />
       </div>
     </div>
   );

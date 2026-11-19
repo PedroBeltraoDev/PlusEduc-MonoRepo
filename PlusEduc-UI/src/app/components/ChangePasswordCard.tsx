@@ -35,7 +35,7 @@ export function ChangePasswordCard() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast.success("Senha alterada com sucesso. Use a nova senha no próximo acesso.");
+      toast.success("Senha alterada. As outras sessões abertas foram encerradas.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Não foi possível alterar a senha.");
     } finally {

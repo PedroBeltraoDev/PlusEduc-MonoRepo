@@ -4,6 +4,8 @@ import { ThemeProvider } from "./components/ThemeProvider";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "sonner";
 import { UserThemeSync } from "./components/UserThemeSync";
+import { MotionProvider } from "@/motion/MotionProvider";
+import { CinematicIntro } from "@/motion/CinematicIntro";
 
 export default function App() {
   return (
@@ -13,11 +15,15 @@ export default function App() {
       enableSystem={false}
       storageKey="pluseduc:theme:active"
     >
-      <AuthProvider>
-        <UserThemeSync />
-        <RouterProvider router={router} />
-        <Toaster position="top-right" richColors />
-      </AuthProvider>
+      <MotionProvider>
+        <AuthProvider>
+          <UserThemeSync />
+          <RouterProvider router={router} />
+          <Toaster position="top-right" richColors closeButton />
+        </AuthProvider>
+        {/* A abertura fica por cima enquanto a aplicação já carrega por baixo. */}
+        <CinematicIntro />
+      </MotionProvider>
     </ThemeProvider>
   );
 }

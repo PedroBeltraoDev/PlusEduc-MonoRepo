@@ -58,18 +58,19 @@ def test_teacher_created_by_the_api_has_a_bcrypt_password_and_a_login():
     service = TeacherService(repo, users)
     created = service.create(TeacherCreateRequest(name="Professor Novo", email="novo@escola.com", password="senha-secreta"))
     stored = repo.find_by_id(created.id)
-    assert stored["password"] != "senha-secreta" and verify_password("senha-secreta", stored["password"])
+    assert "password" not in stored  # a senha fica só na conta de acesso (users), com bcrypt
     login = users.find_active_by_email("novo@escola.com")
     assert login["role"] == "TEACHER" and verify_password("senha-secreta", login["password"])
 
 
-def test_teacher_password_change_is_hashed_in_both_places_and_delete_disables_the_login():
+def test_teacher_password_change_is_hashed_and_delete_disables_the_login():
     repo, users = FakeTeacherRepository(), FakeUserRepository()
     service = TeacherService(repo, users)
     created = service.create(TeacherCreateRequest(name="Professor Novo", email="novo@escola.com", password="senha-secreta"))
     service.update(created.id, TeacherUpdateRequest(password="outra-senha-9"))
-    assert verify_password("outra-senha-9", repo.find_by_id(created.id)["password"])
+    assert "password" not in repo.find_by_id(created.id)
     assert verify_password("outra-senha-9", users.users["novo@escola.com"]["password"])
+    assert users.users["novo@escola.com"]["tokenVersion"] == 1  # trocar a senha encerra as sessões
     service.delete(created.id)
     assert users.find_active_by_email("novo@escola.com") is None
 
@@ -85,13 +86,17 @@ def test_teacher_cannot_reuse_an_email_that_already_has_a_login():
 # --- alunos: excluir desativa o login e libera a turma -------------------------------------
 class ClassroomsWithMembers:
     def __init__(self):
-        self.removed = []
+        self.classrooms = {"class-1": {"_id": "class-1", "students": ["student-1", "student-2"]}}
 
     def exists_by_id(self, classroom_id):
         return True
 
-    def remove_student(self, classroom_id, student_id):
-        self.removed.append((classroom_id, student_id))
+    def find_by_id(self, classroom_id):
+        return self.classrooms.get(classroom_id)
+
+    def update(self, classroom_id, values):
+        self.classrooms[classroom_id].update(values)
+        return self.classrooms[classroom_id]
 
 
 def test_deleting_a_student_disables_the_login_and_leaves_the_classroom_list():
@@ -99,7 +104,7 @@ def test_deleting_a_student_disables_the_login_and_leaves_the_classroom_list():
     users.users["aluno@example.com"] = {"_id": "u-aluno", "email": "aluno@example.com", "role": "STUDENT", "password": "x", "active": True}
     StudentService(students, classrooms, users).delete("student-1")
     assert users.find_active_by_email("aluno@example.com") is None
-    assert classrooms.removed == [("class-1", "student-1")]
+    assert classrooms.classrooms["class-1"]["students"] == ["student-2"]
     assert students.find_by_id("student-1")["active"] is False
 
 

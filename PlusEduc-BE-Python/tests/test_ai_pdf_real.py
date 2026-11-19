@@ -41,7 +41,7 @@ def ai_pdf_real_context():
         user = UserPrincipal(
             user_id=str(teacher["_id"]),
             email=str(teacher.get("email", "teacher@local")),
-            role="TEACHER",
+            role="ADMIN",
             student_id=None,
         )
         app = create_app(settings)

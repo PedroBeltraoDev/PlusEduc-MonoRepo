@@ -10,8 +10,7 @@ from tests.database import TEST_DATABASE
 from app.main import app
 from app.services.curriculum import curriculum_subjects_for_grade, normalize_curriculum_key
 
-TEACHER_EMAIL = "demo.matematica@professor.local"
-PASSWORD = "Demo@123"
+from tests.teacher_fixture import temporary_teacher
 
 
 def test_subject_assignment_is_unique_and_available_subjects_shrink():
@@ -19,8 +18,10 @@ def test_subject_assignment_is_unique_and_available_subjects_shrink():
     grade_level = "6º Ano do Ensino Fundamental"
     curriculum = curriculum_subjects_for_grade(grade_level)
 
+    setup_client = MongoClient("mongodb://localhost:27017")
     try:
-        with TestClient(app) as client:
+        with temporary_teacher(setup_client[TEST_DATABASE]) as temp, TestClient(app) as client:
+            TEACHER_EMAIL, PASSWORD = temp["email"], temp["password"]
             classrooms = app.state.classroom_repository.collection
             teachers = app.state.teacher_repository.collection
             teacher = teachers.find_one({"email": TEACHER_EMAIL, "active": True})
@@ -43,6 +44,11 @@ def test_subject_assignment_is_unique_and_available_subjects_shrink():
             login = client.post("/api/auth/login", json={"email": TEACHER_EMAIL, "password": PASSWORD})
             assert login.status_code == 200, login.text
             headers = {"Authorization": f"Bearer {login.json()['accessToken']}"}
+
+            # Garante o catálogo de matérias da série (num banco limpo ele começa vazio).
+            for subject_name in curriculum:
+                ensured = client.post("/api/subjects", headers=headers, json={"name": subject_name})
+                assert ensured.status_code in {200, 201, 409}, ensured.text
 
             available = client.get(f"/api/subjects/available?classroomId={classroom_id}", headers=headers)
             assert available.status_code == 200, available.text
@@ -73,10 +79,5 @@ def test_subject_assignment_is_unique_and_available_subjects_shrink():
         cleanup_client = MongoClient("mongodb://localhost:27017")
         cleanup_db = cleanup_client[TEST_DATABASE]
         cleanup_db["classrooms"].delete_one({"_id": classroom_id})
-        teacher = cleanup_db["teachers"].find_one({"email": TEACHER_EMAIL, "active": True})
-        if teacher is not None:
-            cleanup_db["teachers"].update_one(
-                {"_id": teacher["_id"]},
-                {"$pull": {"classrooms": str(classroom_id), "classroomIds": str(classroom_id)}},
-            )
         cleanup_client.close()
+        setup_client.close()

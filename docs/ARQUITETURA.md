@@ -83,10 +83,19 @@ Essa proteção é de conveniência; a segurança de verdade está no backend.
 
 ### Sessão (Sprint 10)
 
-O login devolve um token de acesso (8 h) e um refresh token (7 dias). O cliente HTTP (`services/api.ts`) renova a sessão em
+O login devolve um token de acesso (30 min) e um refresh token (7 dias). O cliente HTTP (`services/api.ts`) renova a sessão em
 `POST /api/auth/refresh` quando o token de acesso vence ou a API responde 401, uma renovação por vez; se a renovação falhar, a
-sessão é encerrada e a tela de login avisa. O cadastro público de professor nasce pendente (`users.pendingApproval`) e só o ADMIN
-ativa (`/api/teachers/{id}/approve`).
+sessão é encerrada e a tela de login avisa. Cada refresh token vale uma vez (`refresh_tokens`): reapresentar um já usado encerra
+todas as sessões daquele login. Trocar ou redefinir a senha e desativar a conta incrementam `users.tokenVersion`, o que invalida
+os tokens já emitidos. Login, cadastro e recuperação de senha têm limite de tentativas (`core/rate_limit.py`, em memória). Em
+`APP_ENV=production` a API não inicia com `JWT_SECRET` fraco, modos de demonstração ligados ou cadastro de professor sem aprovação.
+O cadastro público de professor nasce pendente (`users.pendingApproval`) e só o ADMIN ativa (`/api/teachers/{id}/approve`).
+
+### Escopo do professor
+
+`core/access.py` decide o que cada usuário da equipe enxerga: o ADMIN vê tudo; o professor só as turmas em que é titular,
+em que leciona uma disciplina ou que estão no próprio cadastro, e os alunos, notas, atividades, relatórios e indicadores
+delas. Criar, alterar e desativar professores e alterar o catálogo de matérias são tarefas do ADMIN.
 
 ### Documentação da API
 

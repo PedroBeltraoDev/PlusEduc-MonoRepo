@@ -2,8 +2,7 @@ from datetime import date, datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 
-from app.core.auth import UserPrincipal
-from app.dependencies import require_roles
+from app.core.access import AccessScope, staff_scope
 from app.schemas.report import DashboardResponse, ReportCatalogItem, ReportResponse, SearchResponse
 from app.services.report_export import CONTENT_TYPES, EXPORTERS
 from app.services.report_service import CATALOG, Filters, ReportService
@@ -15,7 +14,7 @@ dashboard_router = APIRouter(prefix="/api/dashboard", tags=["Dashboard"])
 search_router = APIRouter(prefix="/api/search", tags=["Search"])
 
 
-def report_service(request: Request) -> ReportService:
+def report_service(request: Request, scope: AccessScope | None = None) -> ReportService:
     state = request.app.state
     return ReportService(
         state.student_repository,
@@ -24,6 +23,7 @@ def report_service(request: Request) -> ReportService:
         state.activity_repository,
         state.activity_submission_repository,
         state.audit_repository,
+        scope,
     )
 
 
@@ -53,13 +53,13 @@ def filters_from(
 def dashboard_overview(
     request: Request,
     filters: Filters = Depends(filters_from),
-    current_user: UserPrincipal = Depends(require_roles(*STAFF)),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    return report_service(request).dashboard(current_user, filters)
+    return report_service(request, scope).dashboard(scope.principal, filters)
 
 
 @reports_router.get("", response_model=list[ReportCatalogItem], summary="Relatórios disponíveis")
-def report_catalog(current_user: UserPrincipal = Depends(require_roles(*STAFF))):
+def report_catalog(scope: AccessScope = Depends(staff_scope)):
     return CATALOG
 
 
@@ -68,9 +68,9 @@ def run_report(
     report_type: str,
     request: Request,
     filters: Filters = Depends(filters_from),
-    current_user: UserPrincipal = Depends(require_roles(*STAFF)),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    return report_service(request).report(report_type, current_user, filters)
+    return report_service(request, scope).report(report_type, scope.principal, filters)
 
 
 @reports_router.get("/{report_type}/export", summary="Exporta um relatório em CSV, XLSX ou PDF")
@@ -79,9 +79,9 @@ def export_report(
     request: Request,
     format: str = Query(default="csv", pattern="^(csv|xlsx|pdf)$"),
     filters: Filters = Depends(filters_from),
-    current_user: UserPrincipal = Depends(require_roles(*STAFF)),
+    scope: AccessScope = Depends(staff_scope),
 ):
-    report = report_service(request).report(report_type, current_user, filters)
+    report = report_service(request, scope).report(report_type, scope.principal, filters)
     content = EXPORTERS[format](report)
     filename = f"pluseduc-{report_type}-{datetime.now().strftime('%Y%m%d')}.{format}"
     return Response(
@@ -97,8 +97,8 @@ def global_search(
     q: str = Query(min_length=2, max_length=80),
     types: str | None = Query(default=None, description="students,classrooms,activities"),
     limit: int = Query(default=20, ge=1, le=100),
-    current_user: UserPrincipal = Depends(require_roles(*STAFF)),
+    scope: AccessScope = Depends(staff_scope),
 ):
     state = request.app.state
     kinds = [item.strip() for item in types.split(",")] if types else None
-    return SearchService(state.student_repository, state.classroom_repository, state.activity_repository).search(q, kinds, limit)
+    return SearchService(state.student_repository, state.classroom_repository, state.activity_repository, scope).search(q, kinds, limit)

@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "PlusEduc API",
-    "description": "API REST do **PlusEduc**, plataforma de gestão pedagógica da educação básica: turmas, alunos, professores,\natividades, notas, frequência, relatórios e portal do aluno.\n\n### Autenticação\n\n1. `POST /api/auth/login` com e-mail e senha devolve `accessToken` (8 h) e `refreshToken` (7 dias).\n2. Envie o token de acesso em todas as rotas protegidas: `Authorization: Bearer <accessToken>`.\n3. Quando o token de acesso vencer, troque o refresh token por um novo par em `POST /api/auth/refresh`.\n\nNo Swagger, clique em **Authorize** e cole o `accessToken`.\n\n### Perfis\n\n| Perfil | O que acessa |\n|---|---|\n| `TEACHER` | gestão de turmas, alunos, atividades, notas, relatórios e o próprio histórico |\n| `ADMIN` | o mesmo que o professor, mais a aprovação de cadastros de professor e o histórico de todos |\n| `STUDENT` | apenas `/api/student-portal/**` e os próprios dados de desempenho |\n\nCada rota informa o perfil exigido no campo **Acesso**. Sem token a resposta é `401`; com perfil errado, `403`.\n\n### Erros\n\nTodo erro tem o mesmo formato JSON:\n\n```json\n{\"timestamp\": \"2026-11-11T18:00:00Z\", \"status\": 400, \"error\": \"Bad Request\", \"message\": \"Senha atual incorreta\"}\n```\n\nErros de validação (`422`) trazem também `details`, com o campo (`loc`) e o motivo (`msg`) de cada problema.\nDatas usam ISO 8601; identificadores são os `_id` do MongoDB em texto (24 caracteres hexadecimais).",
+    "description": "API REST do **PlusEduc**, plataforma de gestão pedagógica da educação básica: turmas, alunos, professores,\natividades, notas, frequência, relatórios e portal do aluno.\n\n### Autenticação\n\n1. `POST /api/auth/login` com e-mail e senha devolve `accessToken` (30 min) e `refreshToken` (7 dias).\n2. Envie o token de acesso em todas as rotas protegidas: `Authorization: Bearer <accessToken>`.\n3. Quando o token de acesso vencer, troque o refresh token por um novo par em `POST /api/auth/refresh`.\n   O refresh token vale **uma vez só**: cada renovação devolve outro. Reapresentar um refresh token já\n   usado encerra todas as sessões daquele login.\n4. `POST /api/auth/logout` revoga o refresh token. Trocar ou redefinir a senha, ou desativar a conta,\n   invalida todos os tokens já emitidos.\n\nLogin, cadastro e recuperação de senha têm limite de tentativas: acima dele a resposta é `429` com o\ncabeçalho `Retry-After` (segundos).\n\nNo Swagger, clique em **Authorize** e cole o `accessToken`.\n\n### Perfis\n\n| Perfil | O que acessa |\n|---|---|\n| `TEACHER` | turmas sob sua responsabilidade (titular, disciplina atribuída ou ligadas ao cadastro) e os alunos, atividades, notas e relatórios delas; o próprio histórico |\n| `ADMIN` | todas as turmas, mais o cadastro de professores, a aprovação de cadastros públicos, a alteração do catálogo de matérias e o histórico de todos |\n| `STUDENT` | apenas `/api/student-portal/**` e os próprios dados de desempenho |\n\nCada rota informa o perfil exigido no campo **Acesso**. Sem token a resposta é `401`; com perfil errado, `403`.\nUm professor que pede uma turma, aluno ou atividade fora do seu escopo também recebe `403`.\n\n### Erros\n\nTodo erro tem o mesmo formato JSON:\n\n```json\n{\"timestamp\": \"2026-11-11T18:00:00Z\", \"status\": 400, \"error\": \"Bad Request\", \"message\": \"Senha atual incorreta\"}\n```\n\nErros de validação (`422`) trazem também `details`, com o campo (`loc`) e o motivo (`msg`) de cada problema.\nDatas usam ISO 8601; identificadores são os `_id` do MongoDB em texto (24 caracteres hexadecimais).",
     "version": "1.0.0-rc.1"
   },
   "paths": {
@@ -187,101 +187,6 @@
         "security": []
       }
     },
-    "/api/auth/refresh": {
-      "post": {
-        "tags": [
-          "Autenticação"
-        ],
-        "summary": "Renovar a sessão com o refresh token",
-        "description": "**Acesso:** público.\n\nRecebe o `refreshToken` do login e devolve um novo par de tokens. O token de acesso (8 h) não serve aqui, e o refresh token não abre as demais rotas. Conta excluída ou desativada recebe 401.",
-        "operationId": "refresh_session_api_auth_refresh_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/RefreshTokenRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AuthenticationResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        },
-        "x-acesso": "público",
-        "security": []
-      }
-    },
-    "/api/auth/change-password": {
-      "post": {
-        "tags": [
-          "Autenticação"
-        ],
-        "summary": "Trocar a própria senha (usuário autenticado)",
-        "description": "**Acesso:** qualquer usuário autenticado.\n\nExige a senha atual. A nova senha precisa ter de 6 a 100 caracteres e ser diferente da atual.",
-        "operationId": "change_password_api_auth_change_password_post",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ChangePasswordRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ChangePasswordResponse"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Token ausente, inválido ou expirado"
-          }
-        },
-        "security": [
-          {
-            "HTTPBearer": []
-          }
-        ],
-        "x-acesso": "qualquer usuário autenticado"
-      }
-    },
     "/api/auth/login": {
       "post": {
         "tags": [
@@ -324,6 +229,138 @@
         "x-acesso": "público",
         "description": "**Acesso:** público.",
         "security": []
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Renovar a sessão com o refresh token",
+        "description": "**Acesso:** público.\n\nRecebe o `refreshToken` e devolve um novo par de tokens. Cada refresh token vale uma vez só: reapresentar um já usado encerra todas as sessões daquele login. O token de acesso não serve aqui. Conta excluída, desativada ou com a senha trocada depois da emissão recebe 401.",
+        "operationId": "refresh_api_auth_refresh_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshTokenRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-acesso": "público",
+        "security": []
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Encerrar a sessão (revoga o refresh token)",
+        "operationId": "logout_api_auth_logout_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        },
+        "x-acesso": "público",
+        "description": "**Acesso:** público.",
+        "security": []
+      }
+    },
+    "/api/auth/change-password": {
+      "post": {
+        "tags": [
+          "Autenticação"
+        ],
+        "summary": "Trocar a própria senha (usuário autenticado)",
+        "description": "**Acesso:** qualquer usuário autenticado.\n\nExige a senha atual. A nova senha precisa ter de 6 a 100 caracteres e ser diferente da atual. Todas as sessões abertas são encerradas; esta recebe um novo par de tokens na resposta.",
+        "operationId": "change_password_api_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthenticationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token ausente, inválido ou expirado"
+          }
+        },
+        "security": [
+          {
+            "HTTPBearer": []
+          }
+        ],
+        "x-acesso": "qualquer usuário autenticado"
       }
     },
     "/api/auth/forgot-password": {
@@ -1218,8 +1255,8 @@
             "HTTPBearer": []
           }
         ],
-        "x-acesso": "TEACHER ou ADMIN",
-        "description": "**Acesso:** TEACHER ou ADMIN."
+        "x-acesso": "ADMIN",
+        "description": "**Acesso:** ADMIN."
       }
     },
     "/api/teachers/email/{email}": {
@@ -1626,8 +1663,8 @@
             "description": "Perfil sem permissão para esta rota"
           }
         },
-        "x-acesso": "TEACHER ou ADMIN",
-        "description": "**Acesso:** TEACHER ou ADMIN."
+        "x-acesso": "ADMIN",
+        "description": "**Acesso:** ADMIN."
       },
       "delete": {
         "tags": [
@@ -1672,8 +1709,8 @@
             "description": "Perfil sem permissão para esta rota"
           }
         },
-        "x-acesso": "TEACHER ou ADMIN",
-        "description": "**Acesso:** TEACHER ou ADMIN."
+        "x-acesso": "ADMIN",
+        "description": "**Acesso:** ADMIN."
       }
     },
     "/api/classrooms": {
@@ -4347,8 +4384,8 @@
             "description": "Perfil sem permissão para esta rota"
           }
         },
-        "x-acesso": "TEACHER ou ADMIN",
-        "description": "**Acesso:** TEACHER ou ADMIN."
+        "x-acesso": "ADMIN",
+        "description": "**Acesso:** ADMIN."
       },
       "delete": {
         "tags": [
@@ -4393,8 +4430,8 @@
             "description": "Perfil sem permissão para esta rota"
           }
         },
-        "x-acesso": "TEACHER ou ADMIN",
-        "description": "**Acesso:** TEACHER ou ADMIN."
+        "x-acesso": "ADMIN",
+        "description": "**Acesso:** ADMIN."
       }
     },
     "/api/subjects/{subject_id}/classrooms": {
@@ -6809,20 +6846,6 @@
         ],
         "title": "ChangePasswordRequest"
       },
-      "ChangePasswordResponse": {
-        "properties": {
-          "message": {
-            "type": "string",
-            "title": "Message"
-          }
-        },
-        "additionalProperties": false,
-        "type": "object",
-        "required": [
-          "message"
-        ],
-        "title": "ChangePasswordResponse"
-      },
       "Classmate": {
         "properties": {
           "id": {
@@ -8176,6 +8199,25 @@
         ],
         "title": "LearningGapResponse"
       },
+      "LogoutRequest": {
+        "properties": {
+          "refreshToken": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 4096
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Refreshtoken"
+          }
+        },
+        "additionalProperties": false,
+        "type": "object",
+        "title": "LogoutRequest"
+      },
       "MonthlyAverage": {
         "properties": {
           "month": {
@@ -8659,6 +8701,7 @@
         "properties": {
           "refreshToken": {
             "type": "string",
+            "maxLength": 4096,
             "minLength": 1,
             "title": "Refreshtoken",
             "description": "Refresh token recebido no login (validade de 7 dias por padrão)"
@@ -10474,6 +10517,17 @@
               }
             ],
             "title": "Active"
+          },
+          "approvalStatus": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Approvalstatus"
           },
           "createdAt": {
             "anyOf": [

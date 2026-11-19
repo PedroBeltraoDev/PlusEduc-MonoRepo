@@ -42,8 +42,11 @@ class AuthService {
     return response;
   }
 
-  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<{ message: string }> {
-    return apiClient.post<{ message: string }>('/auth/change-password', data);
+  // A troca de senha encerra todas as sessões abertas; esta recebe um par de tokens novo e continua.
+  async changePassword(data: { currentPassword: string; newPassword: string }): Promise<AuthResponse> {
+    const response = await apiClient.post<AuthResponse>('/auth/change-password', data);
+    this.persistSession(response);
+    return response;
   }
 
   async forgotPassword(email: string): Promise<{ message: string; demoCode?: string | null }> {
@@ -55,6 +58,11 @@ class AuthService {
   }
 
   logout(): void {
+    // Revoga o refresh token no servidor (sem esperar a resposta) e limpa a sessão local.
+    const refreshToken = localStorage.getItem(AUTH_KEYS.refreshToken);
+    if (refreshToken) {
+      void apiClient.post('/auth/logout', { refreshToken }).catch(() => undefined);
+    }
     clearSession();
   }
 

@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
 import {
   Briefcase,
   Edit,
@@ -24,9 +23,12 @@ function sessionStartedAt(): string {
   const value = Number(localStorage.getItem(AUTH_KEYS.loginTime));
   return value ? formatDateTime(new Date(value)) : "-";
 }
+import { useSmoothTheme } from "@/motion/useSmoothTheme";
+import { Reveal } from "@/motion/primitives";
+import { MotionSettingsCard } from "../components/settings/MotionSettingsCard";
 
 export function Configuracoes() {
-  const { theme, setTheme } = useTheme();
+  const { theme, switchTheme } = useSmoothTheme();
   const { logout, role, userName, userEmail, updateProfile } = useAuth();
   const [nome, setNome] = useState(userName ?? "");
   const [email, setEmail] = useState(userEmail ?? "");
@@ -113,7 +115,7 @@ export function Configuracoes() {
           <div className="mt-6 grid gap-3 sm:grid-cols-2">
             <button
               type="button"
-              onClick={() => setTheme("light")}
+              onClick={() => switchTheme("light")}
               aria-pressed={currentTheme === "light"}
               className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
                 currentTheme === "light"
@@ -130,7 +132,7 @@ export function Configuracoes() {
 
             <button
               type="button"
-              onClick={() => setTheme("dark")}
+              onClick={() => switchTheme("dark")}
               aria-pressed={currentTheme === "dark"}
               className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
                 currentTheme === "dark"
@@ -227,9 +229,19 @@ export function Configuracoes() {
         </section>
       </div>
 
-      <ChangePasswordCard />
+      <Reveal delay={0.04}>
+        <ChangePasswordCard />
+      </Reveal>
 
-      {role === "ADMIN" && <PendingTeachersCard />}
+      <Reveal delay={0.08}>
+        <MotionSettingsCard />
+      </Reveal>
+
+      {role === "ADMIN" && (
+        <Reveal delay={0.12}>
+          <PendingTeachersCard />
+        </Reveal>
+      )}
 
       <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm transition-colors dark:border-rose-900/50 dark:bg-gray-800">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -260,6 +272,9 @@ export function Configuracoes() {
             <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Sessão atual iniciada em</p>
             <p className="mt-2 text-sm font-medium text-gray-700 dark:text-gray-200">{sessionStartedAt()}</p>
           </div>
+          <p className="mt-3 text-sm text-gray-600 dark:text-gray-300">
+            Sua sessão é renovada automaticamente enquanto você usa o sistema. Sair ou trocar a senha encerra o acesso salvo neste navegador.
+          </p>
         </div>
       </section>
     </div>

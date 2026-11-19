@@ -73,7 +73,7 @@ def analytics_real_context():
             client.app.dependency_overrides[get_current_user] = lambda: UserPrincipal(
                 user_id="analytics-test-user",
                 email="teacher-analytics@local",
-                role="TEACHER",
+                role="ADMIN",
             )
             yield client, student_with_grades, student_without_grades_id
     finally:

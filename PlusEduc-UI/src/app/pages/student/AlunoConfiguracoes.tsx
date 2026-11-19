@@ -1,14 +1,15 @@
 import { Mail, LogOut, Moon, Palette, Sun, UserRound } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useTheme } from "next-themes";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSmoothTheme } from "@/motion/useSmoothTheme";
+import { MotionSettingsCard } from "../../components/settings/MotionSettingsCard";
 import { studentPortalService } from "@/services";
 import { ChangePasswordCard } from "../../components/ChangePasswordCard";
 
 export function AlunoConfiguracoes() {
-  const { theme, setTheme } = useTheme();
+  const { theme, switchTheme } = useSmoothTheme();
   const { logout, userName, userEmail } = useAuth();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ name: string; email: string } | null>(null);
@@ -105,7 +106,7 @@ export function AlunoConfiguracoes() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button
             type="button"
-            onClick={() => setTheme("light")}
+            onClick={() => switchTheme("light")}
             aria-pressed={currentTheme === "light"}
             className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
               currentTheme === "light"
@@ -122,7 +123,7 @@ export function AlunoConfiguracoes() {
 
           <button
             type="button"
-            onClick={() => setTheme("dark")}
+            onClick={() => switchTheme("dark")}
             aria-pressed={currentTheme === "dark"}
             className={`flex items-center gap-3 rounded-xl border-2 p-4 text-left transition focus:outline-none focus:ring-2 focus:ring-[#1E5AA8] ${
               currentTheme === "dark"
@@ -140,6 +141,8 @@ export function AlunoConfiguracoes() {
       </section>
 
       <ChangePasswordCard />
+
+      <MotionSettingsCard />
 
       <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm transition-colors dark:border-rose-900/50 dark:bg-gray-800">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

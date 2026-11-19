@@ -66,7 +66,7 @@ def test_subject_catalog_and_performance_on_real_mongodb():
             }).inserted_id
             subject_id = str(inserted_id)
 
-        user = {"_id": teacher_id, "email": teacher_email, "role": "TEACHER", "active": True}
+        user = {"_id": teacher_id, "email": teacher_email, "role": "ADMIN", "active": True}
         token = create_access_token(teacher_email, settings)
         app = create_app(settings, user_repository=FakeUserRepository([user]))
 
@@ -111,7 +111,7 @@ def test_subject_delete_deactivates_and_reactivates_on_recreate():
     subject_id = None
     db = None
     email = f"subject-delete-{uuid4().hex}@example.com"
-    user = {"_id": "subject-delete-test-user", "email": email, "role": "TEACHER", "active": True}
+    user = {"_id": "subject-delete-test-user", "email": email, "role": "ADMIN", "active": True}
     token = create_access_token(email, settings)
 
     try:
@@ -156,7 +156,7 @@ def test_subject_delete_deactivates_all_duplicate_documents():
     db = None
     inserted_ids = []
     email = f"subject-duplicate-delete-{uuid4().hex}@example.com"
-    user = {"_id": "subject-duplicate-delete-user", "email": email, "role": "TEACHER", "active": True}
+    user = {"_id": "subject-duplicate-delete-user", "email": email, "role": "ADMIN", "active": True}
     token = create_access_token(email, settings)
 
     try:

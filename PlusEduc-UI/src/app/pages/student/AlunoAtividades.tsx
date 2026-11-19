@@ -75,7 +75,7 @@ export function AlunoAtividades() {
           <Link
             key={activity.id}
             to={`/aluno/atividades/${activity.id}${tab === "feitas" ? "?review=1" : ""}`}
-            className="rounded-2xl bg-white p-5 shadow-sm transition hover:shadow-md dark:bg-gray-800"
+            className="pe-lift block rounded-2xl bg-white p-5 shadow-sm dark:bg-gray-800"
           >
             <div className="flex items-start justify-between gap-4">
               <div>

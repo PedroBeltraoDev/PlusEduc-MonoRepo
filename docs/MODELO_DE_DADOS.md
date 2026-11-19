@@ -16,8 +16,9 @@ O banco não tem esquema fixo (MongoDB): as regras de integridade estão nos ser
 | `students` | 79 | Cadastro pedagógico do aluno (matrícula, turma, lacunas de aprendizagem). Exclusão lógica (active=false). |
 | `subject_topics` | 1 | Tópicos sugeridos por matéria, usados na criação de atividades. |
 | `subjects` | 17 | Catálogo de matérias (componentes curriculares) ativas e inativas. |
-| `teachers` | 20 | Cadastro do professor (disciplinas, turmas). A senha fica em bcrypt; o login usado é o documento de users. |
+| `teachers` | 20 | Cadastro do professor (disciplinas, turmas). Não guarda senha: o login é o documento de users com o mesmo e-mail. |
 | `users` | 101 | Contas de acesso (login). Um documento por pessoa que entra no sistema; o papel (role) decide as permissões. |
+| `refresh_tokens` | — | Refresh tokens emitidos (só o hash SHA-256 do `jti`), para rotação, revogação e detecção de reuso. Expiram sozinhos (índice TTL). |
 
 ## Relações entre as coleções
 
@@ -32,6 +33,7 @@ O banco não tem esquema fixo (MongoDB): as regras de integridade estão nos ser
 | `grades.studentId / classroomId / activityId` | `students._id / classrooms._id / activities._id` | nota do aluno na turma, opcionalmente vinda de uma atividade |
 | `audit_logs.actorId / entityId` | `users._id / qualquer coleção` | quem fez e sobre qual registro |
 | `teachers.email = users.email` | `—` | o login do professor é o documento de users com o mesmo e-mail |
+| `refresh_tokens.email` | `users.email` | dono do refresh token; `family` agrupa as renovações de um mesmo login |
 
 ## Diagrama de relacionamento
 
@@ -70,13 +72,16 @@ ao iniciar (`app/core/database.py` e os repositórios), então um banco novo já
 | `grades` | — (vários lançamentos por aluno) | `studentId`, `classroomId`, `activityId` |
 | `activities` | — | `classroom_id`, `classroomId`, `student_id`, `studentId`, `created_by` |
 | `audit_logs` | — | `timestamp`, `actorId` + `timestamp`, `entity` + `action` |
+| `refresh_tokens` | `jtiHash` (única) | `family`, `email`, `expiresAt` (TTL: o documento some quando o token vence) |
 
 ## Integridade (regras aplicadas pela API)
 
 | Regra | Onde é aplicada |
 |---|---|
 | E-mail único por conta; matrícula gerada e única | cadastro de aluno e de professor; índice único |
-| Senha sempre em bcrypt | `core/passwords.py`; conferida por `check_database.py` (DOM-03) |
+| Senha sempre em bcrypt e só em `users` (`teachers` não guarda senha) | `core/passwords.py`; conferida por `check_database.py` (DOM-03) |
+| Trocar ou redefinir a senha e desativar a conta incrementam `users.tokenVersion`: os tokens já emitidos deixam de valer | serviços de autenticação, professor e aluno |
+| Professor (TEACHER) só vê e altera as turmas sob sua responsabilidade e os dados delas | `core/access.py`, em todas as rotas de equipe |
 | Exclusão lógica (`active=false`) de aluno, professor, turma e matéria; o login do excluído deixa de valer | serviços de aluno e professor |
 | Aluno pertence a no máximo uma turma; a matrícula é gravada nos dois lados | criar aluno, matricular, desmatricular, excluir |
 | Turma só com professor responsável existente e ativo; no máximo 5 turmas ativas por professor | criar e editar turma (Sprint 10) |
@@ -87,8 +92,18 @@ ao iniciar (`app/core/database.py` e os repositórios), então um banco novo já
 | Cadastro público de professor nasce pendente (`users.pendingApproval`, `teachers.approval_status = PENDING`) e só o ADMIN ativa | cadastro e aprovação (Sprint 10) |
 
 Campos acrescentados na Sprint 10: `users.pendingApproval` (só enquanto o cadastro está pendente) e
-`teachers.approval_status`, `approved_by`, `approved_at`. Não houve mudança em coleções ou índices existentes,
-então nenhum banco precisa de migração para esta versão.
+`teachers.approval_status`, `approved_by`, `approved_at`.
+
+Depois da Sprint 10 (correção geral de segurança): `users.tokenVersion`, a coleção `refresh_tokens` (criada pela API
+ao iniciar, com seus índices) e a remoção de `teachers.password`. Um banco existente precisa rodar uma vez a migração
+idempotente, que move as senhas de `teachers` para `users` (com bcrypt), cria as contas que faltam e acerta os vínculos
+aluno/turma:
+
+```powershell
+cd PlusEduc-BE-Python
+.\.venv\Scripts\python.exe scripts\migrate_security_integrity.py            # simulação
+.\.venv\Scripts\python.exe scripts\migrate_security_integrity.py --apply    # grava
+```
 
 ### Como verificar
 
@@ -303,7 +318,8 @@ Catálogo de matérias (componentes curriculares) ativas e inativas.
 
 ### `teachers`
 
-Cadastro do professor (disciplinas, turmas). A senha fica em bcrypt; o login usado é o documento de users.
+Cadastro do professor (disciplinas, turmas). Não guarda senha: o login usado é o documento de users.
+O campo `password` abaixo é legado e sai com `scripts/migrate_security_integrity.py`.
 
 | Campo | Tipo(s) | Presença |
 |---|---|---:|

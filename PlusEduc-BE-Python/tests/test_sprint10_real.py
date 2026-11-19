@@ -113,9 +113,7 @@ def test_user_changes_own_password(client, db):
     database, created = db
     email = _email("prof.senha", created)
     _make_user(database, email, "TEACHER")
-    database.teachers.insert_one(
-        {"name": "Prof Senha", "email": email, "password": hash_password(PASSWORD), "active": True, "subjects": []}
-    )
+    database.teachers.insert_one({"name": "Prof Senha", "email": email, "active": True, "subjects": []})
     headers = _bearer(email)
 
     wrong = client.post("/api/auth/change-password", json={"currentPassword": "errada", "newPassword": "Nova@123"}, headers=headers)
@@ -129,11 +127,15 @@ def test_user_changes_own_password(client, db):
 
     ok = client.post("/api/auth/change-password", json={"currentPassword": PASSWORD, "newPassword": "Nova@123"}, headers=headers)
     assert ok.status_code == 200, ok.text
+    # a troca encerra as sessões abertas: o token antigo deixa de valer e a resposta traz um par novo
+    assert client.put("/api/auth/profile", json={"name": "Prof Senha", "email": email}, headers=headers).status_code == 401
+    new_headers = {"Authorization": f"Bearer {ok.json()['accessToken']}"}
+    assert client.put("/api/auth/profile", json={"name": "Prof Senha", "email": email}, headers=new_headers).status_code == 200
 
     assert client.post("/api/auth/login", json={"email": email, "password": PASSWORD}).status_code == 401
     assert client.post("/api/auth/login", json={"email": email, "password": "Nova@123"}).status_code == 200
-    # a cópia do hash no cadastro do professor acompanha a troca
-    assert verify_password("Nova@123", database.teachers.find_one({"email": email})["password"])
+    # a senha fica só em users: o cadastro do professor não guarda cópia
+    assert "password" not in database.teachers.find_one({"email": email})
 
 
 def test_change_password_requires_authentication(client):
