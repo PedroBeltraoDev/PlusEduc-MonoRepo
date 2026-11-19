@@ -116,14 +116,6 @@ class ClassroomRepository:
         current["subjectTeachers"] = assignments
         return current
 
-    def add_student(self, classroom_id: str, student_id: str) -> None:
-        """Inclui o aluno na lista da turma (sem duplicar)."""
-        self.collection.update_one({"_id": {"$in": id_candidates([classroom_id])}}, {"$addToSet": {"students": student_id}})
-
-    def remove_student(self, classroom_id: str, student_id: str) -> None:
-        """Tira o aluno da lista de alunos da turma (usado quando o aluno é excluído)."""
-        self.collection.update_one({"_id": {"$in": id_candidates([classroom_id])}}, {"$pull": {"students": {"$in": id_candidates([student_id])}}})
-
     def soft_delete(self, classroom_id: str, updated_at) -> bool:
         current = self.find_by_id(classroom_id)
         if current is None:

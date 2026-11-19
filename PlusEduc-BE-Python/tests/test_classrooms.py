@@ -1,4 +1,3 @@
-import bcrypt
 import pytest
 from fastapi.testclient import TestClient
 

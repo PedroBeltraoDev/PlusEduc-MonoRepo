@@ -10,7 +10,6 @@ from app.core.auth import UserPrincipal
 from app.core.config import Settings
 from app.dependencies import get_current_user
 from app.main import create_app
-from app.schemas.activity import GeneratedQuestion
 from app.services.activity_service import ActivityService
 from app.services.gemini_service import GeminiGenerationError, GeminiGenerationRequest, GeminiService
 

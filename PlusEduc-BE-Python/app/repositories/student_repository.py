@@ -19,9 +19,6 @@ class StudentRepository:
     def find_active_by_email(self, email: str) -> dict[str, Any] | None:
         return self.collection.find_one({"email": email, "active": True})
 
-    def find_by_matricula(self, matricula: str) -> dict[str, Any] | None:
-        return self.collection.find_one({"matricula": matricula, "active": True})
-
     def find_unassigned_active(self) -> list[dict[str, Any]]:
         return list(
             self.collection.find(
@@ -110,9 +107,6 @@ class StudentRepository:
         if include_unassigned:
             conditions.extend([{"class_id": {"$in": [None, ""]}}, {"class_id": {"$exists": False}, "classId": {"$in": [None, ""]}}, {"class_id": {"$exists": False}, "classId": {"$exists": False}}])
         return list(self.collection.find({"active": True, "$or": conditions}).sort("name", 1))
-
-    def count_active(self) -> int:
-        return self.collection.count_documents({"active": True})
 
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)

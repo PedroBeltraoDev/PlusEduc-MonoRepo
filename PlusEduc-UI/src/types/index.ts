@@ -22,6 +22,7 @@ export interface Student {
   _class?: string | null; // Campo do MongoDB para nome da turma
   learningGaps: LearningGap[] | null;
   active: boolean;
+  hasPortalAccess?: boolean; // o aluno já tem login no Portal do Aluno
   createdAt: string | null;
   updatedAt: string | null;
 }

@@ -23,7 +23,6 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-from bson import ObjectId
 from pymongo import MongoClient
 
 BACKEND_ROOT = Path(__file__).resolve().parents[1]

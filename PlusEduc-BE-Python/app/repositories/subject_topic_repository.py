@@ -22,9 +22,6 @@ class SubjectTopicRepository:
             candidates.append(ObjectId(item_id))
         return self.collection.find_one({"_id": {"$in": candidates}, "owner_key": owner_key})
 
-    def find_by_subject(self, subject_normalized: str, owner_key: str) -> dict[str, Any] | None:
-        return self.collection.find_one({"owner_key": owner_key, "subject_normalized": subject_normalized})
-
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)
         document["_id"] = result.inserted_id

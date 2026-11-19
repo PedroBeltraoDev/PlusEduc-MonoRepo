@@ -1,0 +1,4 @@
+# Dependências só para desenvolvimento e testes (a API não precisa delas para rodar).
+-r requirements.txt
+pytest>=8.3,<9.0
+pypdf>=5.0,<6.0

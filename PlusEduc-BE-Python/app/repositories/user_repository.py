@@ -70,20 +70,6 @@ class UserRepository:
         result = self._mongo.database["users"].insert_one(document)
         return str(result.inserted_id)
 
-    def insert_admin_user(self, email: str, password_hash: str, name: str) -> str:
-        result = self._mongo.database["users"].insert_one(
-            {
-                "email": email,
-                "password": password_hash,
-                "role": "ADMIN",
-                "name": name,
-                "active": True,
-                "tokenVersion": 0,
-                "createdAt": datetime.now(timezone.utc),
-            }
-        )
-        return str(result.inserted_id)
-
     # ---- consultas sem filtro de ativo (cadastro pendente, sincronização) -----------------
     def find_by_email(self, email: str) -> dict[str, Any] | None:
         return self._mongo.database["users"].find_one({"email": email})
@@ -116,9 +102,6 @@ class UserRepository:
             {"$set": {**values, "updatedAt": datetime.now(timezone.utc)}},
         )
         return result.matched_count == 1
-
-    def unset_fields(self, email: str, *fields: str) -> None:
-        self._mongo.database["users"].update_one({"email": email}, {"$unset": {field: "" for field in fields}})
 
     def revoke_sessions(self, email: str) -> None:
         """Invalida todos os tokens já emitidos para a conta (access e refresh)."""
@@ -157,14 +140,6 @@ class UserRepository:
                 }
             },
         )
-
-    def deactivate_by_email(self, email: str) -> int:
-        """Desativa o login de quem foi excluído (exclusão lógica): os tokens já emitidos deixam de valer."""
-        result = self._mongo.database["users"].update_many(
-            {"email": email, "active": {"$ne": False}},
-            {"$set": {"active": False, "updatedAt": datetime.now(timezone.utc)}, "$inc": {"tokenVersion": 1}},
-        )
-        return result.modified_count
 
     def update_password(self, email: str, password_hash: str) -> bool:
         """Troca a senha e encerra as sessões abertas (tokens antigos deixam de valer)."""

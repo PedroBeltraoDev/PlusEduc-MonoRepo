@@ -1,0 +1,29 @@
+OK    VAL-UI-01 [Login] clicar em Entrar com e-mail e senha vazios -> esperado o navegador bloqueia o envio e pede o campo obrigatório; obtido ['Preencha este campo.', 'Preencha este campo.']
+captura v01_login_vazio | http://127.0.0.1:5193/login
+OK    VAL-UI-02 [Login] senha incorreta -> esperado banner "E-mail ou senha inválidos."; obtido E-mail ou senha inválidos.
+captura v02_login_senha_errada | http://127.0.0.1:5193/login
+OK    VAL-UI-03 [Cadastro de aluno] e-mail sem arroba -> esperado o navegador recusa o formato do e-mail; obtido Inclua um "@" no endereço de e-mail. "email-sem-arroba" está com um "@" faltando.
+captura v03_cadastro_email_invalido | http://127.0.0.1:5193/login
+OK    VAL-UI-04 [Cadastro de aluno] senha e confirmação diferentes -> esperado "As senhas não coincidem"; obtido As senhas não coincidem
+captura v04_cadastro_senhas_diferentes | http://127.0.0.1:5193/login
+OK    VAL-UI-05 [Cadastro de aluno] senha com 3 caracteres -> esperado recusada (mínimo de 6 caracteres) com mensagem; obtido navegador: 'Aumente este texto para 6 caracteres ou mais. No momento, você está usando 3 caracteres).'; tela: 'As senhas não coincidem'
+captura v05_cadastro_senha_curta | http://127.0.0.1:5193/login
+OK    VAL-UI-05b [Cadastro de aluno] nome com 2 letras (validação do servidor) -> esperado mensagem compreensível citando o campo Nome; obtido Nome deve ter pelo menos 3 caracteres.
+captura v05b_cadastro_nome_curto | http://127.0.0.1:5193/login
+OK    VAL-UI-06 [Esqueci minha senha] código de verificação errado -> esperado "Código inválido ou expirado"; obtido Código inválido ou expirado
+captura v06_codigo_invalido | http://127.0.0.1:5193/esqueci-senha
+OK    VAL-UI-07 [Nova atividade] salvar com tudo em branco -> esperado aviso pedindo título, matéria, tópico e turma; obtido Preencha título, matéria, tópico e turma. | Preencha título, matéria, tópico e turma.
+captura v07_atividade_vazia | http://127.0.0.1:5193/nova-atividade
+OK    VAL-UI-08 [Nova atividade] salvar sem enunciado e sem opções -> esperado aviso pedindo enunciado, opções e resposta correta; obtido Preencha o enunciado da questão 1. | Preencha título, matéria, tópico e turma. | Preencha o enunciado da questão 1. | Preencha título, matéria, tópico e turma.
+captura v08_atividade_sem_enunciado | http://127.0.0.1:5193/nova-atividade
+OK    VAL-UI-09 [Lançar nota] lançar sem escolher o aluno -> esperado aviso pedindo o aluno; obtido Selecione o aluno.
+captura v09_nota_sem_aluno | http://127.0.0.1:5193/notas?turma=6ac2ebfb54fb67ac5e764134
+OK    VAL-UI-10 [Lançar nota] nota 11 -> esperado "A nota deve ser um número entre 0 e 10."; obtido A nota deve ser um número entre 0 e 10. | Selecione o aluno.
+captura v10_nota_11 | http://127.0.0.1:5193/notas?turma=6ac2ebfb54fb67ac5e764134
+OK    VAL-UI-11 [Lançar nota] nota com texto (abc) -> esperado aviso de nota inválida; obtido A nota deve ser um número entre 0 e 10. | A nota deve ser um número entre 0 e 10. | Selecione o aluno.
+OK    VAL-UI-12 [Atividade do aluno] enviar sem marcar nenhuma resposta -> esperado "Preencha todas as questões antes de enviar."; obtido Preencha todas as questões antes de enviar.
+captura v12_aluno_sem_resposta | http://127.0.0.1:5193/aluno/atividades/6aff46a4b7c6cb5dccf4cc51
+OK    VAL-UI-13 [Adicionar aluno] e-mail que já pertence a outro aluno -> esperado aviso de e-mail já cadastrado; obtido Erro ao criar aluno. Email já cadastrado: lucas.carvalho@aluno.local
+captura v13_aluno_email_duplicado | http://127.0.0.1:5193/turmas
+OK    VAL-UI-14 [Adicionar aluno] e-mail em formato inválido -> esperado recusado antes do envio ou com aviso; obtido navegador: 'Inclua um "@" no endereço de e-mail.\xa0"email-invalido" está com um "@" faltando.'; aviso: 'Erro ao criar aluno. Email já cadastrado: lucas.carvalho@aluno.local'
+RESUMO: 15 aprovados de 15

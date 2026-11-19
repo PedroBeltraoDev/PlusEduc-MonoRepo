@@ -1,6 +1,6 @@
 // Hook personalizado para gerenciar estados da API
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type DependencyList } from 'react';
 
 export type LoadingState = 'idle' | 'loading' | 'success' | 'error';
 
@@ -17,7 +17,7 @@ interface UseApiOptions {
 
 export function useApi<T>(
   apiFunction: () => Promise<T>,
-  dependencies: any[] = [],
+  dependencies: DependencyList = [],
   options: UseApiOptions = { immediate: true }
 ) {
   const [state, setState] = useState<UseApiState<T>>({
@@ -86,7 +86,7 @@ export function useApi<T>(
 // Hook específico para listas com busca
 export function useApiList<T>(
   fetchFunction: () => Promise<T[]>,
-  dependencies: any[] = []
+  dependencies: DependencyList = []
 ) {
   const {
     data,
@@ -104,8 +104,8 @@ export function useApiList<T>(
   // Função genérica de filtro - pode ser sobrescrita
   const filterFunction = (items: T[], term: string): T[] => {
     if (!term) return items;
-    return items.filter((item: any) =>
-      Object.values(item).some(value =>
+    return items.filter((item) =>
+      Object.values(item as Record<string, unknown>).some(value =>
         String(value).toLowerCase().includes(term.toLowerCase())
       )
     );

@@ -1,0 +1,8 @@
+== npm run type-check
+sem erros
+== npm run build
+dist/assets/features-DnGxRmru.js                    84.97 kB │ gzip:  27.95 kB
+dist/assets/Dashboard-Cs3RPI95.js                  435.26 kB │ gzip: 117.65 kB
+dist/assets/index-BWEN1tkl.js                      452.46 kB │ gzip: 145.04 kB
+✓ built in 24.48s
+== instalação limpa (npm ci) com só as 13 dependências diretas, numa cópia isolada: type-check e build ok (as correções de tela feitas depois não mudaram dependências)

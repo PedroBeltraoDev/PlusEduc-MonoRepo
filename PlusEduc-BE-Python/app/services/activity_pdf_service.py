@@ -8,7 +8,6 @@ from datetime import datetime, timezone
 from typing import Any
 
 from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import mm
@@ -23,6 +22,8 @@ from app.services.activity_service import ActivityService
 
 logger = logging.getLogger(__name__)
 
+
+LOW_VISION_SCALE = 1.3  # fonte 30% maior no PDF de atividades com adaptação para baixa visão
 
 class ActivityPdfService:
     HEADER_TITLE = "PlusEduc - Atividade de Reforço"
@@ -44,7 +45,10 @@ class ActivityPdfService:
         student = self._find_student(activity)
         classroom = self._find_classroom(activity)
         questions = ActivityService.parse_questions(activity.get("content"))
-        styles = self._styles()
+        adaptations = activity.get("disability_adaptations", activity.get("disabilityAdaptations", [])) or []
+        # Baixa visão: o PDF usa fonte ampliada (antes só exibia o aviso, com a fonte no tamanho normal).
+        low_vision = any("baixa" in str(item).lower() for item in adaptations)
+        styles = self._styles(scale=LOW_VISION_SCALE if low_vision else 1.0)
 
         y = self._header(document, y, width, margin, activity, student, classroom, styles)
         y = self._section(document, y, width, margin, "Contexto Pedagógico", styles["section"])
@@ -74,7 +78,6 @@ class ActivityPdfService:
         y = self._paragraph(document, y, width, margin, guidance, styles["body"])
         if activity.get("generated_by_ai", activity.get("generatedByAi")) and activity.get("ai_provider", activity.get("aiProvider")):
             y = self._paragraph(document, y, width, margin, f"Conteúdo preparado com apoio de IA: {activity.get('ai_provider', activity.get('aiProvider'))}", styles["muted"])
-        adaptations = activity.get("disability_adaptations", activity.get("disabilityAdaptations", [])) or []
         for adaptation, text in (("baixa", "Ajuste aplicado: fonte ampliada para baixa visão."), ("dislexia", "Ajuste aplicado: enunciados mais curtos."), ("tdah", "Ajuste aplicado: comandos destacados e espaçamento ampliado.")):
             if any(adaptation in str(item).lower() for item in adaptations):
                 y = self._paragraph(document, y, width, margin, text, styles["muted"])
@@ -156,10 +159,9 @@ class ActivityPdfService:
         text = str(value or "")
         return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
 
-    def _styles(self):
-        low_vision = False
+    def _styles(self, scale: float = 1.0):
         base = getSampleStyleSheet()
-        return {
+        styles = {
             "title": ParagraphStyle("phase8-title", parent=base["Title"], fontName=self.bold_font_name, fontSize=15, leading=19, textColor=colors.HexColor("#24364A"), spaceAfter=4),
             "section": ParagraphStyle("phase8-section", parent=base["Heading2"], fontName=self.bold_font_name, fontSize=12, leading=15, textColor=colors.HexColor("#1F4E79"), spaceBefore=5, spaceAfter=5),
             "question": ParagraphStyle("phase8-question", parent=base["BodyText"], fontName=self.bold_font_name, fontSize=10, leading=15, textColor=colors.HexColor("#1A5276")),
@@ -169,6 +171,11 @@ class ActivityPdfService:
             "line": ParagraphStyle("phase8-line", parent=base["BodyText"], fontName=self.font_name, fontSize=9, leading=15, textColor=colors.HexColor("#999999")),
             "correct": ParagraphStyle("phase8-correct", parent=base["BodyText"], fontName=self.bold_font_name, fontSize=9.5, leading=13, textColor=colors.HexColor("#1E8449")),
         }
+        if scale != 1.0:
+            for style in styles.values():
+                style.fontSize = round(style.fontSize * scale, 1)
+                style.leading = round(style.leading * scale, 1)
+        return styles
 
     def _find_student(self, activity):
         student_id = activity.get("student_id", activity.get("studentId"))

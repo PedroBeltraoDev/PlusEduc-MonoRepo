@@ -1,0 +1,122 @@
+[
+ {
+  "arquivo": "p01_nova_turma.png",
+  "legenda": "Turmas — formulário de nova turma (nome, série, ano e letra)",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 15:43:33"
+ },
+ {
+  "arquivo": "p02_adicionar_aluno.png",
+  "legenda": "Turmas — cadastro de aluno (nome, e-mail, nascimento, turma e lacunas de aprendizagem)",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 15:43:39"
+ },
+ {
+  "arquivo": "p03_turma_detalhe.png",
+  "legenda": "Turmas — detalhe da turma: alunos, matérias e professores, atividades",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 15:43:47"
+ },
+ {
+  "arquivo": "p04_lancar_nota.png",
+  "legenda": "Notas e Frequência — lançamento de nota e presença de um aluno",
+  "url": "http://127.0.0.1:5193/notas",
+  "hora": "19/11/2026 15:43:53"
+ },
+ {
+  "arquivo": "p05_nova_atividade.png",
+  "legenda": "Atividades — criação manual: dados principais, questões e prévia",
+  "url": "http://127.0.0.1:5193/nova-atividade",
+  "hora": "19/11/2026 15:43:58"
+ },
+ {
+  "arquivo": "p06_gerar_atividade.png",
+  "legenda": "Atividades — geração com apoio de IA: matéria, tópico, dificuldade, formato e adaptações",
+  "url": "http://127.0.0.1:5193/gerar-atividade",
+  "hora": "19/11/2026 15:44:02"
+ },
+ {
+  "arquivo": "p07_atividades.png",
+  "legenda": "Atividades — lista com filtros, atividades geradas com IA e correções pendentes",
+  "url": "http://127.0.0.1:5193/atividades",
+  "hora": "19/11/2026 15:44:06"
+ },
+ {
+  "arquivo": "p08_relatorios.png",
+  "legenda": "Relatórios — escolha do relatório, filtros e exportação (CSV, Excel e PDF)",
+  "url": "http://127.0.0.1:5193/relatorios",
+  "hora": "19/11/2026 15:44:11"
+ },
+ {
+  "arquivo": "p13_aluno_sem_acesso.png",
+  "legenda": "Turmas — aluno cadastrado pela escola ainda sem acesso ao portal: botão Liberar acesso ao portal",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 15:44:19"
+ },
+ {
+  "arquivo": "p14_liberar_acesso.png",
+  "legenda": "Turmas — liberação do acesso: o professor define a senha inicial do aluno",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 15:44:21"
+ },
+ {
+  "arquivo": "p15_acesso_liberado.png",
+  "legenda": "Turmas — acesso liberado: o aviso confirma e o botão some",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 15:44:24"
+ },
+ {
+  "arquivo": "s01_atividades_aluno.png",
+  "legenda": "Portal do aluno — atividades da turma, com a situação de cada uma",
+  "url": "http://127.0.0.1:5193/aluno/atividades",
+  "hora": "19/11/2026 15:44:31"
+ },
+ {
+  "arquivo": "s02_respondendo.png",
+  "legenda": "Portal do aluno — respondendo: a alternativa escolhida fica marcada e o rascunho é salvo no aparelho",
+  "url": "http://127.0.0.1:5193/aluno/atividades/6aff4347bff159cd4d7112cf",
+  "hora": "19/11/2026 15:44:37"
+ },
+ {
+  "arquivo": "s03_resultado.png",
+  "legenda": "Portal do aluno — atividade enviada: nota das objetivas e discursiva aguardando correção",
+  "url": "http://127.0.0.1:5193/aluno/atividades/6aff4347bff159cd4d7112cf",
+  "hora": "19/11/2026 15:44:43"
+ },
+ {
+  "arquivo": "p09_notificacoes.png",
+  "legenda": "Notificações — respostas discursivas aguardando correção",
+  "url": "http://127.0.0.1:5193/dashboard",
+  "hora": "19/11/2026 15:44:51"
+ },
+ {
+  "arquivo": "p11_correcao_discursiva.png",
+  "legenda": "Atividades — correção da questão discursiva: feedback opcional e Marcar correta ou Marcar incorreta",
+  "url": "http://127.0.0.1:5193/atividades",
+  "hora": "19/11/2026 15:44:56"
+ },
+ {
+  "arquivo": "p10_atividade_professor.png",
+  "legenda": "Atividade — detalhe para o professor: participação da turma, PDF e lançamento das notas no boletim",
+  "url": "http://127.0.0.1:5193/atividades/6aff4347bff159cd4d7112cf",
+  "hora": "19/11/2026 15:45:03"
+ },
+ {
+  "arquivo": "p12_notas_lancadas.png",
+  "legenda": "Atividade — notas lançadas no boletim (o aviso confirma quantos alunos receberam nota)",
+  "url": "http://127.0.0.1:5193/atividades/6aff4347bff159cd4d7112cf",
+  "hora": "19/11/2026 15:45:06"
+ },
+ {
+  "arquivo": "s04_corrigida.png",
+  "legenda": "Portal do aluno — atividade corrigida, com o feedback do professor na questão discursiva",
+  "url": "http://127.0.0.1:5193/aluno/atividades/6aff4347bff159cd4d7112cf",
+  "hora": "19/11/2026 15:45:14"
+ },
+ {
+  "arquivo": "s05_notas.png",
+  "legenda": "Portal do aluno — Minhas Notas: a nota da atividade aparece no boletim",
+  "url": "http://127.0.0.1:5193/aluno/notas",
+  "hora": "19/11/2026 15:45:18"
+ }
+]

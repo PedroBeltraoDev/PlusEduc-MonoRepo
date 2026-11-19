@@ -33,9 +33,6 @@ class SubjectRepository:
             candidates.append(ObjectId(subject_id))
         return self.collection.find_one({"_id": {"$in": candidates}})
 
-    def find_by_name_normalized(self, normalized_name: str) -> dict[str, Any] | None:
-        return self.collection.find_one({"name_normalized": normalized_name})
-
     def insert(self, document: dict[str, Any]) -> dict[str, Any]:
         result = self.collection.insert_one(document)
         document["_id"] = result.inserted_id

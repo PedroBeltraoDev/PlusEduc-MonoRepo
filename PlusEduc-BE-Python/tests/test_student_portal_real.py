@@ -10,7 +10,6 @@ from pymongo import MongoClient
 from tests.database import TEST_DATABASE
 from app.core.config import Settings
 from app.core.jwt import create_access_token
-from app.dependencies import get_current_user
 from app.main import create_app
 
 

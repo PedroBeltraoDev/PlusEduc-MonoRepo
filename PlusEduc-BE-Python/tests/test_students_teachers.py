@@ -1,4 +1,3 @@
-from datetime import datetime, timezone
 
 import bcrypt
 import pytest
@@ -178,11 +177,6 @@ class FakeUserRepository:
             self.users[email]["password"] = password_hash
             self.revoke_sessions(email)
         return email in self.users
-
-    def deactivate_by_email(self, email):
-        if email in self.users:
-            self.users[email]["active"] = False
-        return int(email in self.users)
 
     def insert_student_user(self, email, password_hash, student_id):
         user_id = "student-user-created"

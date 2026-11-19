@@ -1,5 +1,3 @@
-import json
-from datetime import datetime, timezone
 
 import pytest
 from bson import ObjectId
@@ -33,7 +31,6 @@ def teacher_corrections_context():
                 pytest.fail(f"Collection {collection} não existe em escola_db")
         # Turma real com alunos, um aluno dela e o professor titular dela (antes os três eram
         # escolhidos ao acaso e podiam não ter relação entre si).
-        from tests.database import TEST_DATABASE as _db  # noqa: F401
         from app.repositories.base import id_candidates
         classroom = db.classrooms.find_one({"active": True, "students.0": {"$exists": True}, "teacher_id": {"$nin": [None, ""]}})
         student = db.students.find_one({"_id": {"$in": id_candidates([classroom["students"][0]])}}) if classroom else None
