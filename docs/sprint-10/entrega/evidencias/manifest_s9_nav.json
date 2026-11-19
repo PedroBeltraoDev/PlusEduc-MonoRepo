@@ -1,0 +1,32 @@
+[
+ {
+  "arquivo": "n01_menu_atividade_interna.png",
+  "legenda": "Navegação — em /atividades/{id} o item \"Atividades\" do menu continua destacado",
+  "url": "http://127.0.0.1:5193/atividades/6ac2ed6054fb67ac5e764135",
+  "hora": "19/11/2026 14:27:29"
+ },
+ {
+  "arquivo": "n02_rota_inexistente.png",
+  "legenda": "Navegação — rota inexistente com o professor autenticado",
+  "url": "http://127.0.0.1:5193/rota-que-nao-existe",
+  "hora": "19/11/2026 14:27:32"
+ },
+ {
+  "arquivo": "n03_rota_inexistente_aluno.png",
+  "legenda": "Navegação — rota inexistente com o aluno autenticado",
+  "url": "http://127.0.0.1:5193/rota-que-nao-existe",
+  "hora": "19/11/2026 14:28:49"
+ },
+ {
+  "arquivo": "n04_sessao_renovada.png",
+  "legenda": "Sessão — token de acesso inválido: a sessão é renovada pelo refresh token e o aluno continua na tela",
+  "url": "http://127.0.0.1:5193/aluno/notas",
+  "hora": "19/11/2026 14:28:53"
+ },
+ {
+  "arquivo": "n05_sessao_encerrada.png",
+  "legenda": "Sessão — sem refresh token válido a sessão é encerrada e a tela de login avisa",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:28:57"
+ }
+]

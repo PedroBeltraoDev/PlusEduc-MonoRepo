@@ -13,7 +13,7 @@ from PIL import Image, ImageDraw, ImageFont
 UI = os.environ.get('PLUSEDUC_UI', 'http://127.0.0.1:5193')
 # As capturas vão sempre para docs/sprint-10/evidencias, mesmo quando um roteiro da Sprint 09 é reaproveitado
 # (eles atribuem evid.OUT; por isso shot() usa _OUT_DIR, que ninguém sobrescreve).
-_OUT_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'evidencias')
+_OUT_DIR = os.environ.get('PLUSEDUC_EVID_DIR') or os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'evidencias')
 OUT = _OUT_DIR
 PW = os.environ['PLUSEDUC_EVAL_PASSWORD']
 os.makedirs(_OUT_DIR, exist_ok=True)
@@ -78,6 +78,16 @@ def xp(d, xpath, timeout=15):
 def clear_session(d):
     d.get(UI + '/login')
     d.execute_script('localStorage.clear(); sessionStorage.clear();')
+    # A abertura animada aparece uma vez por sessão; nos roteiros ela conta como já vista (tem captura própria).
+    d.execute_script("sessionStorage.setItem('pluseduc:intro:seen', '1');")
+    # Recarrega sem sessão e descarta o log: os 401 das consultas do app anterior, interrompidas pela limpeza do
+    # localStorage, são efeito do roteiro e não da tela que será revisada a seguir.
+    d.get(UI + '/login')
+    time.sleep(0.5)
+    try:
+        d.get_log('browser')
+    except Exception:  # noqa: BLE001 - nem todo driver expõe o log
+        pass
 
 
 def login_ui(d, email, password=PW, expect_path=None):

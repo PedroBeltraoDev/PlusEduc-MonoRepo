@@ -2,6 +2,9 @@
 
 **Versão:** PlusEduc **1.0.0-rc.1** · Grupo 08 · executada e verificada em 11/11/2026
 
+> **Entrega:** a sprint foi entregue em 19/11/2026, após o prazo, com a versão atual da `main` (esta release candidate
+> mais a atualização de segurança e Ultra Motion). A verificação dessa versão está em [`entrega/`](entrega/README.md).
+
 A release candidate é a versão que segue para validação, apresentação e entrega final. Nesta sprint o sistema foi
 estabilizado sobre a Sprint 09: as pendências de autenticação registradas desde a Sprint 08 foram fechadas, os bugs
 encontrados na revisão foram corrigidos, a interface perdeu os dados fictícios que restavam, o banco ganhou uma
