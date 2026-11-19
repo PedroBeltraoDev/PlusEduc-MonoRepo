@@ -34,7 +34,7 @@ registros em informação de ação:
 | Backend (`PlusEduc-BE-Python`) | Python 3.12, FastAPI, Pydantic 2, PyMongo, PyJWT, bcrypt, ReportLab e openpyxl (exportações), PyOpenCL e NumPy (estatísticas) |
 | Banco de dados | MongoDB (local), banco `escola_db` |
 | Integrações opcionais | Google Gemini (geração de atividades, com alternativa determinística) e SMTP (código de recuperação de senha) |
-| Qualidade | pytest (171 testes), verificação de tipos e build do frontend e Selenium (regressão de navegação) |
+| Qualidade | pytest (192 testes), verificação de tipos e build do frontend e Selenium (regressão de navegação) |
 
 ## Requisitos para execução
 
@@ -56,7 +56,7 @@ cd PlusEduc-MonoRepo
 ```powershell
 cd PlusEduc-BE-Python
 py -3.12 -m venv .venv
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements-dev.txt   # só para rodar a API: requirements.txt
 Copy-Item .env.example .env
 ```
 
@@ -137,7 +137,7 @@ Abra `http://localhost:5173`. Confira a API em `http://127.0.0.1:8080/health`.
 ### Testes
 
 ```powershell
-# backend: 171 testes (use um banco descartável para não tocar nos dados de demonstração)
+# backend: 192 testes (use um banco descartável para não tocar nos dados de demonstração)
 cd PlusEduc-BE-Python
 $env:MONGODB_DATABASE = "pluseduc_teste"
 .\.venv\Scripts\python.exe -m pytest -q
@@ -149,8 +149,8 @@ npm run build
 ```
 
 A regressão
-funcional contra o sistema em execução (104 casos de API, 91 de navegação e 15 de validação pela interface) está em
-[`docs/sprint-10/`](docs/sprint-10/README.md).
+funcional contra o sistema em execução (111 casos de API, 91 de navegação e 15 de validação pela interface) está em
+[`docs/sprint-10/entrega/`](docs/sprint-10/entrega/README.md).
 
 ## Documentação da API
 
@@ -173,9 +173,9 @@ PlusEduc-MonoRepo/
 │   │   ├── services/            regras de negócio e casos de uso
 │   │   ├── repositories/        acesso às coleções do MongoDB
 │   │   ├── schemas/             contratos de entrada e saída (Pydantic) e validações
-│   │   ├── core/                configuração, JWT, senhas, conexão, erros, histórico de operações
+│   │   ├── core/                configuração, JWT, senhas, escopo do professor, limite de tentativas, erros, histórico
 │   │   └── compute/             estatísticas de notas em OpenCL
-│   ├── scripts/                 create_admin, seed, check_database, export_api_docs, build e benchmarks
+│   ├── scripts/                 create_admin, migração, check_database, export_api_docs, seed, build e benchmarks
 │   └── tests/                   suíte pytest
 ├── PlusEduc-UI/                 interface React
 │   └── src/
@@ -183,27 +183,34 @@ PlusEduc-MonoRepo/
 │       ├── app/components/      layouts, menus e componentes de interface
 │       ├── contexts/            sessão do usuário (AuthContext)
 │       ├── services/            cliente HTTP e um serviço por domínio
+│       ├── motion/              Ultra Motion (abertura e animações)
 │       └── types/, hooks/, utils/, styles/
-└── docs/                        documentação do projeto e evidências de cada sprint
+├── PlusEduc-Desktop/            aplicativo Windows (Electron) com a API e a interface
+└── docs/                        documentação do projeto, manuais e evidências de cada sprint
 ```
 
 ## Documentação do projeto
 
+O índice completo da documentação final está em [`docs/README.md`](docs/README.md).
+
 | Documento | Conteúdo |
 |---|---|
+| [`docs/MANUAL_DO_USUARIO.md`](docs/MANUAL_DO_USUARIO.md) | como usar o sistema (professor, administrador e aluno), com telas |
+| [`docs/MANUAL_TECNICO.md`](docs/MANUAL_TECNICO.md) | arquitetura, instalação, configuração, execução, APIs, IA e manutenção |
+| [`docs/REGRAS_DE_NEGOCIO.md`](docs/REGRAS_DE_NEGOCIO.md) | regras de negócio (RN01 a RN44) e onde são verificadas |
 | [`docs/PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.md`](docs/PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.md) | plano, requisitos, casos de uso, backlog e cronograma |
 | [`docs/REQUISITOS_STATUS.md`](docs/REQUISITOS_STATUS.md) | situação real de cada requisito funcional e não funcional |
 | [`docs/ARQUITETURA.md`](docs/ARQUITETURA.md) | camadas, segurança, frontend e build |
 | [`docs/MODELO_DE_DADOS.md`](docs/MODELO_DE_DADOS.md) | estrutura final do banco |
 | [`docs/API.md`](docs/API.md) | documentação da API |
 | [`docs/DEMO_AND_PRESENTATION.md`](docs/DEMO_AND_PRESENTATION.md) | roteiro de demonstração |
-| [`docs/sprint-08/`](docs/sprint-08/README.md), [`docs/sprint-09/`](docs/sprint-09/README.md), [`docs/sprint-10/`](docs/sprint-10/README.md) | permissões verificadas, testes completos e release candidate (resultados e capturas) |
+| [`docs/sprint-08/`](docs/sprint-08/README.md), [`docs/sprint-09/`](docs/sprint-09/README.md), [`docs/sprint-10/`](docs/sprint-10/README.md), [`docs/sprint-11/`](docs/sprint-11/README.md) | permissões verificadas, testes completos, release candidate e preparação para entrega (resultados e capturas) |
 
 ## Pendências conhecidas
 
-Registradas em [`docs/sprint-10/README.md`](docs/sprint-10/README.md): predição de risco, agrupamento por perfil e
-otimização de grupos de reforço (RF19, RF21 e RF22) e a integração contínua (os testes ainda rodam manualmente).
-O escopo de dados por turma para cada professor entrou depois da Sprint 10, com a atualização de segurança abaixo.
+Registradas em [`docs/sprint-11/README.md`](docs/sprint-11/README.md): predição de risco, agrupamento por perfil e
+otimização de grupos de reforço (RF19, RF21 e RF22), integração contínua (os testes ainda rodam manualmente) e testes
+automatizados de frontend.
 
 Arquivos `.env`, ambientes virtuais, dependências, builds, logs e caches locais não são versionados.
 
