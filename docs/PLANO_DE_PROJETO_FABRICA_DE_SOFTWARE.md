@@ -226,26 +226,33 @@ Professor, Aluno, Coordenação Pedagógica, Administrador, Serviço de Análise
 
 ### Principais casos de uso
 
-| ID | Caso de uso | Ator principal |
-|---|---|---|
-| UC01 | Autenticar-se no sistema | Todos |
-| UC02 | Gerenciar turmas e matrículas | Administrador / Professor |
-| UC03 | Configurar componentes curriculares por série (BNCC) | Coordenação |
-| UC04 | Lançar notas e frequência | Professor |
-| UC05 | Criar/editar/excluir atividade | Professor |
-| UC06 | Gerar atividade assistida a partir de um tópico | Professor |
-| UC07 | Submeter atividade | Aluno |
-| UC08 | Corrigir submissões (auto objetiva + manual discursiva) | Professor |
-| UC09 | Consultar desempenho da turma | Professor / Coordenação |
-| UC10 | Consultar desempenho do aluno | Aluno / Professor / Responsável |
-| UC11 | Registrar lacuna de aprendizagem | Professor |
-| UC12 | Gerar predição de risco acadêmico | Serviço de Análise |
-| UC13 | Obter recomendação pedagógica priorizada | Professor |
-| UC14 | Agrupar alunos por perfil de dificuldade | Serviço de Análise |
-| UC15 | Montar grupos de reforço otimizados | Coordenação |
-| UC16 | Executar recálculo em lote de indicadores da escola | Coordenação |
-| UC17 | Exportar atividade em PDF | Professor |
-| UC18 | Acessar portal do aluno | Aluno |
+Situação revisada na Sprint 11 (a coluna "Situação" registra o que foi efetivamente implementado):
+
+| ID | Caso de uso | Ator principal | Situação |
+|---|---|---|---|
+| UC01 | Autenticar-se no sistema | Todos | Implementado |
+| UC02 | Gerenciar turmas e matrículas | Administrador / Professor | Implementado (professor nas próprias turmas; transferência entre professores pelo ADMIN) |
+| UC03 | Configurar componentes curriculares por série (BNCC) | Coordenação | Implementado (catálogo por série em `services/curriculum.py`; alteração do catálogo pelo ADMIN) |
+| UC04 | Lançar notas e frequência | Professor | Implementado |
+| UC05 | Criar/editar/excluir atividade | Professor | Implementado |
+| UC06 | Gerar atividade assistida a partir de um tópico | Professor | Implementado (Gemini, com alternativa sem IA) |
+| UC07 | Submeter atividade | Aluno | Implementado |
+| UC08 | Corrigir submissões (auto objetiva + manual discursiva) | Professor | Implementado |
+| UC09 | Consultar desempenho da turma | Professor / Coordenação | Implementado (RF17 parcial) |
+| UC10 | Consultar desempenho do aluno | Aluno / Professor / Responsável | Parcial (aluno e professor; sem acesso de responsável) |
+| UC11 | Registrar lacuna de aprendizagem | Professor | Implementado |
+| UC12 | Gerar predição de risco acadêmico | Serviço de Análise | Não implementado |
+| UC13 | Obter recomendação pedagógica priorizada | Professor | Parcial (calculada pela API e usada na geração; sem tela própria) |
+| UC14 | Agrupar alunos por perfil de dificuldade | Serviço de Análise | Não implementado |
+| UC15 | Montar grupos de reforço otimizados | Coordenação | Não implementado |
+| UC16 | Executar recálculo em lote de indicadores da escola | Coordenação | Parcial (estatísticas em OpenCL sob demanda; sem recálculo agendado) |
+| UC17 | Exportar atividade em PDF | Professor | Implementado |
+| UC18 | Acessar portal do aluno | Aluno | Implementado |
+| UC19 | Aprovar ou recusar cadastro público de professor | Administrador | Implementado (Sprint 10) |
+| UC20 | Consultar relatórios e exportar (CSV, Excel, PDF) | Professor / Coordenação | Implementado (Sprint 07) |
+| UC21 | Consultar histórico de operações | Professor / Administrador | Implementado (Sprint 07) |
+| UC22 | Liberar acesso do aluno ao portal | Professor / Administrador | Implementado (Sprint 11) |
+| UC23 | Recuperar ou trocar a própria senha | Todos | Implementado (Sprints 08 e 10) |
 
 ### Diagrama de casos de uso (visão inicial)
 
@@ -339,8 +346,8 @@ Termo de Compromisso de Estágio) não fazem parte deste cronograma.
 | **Sprint 7** | 24/10/2026 | Sistema quase completo | Dashboard com indicadores e gráficos, relatórios, pesquisa, filtros, exportação (CSV/XLSX/PDF) e histórico de operações (RF17 parcial e RF26), integrados aos módulos anteriores. Predição e recomendação (RF19/RF20) seguem para a Sprint 8. |
 | **Sprint 8** | 31/10/2026 | Sistema praticamente concluído | Escopo real: integração da Sprint 07 à `main`, revisão e correção do controle de permissões por perfil (verificado com a API em execução), revisão das regras de negócio, melhorias de usabilidade e testes (138). Predição de risco (RF19), clustering (B17) e otimização de grupos (B18) não foram implementados e seguem em aberto (ver `docs/sprint-08/README.md`). |
 | **Sprint 9** | 07/11/2026 | Testes completos | Escopo real: catálogo de 92 testes funcionais e de validação contra a API, 90 de navegação e 15 de validação pela interface, correção de 12 bugs, documentação revisada (`ARQUITETURA.md`, `MODELO_DE_DADOS.md`, `REQUISITOS_STATUS.md`) e suíte automatizada de 158 testes. Testes automatizados de frontend e CI seguem pendentes. |
-| **Sprint 10** | 14/11/2026 | Versão release candidate | Escopo real: versão 1.0.0-rc.1 — renovação de sessão (RF01), troca de senha logado (RF03), aprovação do cadastro de professor (RF04), correções de turma e matrícula, limpeza da interface, verificação de consistência do banco, API documentada (99 rotas) e README final; 171 testes e regressão de 210 casos contra o sistema em execução (ver `docs/sprint-10/README.md`). |
-| **Sprint 11** | 21/11/2026 | Preparação para entrega | Documentação final, roteiro de demonstração, ensaio da apresentação. |
+| **Sprint 10** | 14/11/2026 | Versão release candidate | Escopo real: versão 1.0.0-rc.1 — renovação de sessão (RF01), troca de senha logado (RF03), aprovação do cadastro de professor (RF04), correções de turma e matrícula, limpeza da interface, verificação de consistência do banco, API documentada (99 rotas) e README final; 171 testes e regressão de 210 casos contra o sistema em execução (ver `docs/sprint-10/README.md`). Entregue em 19/11/2026, após o prazo, com a atualização de segurança e Ultra Motion integrada (PRs #14 e #15; verificação em `docs/sprint-10/entrega/`). |
+| **Sprint 11** | 21/11/2026 | Preparação para entrega | Escopo real: Manual do Usuário e Manual Técnico, documentação consolidada (regras de negócio RN01 a RN44, casos de uso com a situação real, índice em `docs/README.md`), roteiro de demonstração atualizado, revisão completa do código (código morto, 43 componentes e 42 dependências sem uso removidos; 3 defeitos corrigidos: acesso ao portal do aluno cadastrado pela escola, data de nascimento um dia antes, PDF de baixa visão sem fonte ampliada) e organização do repositório (ver `docs/sprint-11/README.md`). |
 | **Sprint 12** | 28/11/2026 | Versão final do sistema | Sistema completo e congelado para gravação dos vídeos. |
 | **Entrega Final** | 05/12/2026 | Entrega final — Fábrica de Software | Vídeo horizontal (16:9, até 10 min, YouTube) e vídeo vertical (9:16, Instagram, marcando `@pryscillabgoncalves` e `@antenorparnaiba`); apresentação para a banca. |
 

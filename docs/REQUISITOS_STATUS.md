@@ -1,4 +1,4 @@
-# Situação dos requisitos (Sprint 10 — release candidate 1.0.0-rc.1)
+# Situação dos requisitos (Sprint 11 — versão 1.0.0-rc.1 com a atualização de segurança)
 
 Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.md`) e o sistema como está hoje.
 "Evidência" aponta o caso de teste que exercita o requisito (catálogo em `docs/sprint-09/resultados/`) ou o documento da sprint em que foi demonstrado.
@@ -38,7 +38,7 @@ Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.
 
 | RNF | Requisito | Situação | Evidência / observação |
 |---|---|---|---|
-| RNF01 | Senhas com bcrypt | Concluído | **Bug corrigido na Sprint 09:** `POST /api/teachers` gravava a senha em texto puro (PRO-01 confere o hash no banco) |
+| RNF01 | Senhas com bcrypt | Concluído | **Bug corrigido na Sprint 09:** `POST /api/teachers` gravava a senha em texto puro. Desde a atualização de segurança a senha fica só em `users` (PRO-01 confere) |
 | RNF02 | JWT Bearer, expiração configurável | Concluído | AUT-18; refresh token não abre a API (Sprint 08) |
 | RNF03 | RBAC no backend | Concluído | matriz de permissões (Sprint 08) |
 | RNF04 | LGPD: sem dados de menores em URLs, logs ou repositório; segredos só no `.env` | **Parcial** | código de recuperação fora do log e da resposta (Sprint 08); e-mail dos colegas removido do portal (POR-02); dados de demonstração fictícios no repositório; a LGPD não foi auditada além disso |
@@ -51,7 +51,7 @@ Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.
 | RNF11 | Recomendação sempre com justificativa | Parcial | a recomendação existente traz as evidências; não há tela |
 | RNF12 | Mensagens de erro claras; modo alternativo da IA sinalizado | Concluído | VAL-UI-01 a VAL-UI-15; mensagens de validação traduzidas na Sprint 09 |
 | RNF13 | Arquitetura em camadas | Concluído | `docs/ARQUITETURA.md` |
-| RNF14 | Testes de backend e verificação de tipos e build do frontend a cada sprint | Concluído | 171 testes de backend (Sprint 10); `type-check` e `build` sem erros |
+| RNF14 | Testes de backend e verificação de tipos e build do frontend a cada sprint | Concluído | 192 testes de backend (Sprint 11); `type-check` (modo estrito, sem código não usado) e `build` sem erros |
 | RNF15 | Health check e OpenAPI publicados automaticamente | **Parcial** | `/health`, `/docs` e `/redoc` documentados em português; `docs/API.md` e `docs/api/openapi.json` gerados do código. Sem CI. |
 | RNF16 | Configuração por ambiente | Concluído | `.env.example` |
 | RNF17 | Windows e Linux, Python 3.11+, MongoDB local, Node 18+ | Parcial | validado só no Windows 11 (Python 3.12, Node 22) |
@@ -61,4 +61,4 @@ Rastreabilidade entre o plano de projeto (`PLANO_DE_PROJETO_FABRICA_DE_SOFTWARE.
 
 B01 a B14 concluídos, **exceto B07** (repositório e ambiente existem, mas o CI de testes não foi implementado: a suíte depende de dados
 existentes no banco e os testes rodam manualmente); B15 (predição) pendente; B16 parcial; B17 e B18 pendentes; B19 parcial; B20 a B24
-concluídos (B24 com 171 testes); B25: documentação final (README, API, modelo de dados) atualizada na Sprint 10, vídeos pendentes (entrega final).
+concluídos (B24 com 192 testes); B25: documentação final (README, API, modelo de dados, manuais do usuário e técnico, regras de negócio) consolidada na Sprint 11, vídeos pendentes (entrega final).
