@@ -8,6 +8,10 @@ PlusEduc-BE-Python/scripts/create_admin.py (PLUSEDUC_ADMIN_EMAIL, padrão coorde
 
 Além das imagens, grava resultados/revisao_interface.json: para cada tela, se houve rolagem lateral e quantos
 erros graves o console do navegador registrou.
+
+Pastas de saída: PLUSEDUC_EVID_DIR (capturas e manifesto) e PLUSEDUC_RESULT_DIR (revisão das telas); sem elas,
+docs/sprint-10/evidencias e docs/sprint-10/resultados. A entrega da Sprint 10 (versão com a atualização de segurança e o
+Ultra Motion) usa docs/sprint-10/entrega/.
 """
 import json
 import os
@@ -21,6 +25,8 @@ from evid import By, PW, UI, clear_session, goto, login_ui, make_driver, shot, x
 from pymongo import MongoClient  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
+EVID_DIR = evid._OUT_DIR
+RESULT_DIR = os.environ.get("PLUSEDUC_RESULT_DIR") or os.path.join(HERE, "..", "resultados")
 API = os.environ.get("PLUSEDUC_API", "http://127.0.0.1:8093")
 ADMIN = os.environ.get("PLUSEDUC_ADMIN_EMAIL", "coordenacao@pluseduc.local")
 PROF, ALUNO = "marina.ferreira@pluseduc.local", "lucas.carvalho@aluno.local"
@@ -46,6 +52,11 @@ def tela(d, perfil, path, nome, legenda, settle=2.6, full=False):
     goto(d, path, settle)
     revisar(d, perfil, path.replace(ACT, "{id}"))
     shot(d, nome, legenda, full=full)
+
+
+def sem_reducao(d):
+    """Emula um navegador sem a preferência de movimento reduzido (o Windows desta máquina pede redução, e o app respeita)."""
+    d.execute_cdp_cmd("Emulation.setEmulatedMedia", {"features": [{"name": "prefers-reduced-motion", "value": "no-preference"}]})
 
 
 def campos(d):
@@ -89,6 +100,7 @@ try:
     revisar(d, "admin", "/turmas (modal Nova Turma)")
     shot(d, "c08_admin_nova_turma", "Correção — ADMIN cria turma escolhendo o professor responsável (antes a criação falhava)")
     tela(d, "admin", "/historico", "c09_admin_historico", "Histórico — o ADMIN vê as operações de todos, inclusive a aprovação do cadastro")
+    tela(d, "admin", "/turmas", "u03_admin_turmas", "Escopo — o ADMIN vê todas as turmas da escola", 3.0)
 
     # ------------------------------------------------------------------ professor aprovado entra e troca a senha
     login_ui(d, NOVO_PROF, expect_path="/dashboard")
@@ -114,7 +126,7 @@ try:
     login_ui(d, PROF, expect_path="/dashboard")
     for path, nome, legenda, full in (
         ("/dashboard", "t01_dashboard", "Interface final — Dashboard do professor", True),
-        ("/turmas", "t02_turmas", "Interface final — Turmas", False),
+        ("/turmas", "t02_turmas", "Interface final — Turmas: a professora vê só as turmas sob sua responsabilidade", False),
         ("/atividades", "t03_atividades", "Interface final — Atividades", False),
         (f"/atividades/{ACT}", "t04_atividade_detalhe", "Interface final — Atividade: participação e respostas da turma", False),
         ("/nova-atividade", "t05_nova_atividade", "Interface final — Nova atividade (manual)", False),
@@ -125,9 +137,16 @@ try:
         ("/busca?q=lucas", "t10_busca", "Interface final — Pesquisa global", False),
         ("/materias", "t11_materias", "Interface final — Matérias", False),
         ("/materias-topicos", "t12_topicos", "Interface final — Tópicos das matérias", False),
-        ("/configuracoes", "t13_configuracoes", "Interface final — Configurações (perfil, tema, troca de senha e sessão)", True),
+        ("/configuracoes", "t13_configuracoes", "Interface final — Configurações (perfil, tema, troca de senha, animações e sessão)", True),
     ):
         tela(d, "professor", path, nome, legenda, 3.0, full)
+    sem_reducao(d)
+    goto(d, "/configuracoes", 2.5)
+    alvo = d.find_elements(By.XPATH, "//h2[contains(., 'Animações')]")
+    if alvo:
+        d.execute_script("arguments[0].scrollIntoView({block: 'start'}); window.scrollBy(0, -90);", alvo[0])
+    shot(d, "u02_animacoes", "Ultra Motion — perfis de animação (Ultra, Equilibrado, Desempenho) e redução de movimento")
+    d.execute_cdp_cmd("Emulation.setEmulatedMedia", {"features": []})
 
     # ------------------------------------------------------------------ telas finais do aluno
     login_ui(d, ALUNO, expect_path="/aluno")
@@ -165,6 +184,16 @@ try:
         shot(d, nome, f"Celular (390 px) — {legenda}")
     d.quit()
 
+    # ------------------------------------------------------------------ abertura animada (uma vez por sessão)
+    d = make_driver()
+    sem_reducao(d)
+    d.get(UI + "/login")
+    d.execute_script("localStorage.clear(); sessionStorage.clear();")
+    d.get(UI + "/login")
+    time.sleep(0.3)
+    shot(d, "u01_abertura", "Ultra Motion — abertura animada com o logotipo do PlusEduc (uma vez por sessão; botão Pular ou Esc)")
+    d.quit()
+
     # ------------------------------------------------------------------ documentação da API publicada pelo servidor
     d = make_driver(1366, 1000)
     evid.UI = API
@@ -181,8 +210,9 @@ finally:
         pass
     db.users.delete_many({"email": NOVO_PROF})
     db.teachers.delete_many({"email": NOVO_PROF})
-    json.dump(REVISAO, open(os.path.join(HERE, "..", "resultados", "revisao_interface.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
-    json.dump(evid.MANIFEST, open(os.path.join(HERE, "..", "evidencias", "manifest_rc.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    os.makedirs(RESULT_DIR, exist_ok=True)
+    json.dump(REVISAO, open(os.path.join(RESULT_DIR, "revisao_interface.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    json.dump(evid.MANIFEST, open(os.path.join(EVID_DIR, "manifest_rc.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 problemas = [r for r in REVISAO if r["rolagem_horizontal"] or r["erros_console"]]
 print(f"{len(REVISAO)} telas revisadas; com rolagem lateral ou erro de console: {len(problemas)}")
 for p in problemas:

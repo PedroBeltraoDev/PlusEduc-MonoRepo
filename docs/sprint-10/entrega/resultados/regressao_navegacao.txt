@@ -1,0 +1,97 @@
+OK    NAV-A01 [anônimo] abrir /dashboard -> esperado /login; obtido /login
+OK    NAV-A02 [anônimo] abrir /turmas -> esperado /login; obtido /login
+OK    NAV-A03 [anônimo] abrir /notas -> esperado /login; obtido /login
+OK    NAV-A04 [anônimo] abrir /relatorios -> esperado /login; obtido /login
+OK    NAV-A05 [anônimo] abrir /historico -> esperado /login; obtido /login
+OK    NAV-A06 [anônimo] abrir /busca -> esperado /login; obtido /login
+OK    NAV-A07 [anônimo] abrir /atividades -> esperado /login; obtido /login
+OK    NAV-A08 [anônimo] abrir /atividades/{id} -> esperado /login; obtido /login
+OK    NAV-A09 [anônimo] abrir /gerar-atividade -> esperado /login; obtido /login
+OK    NAV-A10 [anônimo] abrir /nova-atividade -> esperado /login; obtido /login
+OK    NAV-A11 [anônimo] abrir /configuracoes -> esperado /login; obtido /login
+OK    NAV-A12 [anônimo] abrir /materias -> esperado /login; obtido /login
+OK    NAV-A13 [anônimo] abrir /materias-topicos -> esperado /login; obtido /login
+OK    NAV-A14 [anônimo] abrir /aluno -> esperado /login; obtido /login
+OK    NAV-A15 [anônimo] abrir /aluno/atividades -> esperado /login; obtido /login
+OK    NAV-A16 [anônimo] abrir /aluno/atividades/{id} -> esperado /login; obtido /login
+OK    NAV-A17 [anônimo] abrir /aluno/turma -> esperado /login; obtido /login
+OK    NAV-A18 [anônimo] abrir /aluno/professores -> esperado /login; obtido /login
+OK    NAV-A19 [anônimo] abrir /aluno/notas -> esperado /login; obtido /login
+OK    NAV-A20 [anônimo] abrir /aluno/desempenho -> esperado /login; obtido /login
+OK    NAV-A21 [anônimo] abrir /aluno/configuracoes -> esperado /login; obtido /login
+OK    NAV-A99 [anônimo] abrir / (raiz) -> esperado /login; obtido /login
+OK    NAV-P01 [professor] abrir /dashboard -> esperado permanece em /dashboard, sem erro; obtido /dashboard; tela ok
+OK    NAV-P02 [professor] abrir /turmas -> esperado permanece em /turmas, sem erro; obtido /turmas; tela ok
+OK    NAV-P03 [professor] abrir /notas -> esperado permanece em /notas, sem erro; obtido /notas; tela ok
+OK    NAV-P04 [professor] abrir /relatorios -> esperado permanece em /relatorios, sem erro; obtido /relatorios; tela ok
+OK    NAV-P05 [professor] abrir /historico -> esperado permanece em /historico, sem erro; obtido /historico; tela ok
+OK    NAV-P06 [professor] abrir /busca -> esperado permanece em /busca, sem erro; obtido /busca; tela ok
+OK    NAV-P07 [professor] abrir /atividades -> esperado permanece em /atividades, sem erro; obtido /atividades; tela ok
+OK    NAV-P08 [professor] abrir /atividades/{id} -> esperado permanece em /atividades/{id}, sem erro; obtido /atividades/{id}; tela ok
+OK    NAV-P09 [professor] abrir /gerar-atividade -> esperado permanece em /gerar-atividade, sem erro; obtido /gerar-atividade; tela ok
+OK    NAV-P10 [professor] abrir /nova-atividade -> esperado permanece em /nova-atividade, sem erro; obtido /nova-atividade; tela ok
+OK    NAV-P11 [professor] abrir /configuracoes -> esperado permanece em /configuracoes, sem erro; obtido /configuracoes; tela ok
+OK    NAV-P12 [professor] abrir /materias -> esperado permanece em /materias, sem erro; obtido /materias; tela ok
+OK    NAV-P13 [professor] abrir /materias-topicos -> esperado permanece em /materias-topicos, sem erro; obtido /materias-topicos; tela ok
+OK    NAV-P51 [professor] abrir /aluno (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P52 [professor] abrir /aluno/atividades (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P53 [professor] abrir /aluno/atividades/{id} (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P54 [professor] abrir /aluno/turma (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P55 [professor] abrir /aluno/professores (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P56 [professor] abrir /aluno/notas (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P57 [professor] abrir /aluno/desempenho (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-P58 [professor] abrir /aluno/configuracoes (área do aluno) -> esperado /dashboard; obtido /dashboard
+OK    NAV-M01 [professor] clicar em "Dashboard" no menu lateral -> esperado /dashboard; obtido /dashboard
+OK    NAV-M02 [professor] clicar em "Turmas" no menu lateral -> esperado /turmas; obtido /turmas
+OK    NAV-M03 [professor] clicar em "Atividades" no menu lateral -> esperado /atividades; obtido /atividades
+OK    NAV-M04 [professor] clicar em "Notas e Frequência" no menu lateral -> esperado /notas; obtido /notas
+OK    NAV-M05 [professor] clicar em "Relatórios" no menu lateral -> esperado /relatorios; obtido /relatorios
+OK    NAV-M06 [professor] clicar em "Histórico" no menu lateral -> esperado /historico; obtido /historico
+OK    NAV-M07 [professor] clicar em "Minhas matérias" no menu lateral -> esperado /materias; obtido /materias
+OK    NAV-M08 [professor] clicar em "Configurações" no menu lateral -> esperado /configuracoes; obtido /configuracoes
+OK    NAV-M09 [professor] menu destaca "Atividades" ao abrir uma atividade -> esperado item Atividades com destaque diferente dos demais; obtido classes diferentes: True
+captura n01_menu_atividade_interna | http://127.0.0.1:5193/atividades/6ac2ed6054fb67ac5e764135
+OK    NAV-R01 [professor] abrir uma rota inexistente (/rota-que-nao-existe) -> esperado tela amigável de página não encontrada ou volta ao painel; obtido /rota-que-nao-existe; texto: 'Página não encontrada\nO endereço digitado não existe ou foi '
+captura n02_rota_inexistente | http://127.0.0.1:5193/rota-que-nao-existe
+OK    NAV-R02 [professor] recarregar a página em /relatorios (F5) -> esperado continua em /relatorios, logado; obtido /relatorios
+OK    NAV-R03 [professor] botão Voltar do navegador de /notas para /turmas -> esperado /turmas; obtido /turmas
+OK    NAV-L01 [professor] abrir /notas?turma={id} (atalho de outros módulos) -> esperado turma já selecionada; obtido select=True
+OK    NAV-L02 [professor] link "Ver notas e frequência da turma" na atividade -> esperado /notas?turma={id}; obtido /notas?turma=…
+OK    NAV-L03 [professor] pesquisa global: "Ver todos os resultados" -> esperado /busca?q=lucas; obtido /busca?q=lucas
+OK    NAV-S01 [professor] clicar em Sair -> esperado /login; obtido /login
+OK    NAV-S02 [professor] depois de sair, abrir /dashboard -> esperado /login; obtido /login
+OK    NAV-S11 [aluno] abrir /aluno -> esperado permanece em /aluno, sem erro; obtido /aluno; tela ok
+OK    NAV-S12 [aluno] abrir /aluno/atividades -> esperado permanece em /aluno/atividades, sem erro; obtido /aluno/atividades; tela ok
+OK    NAV-S13 [aluno] abrir /aluno/atividades/{id} -> esperado permanece em /aluno/atividades/{id}, sem erro; obtido /aluno/atividades/{id}; tela ok
+OK    NAV-S14 [aluno] abrir /aluno/turma -> esperado permanece em /aluno/turma, sem erro; obtido /aluno/turma; tela ok
+OK    NAV-S15 [aluno] abrir /aluno/professores -> esperado permanece em /aluno/professores, sem erro; obtido /aluno/professores; tela ok
+OK    NAV-S16 [aluno] abrir /aluno/notas -> esperado permanece em /aluno/notas, sem erro; obtido /aluno/notas; tela ok
+OK    NAV-S17 [aluno] abrir /aluno/desempenho -> esperado permanece em /aluno/desempenho, sem erro; obtido /aluno/desempenho; tela ok
+OK    NAV-S18 [aluno] abrir /aluno/configuracoes -> esperado permanece em /aluno/configuracoes, sem erro; obtido /aluno/configuracoes; tela ok
+OK    NAV-S31 [aluno] abrir /dashboard (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S32 [aluno] abrir /turmas (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S33 [aluno] abrir /notas (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S34 [aluno] abrir /relatorios (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S35 [aluno] abrir /historico (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S36 [aluno] abrir /busca (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S37 [aluno] abrir /atividades (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S38 [aluno] abrir /atividades/{id} (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S39 [aluno] abrir /gerar-atividade (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S40 [aluno] abrir /nova-atividade (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S41 [aluno] abrir /configuracoes (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S42 [aluno] abrir /materias (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-S43 [aluno] abrir /materias-topicos (área do professor) -> esperado /aluno; obtido /aluno
+OK    NAV-SM01 [aluno] clicar em "Início" no menu lateral -> esperado /aluno; obtido /aluno
+OK    NAV-SM02 [aluno] clicar em "Atividades" no menu lateral -> esperado /aluno/atividades; obtido /aluno/atividades
+OK    NAV-SM03 [aluno] clicar em "Minha Turma" no menu lateral -> esperado /aluno/turma; obtido /aluno/turma
+OK    NAV-SM04 [aluno] clicar em "Professores" no menu lateral -> esperado /aluno/professores; obtido /aluno/professores
+OK    NAV-SM05 [aluno] clicar em "Minhas Notas" no menu lateral -> esperado /aluno/notas; obtido /aluno/notas
+OK    NAV-SM06 [aluno] clicar em "Desempenho" no menu lateral -> esperado /aluno/desempenho; obtido /aluno/desempenho
+OK    NAV-SM07 [aluno] clicar em "Configurações" no menu lateral -> esperado /aluno/configuracoes; obtido /aluno/configuracoes
+OK    NAV-SR01 [aluno] abrir uma rota inexistente -> esperado tela amigável de página não encontrada ou volta ao início; obtido /rota-que-nao-existe; texto: 'Página não encontrada\nO endereço digitado não existe ou foi '
+captura n03_rota_inexistente_aluno | http://127.0.0.1:5193/rota-que-nao-existe
+OK    NAV-SS01 [aluno] abrir /aluno/notas com token de acesso inválido e refresh token válido -> esperado /aluno/notas (sessão renovada, token trocado); obtido /aluno/notas; token renovado: True
+captura n04_sessao_renovada | http://127.0.0.1:5193/aluno/notas
+OK    NAV-SS02 [aluno] abrir /aluno/notas com os dois tokens inválidos -> esperado /login (sessão encerrada); obtido /login
+captura n05_sessao_encerrada | http://127.0.0.1:5193/login
+RESUMO: 91 aprovados de 91

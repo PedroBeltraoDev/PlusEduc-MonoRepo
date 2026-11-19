@@ -1,0 +1,80 @@
+[
+ {
+  "arquivo": "v01_login_vazio.png",
+  "legenda": "Validação — login com campos vazios: o formulário não é enviado",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:29:18"
+ },
+ {
+  "arquivo": "v02_login_senha_errada.png",
+  "legenda": "Validação — senha incorreta: mensagem clara em português",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:29:21"
+ },
+ {
+  "arquivo": "v03_cadastro_email_invalido.png",
+  "legenda": "Validação — cadastro com e-mail em formato inválido",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:29:25"
+ },
+ {
+  "arquivo": "v04_cadastro_senhas_diferentes.png",
+  "legenda": "Validação — confirmação de senha diferente da senha",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:29:28"
+ },
+ {
+  "arquivo": "v05_cadastro_senha_curta.png",
+  "legenda": "Validação — senha curta no cadastro",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:29:30"
+ },
+ {
+  "arquivo": "v05b_cadastro_nome_curto.png",
+  "legenda": "Validação — nome curto: o servidor recusa e a tela explica o motivo",
+  "url": "http://127.0.0.1:5193/login",
+  "hora": "19/11/2026 14:29:33"
+ },
+ {
+  "arquivo": "v06_codigo_invalido.png",
+  "legenda": "Validação — código de recuperação inválido",
+  "url": "http://127.0.0.1:5193/esqueci-senha",
+  "hora": "19/11/2026 14:29:40"
+ },
+ {
+  "arquivo": "v07_atividade_vazia.png",
+  "legenda": "Validação — nova atividade com campos em branco",
+  "url": "http://127.0.0.1:5193/nova-atividade",
+  "hora": "19/11/2026 14:29:46"
+ },
+ {
+  "arquivo": "v08_atividade_sem_enunciado.png",
+  "legenda": "Validação — nova atividade sem enunciado/opções da questão",
+  "url": "http://127.0.0.1:5193/nova-atividade",
+  "hora": "19/11/2026 14:29:47"
+ },
+ {
+  "arquivo": "v09_nota_sem_aluno.png",
+  "legenda": "Validação — lançamento de nota sem aluno",
+  "url": "http://127.0.0.1:5193/notas?turma=6ac2ebfb54fb67ac5e764134",
+  "hora": "19/11/2026 14:29:52"
+ },
+ {
+  "arquivo": "v10_nota_11.png",
+  "legenda": "Validação — nota fora da faixa 0 a 10",
+  "url": "http://127.0.0.1:5193/notas?turma=6ac2ebfb54fb67ac5e764134",
+  "hora": "19/11/2026 14:29:53"
+ },
+ {
+  "arquivo": "v12_aluno_sem_resposta.png",
+  "legenda": "Validação — aluno tenta enviar a atividade sem responder",
+  "url": "http://127.0.0.1:5193/aluno/atividades/6aff3211cdb78c6b742c289b",
+  "hora": "19/11/2026 14:30:00"
+ },
+ {
+  "arquivo": "v13_aluno_email_duplicado.png",
+  "legenda": "Validação — cadastro de aluno com e-mail já usado",
+  "url": "http://127.0.0.1:5193/turmas",
+  "hora": "19/11/2026 14:30:08"
+ }
+]
